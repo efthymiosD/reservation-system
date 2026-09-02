@@ -1,6 +1,9 @@
 package com.decoupledx.reservation.testinfra;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -16,6 +19,16 @@ public abstract class PostgresIntegrationTest {
 
     static {
         POSTGRES.start();
+    }
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    // All integration test classes share one Postgres container and dataset; every
+    // class must start from a clean booking state regardless of execution order.
+    @BeforeEach
+    void cleanBookingTables() {
+        jdbc.update("TRUNCATE resource_blocks, reservations");
     }
 
     @DynamicPropertySource
