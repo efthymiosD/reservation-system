@@ -1,0 +1,27 @@
+# VCS / CI
+.git
+.github
+.gitignore
+
+# Build output
+target
+logs
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Secrets / local env (never in image)
+.env
+.env.*
+!.env.example
+**/jwt-private.pem
+*.p12
+*.jks
+*.keystore
+
+# Docs / local tooling
+*.md
+docker-compose*.yml
+keycloak

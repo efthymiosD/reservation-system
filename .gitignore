@@ -1,0 +1,32 @@
+target/
+# .mvn/wrapper/maven-wrapper.properties MUST be committed: mvnw reads it to resolve Maven
+# (distributionType=only-script, so there is no wrapper jar).
+
+### IntelliJ ###
+.idea/
+*.iml
+*.ipr
+*.iws
+
+### VS Code ###
+.vscode/
+
+### macOS ###
+.DS_Store
+
+### Logs ###
+*.log
+
+### Secrets / credentials (dev-only; never commit) ###
+.env
+.env.*
+!.env.example
+# Private keys are never committed. The dev *public* key (src/main/resources/dev/jwt-public.pem)
+# is intentionally committed: it is not a secret and is required for the local dev JWT fallback.
+jwt-private.pem
+*.p12
+*.jks
+*.keystore
+
+### Runtime output ###
+logs/

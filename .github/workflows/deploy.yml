@@ -1,0 +1,81 @@
+name: Deploy to QNAP
+
+# Deploys an exact, already-tested image SHA to the QNAP demo environment.
+# Run manually AFTER a Release workflow has pushed the SHA to GHCR.
+# Rollback = re-run this workflow with the previous known-good SHA.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Exact git SHA tag to deploy (from the Release workflow, e.g. 8f3a91c...)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.image_tag }} to QNAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      IMAGE: ghcr.io/efthymiosd/reservation-system:${{ inputs.image_tag }}
+      DEPLOY_DIR: ${{ vars.QNAP_DEPLOY_DIR || '/opt/reservation' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1) Sync compose file + Keycloak realm to the QNAP (the QNAP never builds from source)
+      - name: Copy deployment files to QNAP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.QNAP_DEPLOY_HOST }}
+          username: ${{ secrets.QNAP_DEPLOY_USER }}
+          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
+          source: 'docker-compose.prod.yml,keycloak/realm-export.json'
+          target: ${{ env.DEPLOY_DIR }}
+          strip_components: 0
+          overwrite: true
+
+      # 2-4) Pull the exact SHA, (re)start the stack
+      - name: Pull and start stack
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.QNAP_DEPLOY_HOST }}
+          username: ${{ secrets.QNAP_DEPLOY_USER }}
+          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd ${{ env.DEPLOY_DIR }}
+            echo "RESERVATION_IMAGE=${{ env.IMAGE }}" > .env.image
+            docker compose -f docker-compose.prod.yml --env-file .env --env-file .env.image pull app
+            docker compose -f docker-compose.prod.yml --env-file .env --env-file .env.image up -d
+
+      # 5) Wait for health; 6) smoke test; 7) fail the deployment if either fails
+      - name: Health check and smoke test
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.QNAP_DEPLOY_HOST }}
+          username: ${{ secrets.QNAP_DEPLOY_USER }}
+          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            BASE=http://localhost:8080
+
+            echo "== Waiting for health =="
+            ok=""
+            for i in $(seq 1 40); do
+              if curl -sf "$BASE/actuator/health" | grep -q '"status":"UP"'; then ok=yes; break; fi
+              sleep 3
+            done
+            [ -n "$ok" ] || { echo "HEALTH CHECK FAILED"; docker logs reservation-api --tail 100; exit 1; }
+            echo "health: UP"
+
+            echo "== Smoke: public venue endpoint =="
+            curl -sf "$BASE/api/public/venue" | grep -q . || { echo "SMOKE FAILED: /api/public/venue"; exit 1; }
+
+            echo "== Smoke: availability requires authentication =="
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/availability?date=2026-09-10&start=10:00&durationMinutes=60")
+            [ "$code" = "401" ] || { echo "SMOKE FAILED: /api/availability returned $code, expected 401"; exit 1; }
+
+            echo "smoke tests passed for ${{ env.IMAGE }}"

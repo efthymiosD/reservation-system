@@ -1,0 +1,60 @@
+# Production/demo compose for the QNAP. NOT for local development (use docker-compose.yml).
+# The image tag is injected by the deploy workflow; never reference 'latest'.
+#
+# Runtime secrets come from an env file on the host (e.g. /opt/reservation/.env):
+#   POSTGRES_PASSWORD=...
+#   JWT_ISSUER_URI=http://keycloak:8081/realms/reservation  (or the public realm URL)
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: reservation-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: reservation
+      POSTGRES_USER: reservation
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - reservation-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reservation -d reservation"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: reservation-keycloak
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      - postgres
+
+  app:
+    image: ${RESERVATION_IMAGE:?RESERVATION_IMAGE is required (ghcr.io/owner/reservation-api:<sha>)}
+    container_name: reservation-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/reservation
+      DB_USERNAME: reservation
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_ISSUER_URI: ${JWT_ISSUER_URI:?JWT_ISSUER_URI is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+volumes:
+  reservation-pgdata:

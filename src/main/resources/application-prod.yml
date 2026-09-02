@@ -1,0 +1,31 @@
+spring:
+  # No dev defaults in prod: DB credentials MUST come from the environment.
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    root: INFO
+    com.decoupledx.reservation: INFO
+  file:
+    name: ${LOG_FILE:logs/reservation-prod.log}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{40} - %msg%n"
+
+app:
+  security:
+    # REQUIRED: a real OIDC issuer. There must be no dev-key fallback in prod.
+    issuer-uri: ${JWT_ISSUER_URI}
+    allow-dev-key: false
+
+# Docs/UI disabled in prod by default; re-enable only if explicitly required.
+springdoc:
+  api-docs:
+    enabled: ${SPRINGDOC_ENABLED:false}
+  swagger-ui:
+    enabled: ${SPRINGDOC_ENABLED:false}

@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: reservation-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-reservation}
+      POSTGRES_USER: ${POSTGRES_USER:-reservation}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reservation}
+    ports:
+      - "5432:5432"
+    volumes:
+      - reservation-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-reservation} -d ${POSTGRES_DB:-reservation}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: reservation-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      - postgres
+
+volumes:
+  reservation-pgdata:
