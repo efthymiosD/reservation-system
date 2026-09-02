@@ -59,7 +59,7 @@ jobs:
       # Immutable tags only: the exact git SHA plus the branch name.
       # 'latest' is intentionally NOT produced.
       - name: Build image (no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           load: true
@@ -78,7 +78,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
