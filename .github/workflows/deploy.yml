@@ -23,7 +23,7 @@ jobs:
       IMAGE: ghcr.io/efthymiosd/reservation-system:${{ inputs.image_tag }}
       DEPLOY_DIR: ${{ vars.QNAP_DEPLOY_DIR || '/opt/reservation' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 1) Sync compose file + Keycloak realm to the QNAP (the QNAP never builds from source)
       - name: Copy deployment files to QNAP
