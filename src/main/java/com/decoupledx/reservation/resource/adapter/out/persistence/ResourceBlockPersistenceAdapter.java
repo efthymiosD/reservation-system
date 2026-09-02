@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
@@ -66,15 +68,20 @@ class ResourceBlockPersistenceAdapter implements ResourceBlockRepository {
                             () -> blocks.saveAndFlush(toEntity(block)));
             blocks.flush();
             return block;
-        } catch (DataIntegrityViolationException exception) {
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException exception) {
             if (constraintName(exception).contains(BLOCK_OVERLAP_CONSTRAINT)) {
+                throw new BusinessException(ErrorCode.BLOCK_OVERLAPS);
+            }
+            // Deadlock/lock-timeout victims of the exclusion-constraint race lost the
+            // same block race as 23P01 conflicts; report the block overlap conflict.
+            if (exception instanceof ConcurrencyFailureException) {
                 throw new BusinessException(ErrorCode.BLOCK_OVERLAPS);
             }
             throw exception;
         }
     }
 
-    private static String constraintName(DataIntegrityViolationException exception) {
+    private static String constraintName(DataAccessException exception) {
         return exception.getMostSpecificCause().getMessage() == null
                 ? ""
                 : exception.getMostSpecificCause().getMessage();

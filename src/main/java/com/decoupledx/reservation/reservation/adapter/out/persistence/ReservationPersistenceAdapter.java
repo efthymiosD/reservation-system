@@ -5,6 +5,8 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +47,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
                             () -> reservations.saveAndFlush(toEntity(reservation)));
             reservations.flush();
             return reservation;
-        } catch (DataIntegrityViolationException exception) {
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException exception) {
             throw translate(exception);
         }
     }
@@ -107,7 +109,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
         return status == null ? reservations.count() : reservations.countByStatus(status.name());
     }
 
-    private RuntimeException translate(DataIntegrityViolationException exception) {
+    private RuntimeException translate(DataAccessException exception) {
         String message = exception.getMostSpecificCause().getMessage();
         if (message != null) {
             if (message.contains(RESOURCE_OVERLAP_CONSTRAINT)) {
@@ -116,6 +118,12 @@ class ReservationPersistenceAdapter implements ReservationRepository {
             if (message.contains(CUSTOMER_OVERLAP_CONSTRAINT)) {
                 return new BusinessException(ErrorCode.CUSTOMER_HAS_OVERLAPPING_RESERVATION);
             }
+        }
+        // Deadlock/lock-timeout victims of the exclusion-constraint race lost the same
+        // booking race as 23P01 conflicts; the victim's log line does not name the
+        // constraint, so report the generic slot-taken conflict.
+        if (exception instanceof ConcurrencyFailureException) {
+            return new BusinessException(ErrorCode.RESOURCE_NO_LONGER_AVAILABLE);
         }
         return exception;
     }
