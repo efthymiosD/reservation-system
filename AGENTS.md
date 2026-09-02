@@ -103,3 +103,16 @@ com.decoupledx.reservation.<module>/
 - `GET /api/admin/reservations?status&page&size` — list all reservations (paged, optional status filter)
 - `POST /api/admin/resource-blocks` (normal), `/override` (atomic cancel+create), `/{id}/cancel`
 - `GET /api/admin/resource-blocks?resourceId&status` — list resource blocks (all or per resource)
+
+## CI/CD (GitHub: efthymiosD/reservation-system, public repo)
+
+Pipeline: `feature/* → PR (CI) → main → Docker image → GHCR → (QNAP deploy deferred)`.
+
+- **`.github/workflows/ci.yml`** — PRs to `main`: JDK 26 (temurin, setup-java@v5), Maven cache, `./mvnw -ntp verify` with Testcontainers Postgres. No Keycloak dependency (opt-in `@Tag("keycloak")` stays excluded). Triggers on `pull_request` only — the removed `push` trigger used to create duplicate required check runs that deadlocked branch protection.
+- **`.github/workflows/release.yml`** — push to `main`: `verify` job, then build image (buildx, GHA cache) → Trivy scan (fail on HIGH/CRITICAL, `ignore-unfixed`) → push to `ghcr.io/efthymiosd/reservation-system` with immutable git-SHA tag + `main` branch tag. Never `latest`.
+- **`.github/workflows/deploy.yml`** — manual `workflow_dispatch` with an exact SHA; SSH deploy to the QNAP (compose up, health wait, smoke tests). **Deferred**: secrets `QNAP_DEPLOY_HOST/USER/SSH_KEY` not configured yet; `docker-compose.prod.yml` + host env file carry runtime secrets (DB password, issuer URI).
+- **Branch protection on `main`**: PRs required (0 approvals), required check `mvn verify (unit + integration)`, enforced for admins, no force-push/delete.
+- **Dependabot**: maven + docker + github-actions ecosystems, weekly; merge its PRs one at a time (they may conflict on the same `uses:` lines; ask Dependabot to rebase).
+- **Dockerfile**: multi-stage (`maven:3.9-eclipse-temurin-26` → `eclipse-temurin:26-jre`), non-root `app` user, healthcheck via installed `curl`, `/usr/bin/pebble` removed (Canonical init daemon baked into the Ubuntu base; its bundled Go stdlib fails the Trivy gate). Dev *public* key is intentionally in the image (dev fallback only; prod profile forbids it).
+- **Integration-test isolation**: `PostgresIntegrationTest` truncates `resource_blocks, reservations` in `@BeforeEach` — every test class shares one container and must start clean regardless of execution order.
+- **Exclusion-constraint races**: both persistence adapters translate `ConcurrencyFailureException` (deadlock/lock-timeout victims of the `btree_gist` race, SQLState 40P01) into the same 409 business conflicts as `DataIntegrityViolationException` (23P01) — lock-race losers must not surface as 500s.
