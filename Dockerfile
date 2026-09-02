@@ -15,9 +15,12 @@ RUN ./mvnw -B -q -DskipTests package
 # --- Runtime stage ---
 FROM eclipse-temurin:26-jre AS runtime
 
-# curl for the container healthcheck (temurin images do not ship it)
+# curl for the container healthcheck (temurin images do not ship it);
+# drop pebble (Canonical init daemon baked into the Ubuntu base) — unused and its
+# bundled Go stdlib carries HIGH CVEs that would fail the Trivy gate.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
+ && apt-get purge -y pebble || rm -f /usr/bin/pebble \
  && rm -rf /var/lib/apt/lists/*
 
 # Non-root user
