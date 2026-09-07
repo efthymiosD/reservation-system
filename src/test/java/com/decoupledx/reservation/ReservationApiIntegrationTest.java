@@ -2,6 +2,7 @@ package com.decoupledx.reservation;
 
 import static com.decoupledx.reservation.testinfra.JwtSupport.admin;
 import static com.decoupledx.reservation.testinfra.JwtSupport.customer;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,12 +10,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -31,12 +36,16 @@ class ReservationApiIntegrationTest extends PostgresIntegrationTest {
     private static final String FIELD_4 = "a0000000-0000-0000-0000-000000000104";
     private static final String FIELD_5 = "a0000000-0000-0000-0000-000000000105";
     private static final String FIELD_6 = "a0000000-0000-0000-0000-000000000106";
+    private static final ZoneId VENUE_ZONE = ZoneId.of("Europe/Warsaw");
 
     @Autowired
     MockMvc mockMvc;
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    JdbcTemplate jdbc;
 
     @Test
     void publicVenueInfoIsAccessibleWithoutAuthentication() throws Exception {
@@ -211,6 +220,57 @@ class ReservationApiIntegrationTest extends PostgresIntegrationTest {
         mockMvc.perform(post("/api/reservations/{id}/cancel", reservationId)
                         .with(customer("user-intruder")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void canCancelIsReportedTrueWhileBeforeDeadline() throws Exception {
+        String reservationId = createReservation("cc-user", FIELD_1, "2026-09-03T18:00:00", 60);
+
+        mockMvc.perform(get("/api/reservations/{id}", reservationId).with(customer("cc-user")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.canCancel").value(true));
+    }
+
+    @Test
+    void canCancelIsReportedFalseWithinDeadline() throws Exception {
+        // Inserted directly because no valid bookable slot lies within the 120-minute
+        // cancellation deadline of the fixed clock (2026-09-01T10:00Z; opening 14:00 local).
+        UUID customerId = provisionCustomer("cc-deadline-user");
+        insertReservation(UUID.fromString(FIELD_1), customerId,
+                venueTime(LocalDate.of(2026, 9, 1), 12, 30),   // 10:30Z, inside the deadline
+                venueTime(LocalDate.of(2026, 9, 1), 13, 30));
+
+        MvcResult list = mockMvc.perform(get("/api/reservations").with(customer("cc-deadline-user")))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode items = objectMapper.readTree(list.getResponse().getContentAsString()).get("items");
+        assertThat(items).hasSize(1);
+        assertThat(items.get(0).get("canCancel").asBoolean()).isFalse();
+    }
+
+    private UUID provisionCustomer(String subject) {
+        jdbc.update("""
+                INSERT INTO customers (customer_id, idp_subject)
+                VALUES (?, ?)
+                ON CONFLICT (idp_subject) DO NOTHING
+                """, UUID.randomUUID(), subject);
+        return jdbc.queryForObject(
+                "SELECT customer_id FROM customers WHERE idp_subject = ?", UUID.class, subject);
+    }
+
+    private void insertReservation(UUID resourceId, UUID customerId, OffsetDateTime start, OffsetDateTime end) {
+        jdbc.update("""
+                INSERT INTO reservations
+                    (id, resource_id, customer_id, start_time, end_time, status,
+                     price_amount, price_currency, created_at, version)
+                VALUES (?, ?, ?, ?, ?, 'ACTIVE', 80.00, 'PLN', now(), 0)
+                """, UUID.randomUUID(), resourceId, customerId.toString(), start, end);
+    }
+
+    private OffsetDateTime venueTime(LocalDate date, int hour, int minute) {
+        return date.atTime(hour, minute).atZone(VENUE_ZONE).toOffsetDateTime();
     }
 
     private String createReservation(String subject, String resourceId, String startTime, int minutes)

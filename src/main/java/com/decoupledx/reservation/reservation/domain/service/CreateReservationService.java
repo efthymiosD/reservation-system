@@ -1,7 +1,9 @@
 package com.decoupledx.reservation.reservation.domain.service;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -40,6 +42,22 @@ public class CreateReservationService {
     private final ReservationRepository reservations;
     private final Clock clock;
     private final TransactionRunner tx;
+
+    /**
+     * Web entry point: the start time is venue-local wall-clock time. The service
+     * resolves the venue timezone and derives the UTC booking period itself, so
+     * callers never touch timezone or period arithmetic.
+     */
+    public ReservationInfo create(ResourceId resourceId, LocalDateTime startTime,
+            int durationMinutes, CustomerId customerId) {
+        Instant start = startTime.atZone(venueZone()).toInstant();
+        Instant end = start.plus(Duration.ofMinutes(durationMinutes));
+        return create(new CreateReservationCommand(resourceId, start, end), customerId);
+    }
+
+    private ZoneId venueZone() {
+        return venueService.getVenue(venueService.singleVenueId()).timezone();
+    }
 
     public ReservationInfo create(CreateReservationCommand command, CustomerId customerId) {
         return tx.run(() -> doCreate(command, customerId));
