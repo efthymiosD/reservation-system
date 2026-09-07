@@ -23,6 +23,22 @@ app:
     issuer-uri: ${JWT_ISSUER_URI}
     allow-dev-key: false
 
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            # REQUIRED: no dev web-client secret or redirect URI in prod.
+            client-secret: ${KC_WEB_CLIENT_SECRET}
+            redirect-uri: ${KC_WEB_REDIRECT_URI}
+        provider:
+          keycloak:
+            # REQUIRED: the web client talks to the real realm endpoints.
+            authorization-uri: ${KEYCLOAK_AUTHORIZATION_URI}
+            token-uri: ${KEYCLOAK_TOKEN_URI}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI}
+
 # Docs/UI disabled in prod by default; re-enable only if explicitly required.
 springdoc:
   api-docs:

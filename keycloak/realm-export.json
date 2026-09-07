@@ -48,6 +48,36 @@
         "offline_access",
         "microprofile-jwt"
       ]
+    },
+    {
+      "clientId": "reservation-web",
+      "name": "Reservation Web Client",
+      "description": "Confidential browser client for the Thymeleaf web UI (authorization code flow). Dev-only secret; change it in the production realm.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "publicClient": false,
+      "secret": "dev-web-secret",
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "offline_access",
+        "microprofile-jwt"
+      ]
     }
   ],
   "users": [

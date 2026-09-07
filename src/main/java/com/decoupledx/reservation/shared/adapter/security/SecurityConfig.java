@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -41,9 +42,16 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * API: stateless bearer-token resource server, CSRF off. Behavior unchanged
+     * for everything under /api/**, the OpenAPI docs and the actuator.
+     */
     @Bean
+    @Order(1)
     SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
         return http
+                .securityMatcher("/api/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+                        "/actuator/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -60,6 +68,31 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(new JwtRolesConverter())))
+                .build();
+    }
+
+    /**
+     * Browser: session-based OAuth2 login against Keycloak (authorization code) with
+     * CSRF protection on. Until the web UI adds public pages (T3+), every browser
+     * request redirects to Keycloak.
+     */
+    @Bean
+    @Order(2)
+    SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+        return http
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/error",
+                                "/favicon.ico",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/webjars/**")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorization")))
+                .logout(logout -> logout.logoutUrl("/logout"))
                 .build();
     }
 }

@@ -2,6 +2,7 @@ package com.decoupledx.reservation.identity.adapter.in;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import com.decoupledx.reservation.identity.domain.model.CustomerId;
@@ -9,6 +10,14 @@ import com.decoupledx.reservation.identity.domain.service.CustomerAccountService
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Maps the authenticated principal's IdP subject to the app-owned internal
+ * {@link CustomerId}. Accepts both principal types: {@link JwtAuthenticationToken}
+ * (REST API bearer tokens) and an {@link OidcUser} principal inside an
+ * OAuth2 session token (browser sessions via oauth2Login, where the user-name
+ * attribute is configured as 'sub'). There is deliberately no preferred_username
+ * fallback.
+ */
 @Service
 @RequiredArgsConstructor
 public class CurrentCustomerResolver {
@@ -18,12 +27,18 @@ public class CurrentCustomerResolver {
     public CustomerId currentCustomerId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken jwt) {
-            String subject = jwt.getName();
-            if (subject != null && !subject.isBlank()) {
-                return customerAccounts.resolveOrProvision(subject);
-            }
-            throw new IllegalStateException("JWT is missing the 'sub' claim required for customer identity");
+            return resolve(jwt.getName(), "JWT is missing the 'sub' claim required for customer identity");
         }
-        throw new IllegalStateException("No authenticated JWT principal present");
+        if (authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser) {
+            return resolve(oidcUser.getName(), "OIDC principal is missing the 'sub' claim required for customer identity");
+        }
+        throw new IllegalStateException("No authenticated customer principal present");
+    }
+
+    private CustomerId resolve(String subject, String missingSubjectMessage) {
+        if (subject != null && !subject.isBlank()) {
+            return customerAccounts.resolveOrProvision(subject);
+        }
+        throw new IllegalStateException(missingSubjectMessage);
     }
 }
