@@ -11,6 +11,24 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KC_WEB_CLIENT_ID:reservation-web}
+            client-secret: ${KC_WEB_CLIENT_SECRET:dev-web-secret}
+            redirect-uri: ${KC_WEB_REDIRECT_URI:{baseUrl}/login/oauth2/code/keycloak}
+            authorization-grant-type: authorization_code
+            scope: openid
+        # Explicit endpoints (not issuer-uri) so startup never fetches OIDC metadata:
+        # integration tests must not require a running Keycloak.
+        provider:
+          keycloak:
+            authorization-uri: ${KEYCLOAK_AUTHORIZATION_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/auth}
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/token}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/certs}
+            user-name-attribute: sub
 
 server:
   port: 8080
