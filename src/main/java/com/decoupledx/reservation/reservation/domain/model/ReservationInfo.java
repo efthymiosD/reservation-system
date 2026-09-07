@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.reservation.domain.model;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import com.decoupledx.reservation.identity.domain.model.CustomerId;
@@ -19,5 +20,14 @@ public record ReservationInfo(
 
     public boolean isActive() {
         return status == ReservationStatus.ACTIVE;
+    }
+
+    /**
+     * Whether this reservation may be cancelled at the given instant under a
+     * cancellation policy with the given deadline before the start. View-oriented
+     * UX hint; the cancel use case revalidates against the current policy.
+     */
+    public boolean isCancellable(Instant now, Duration deadlineBeforeStart) {
+        return isActive() && !now.plus(deadlineBeforeStart).isAfter(start);
     }
 }
