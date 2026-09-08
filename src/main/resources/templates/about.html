@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('About', ~{::section})}">
+<head>
+  <title>About</title>
+</head>
+<body>
+<section class="container py-5">
+  <h1 class="mb-3" th:text="${venue.name}">Venue</h1>
+  <p class="lead" th:text="${venue.description}">Description</p>
+
+  <div class="row g-4 mt-2">
+    <div class="col-md-4">
+      <h2 class="h5">Address</h2>
+      <p class="text-muted" th:text="${venue.address}">Address</p>
+    </div>
+    <div class="col-md-4">
+      <h2 class="h5">Timezone</h2>
+      <p class="text-muted">All bookings are scheduled in venue-local time
+        (<span th:text="${venue.timezone}">Europe/Warsaw</span>).</p>
+    </div>
+    <div class="col-md-4">
+      <h2 class="h5">Booking</h2>
+      <p class="text-muted">Reserve a field online — pick a date, start time and
+        duration, and see the price before you confirm.</p>
+      <a class="btn btn-primary btn-sm" th:href="@{/reserve}">Make a reservation</a>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a class="link-secondary me-3" th:href="@{/opening-hours}">Opening hours</a>
+    <a class="link-secondary me-3" th:href="@{/contact}">Find us</a>
+    <a class="link-secondary" th:href="@{/}">Home</a>
+  </div>
+</section>
+</body>
+</html>
