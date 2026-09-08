@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${title} + ' · Five-a-Side Football Centre'">Reservation System</title>
+  <link rel="stylesheet" th:href="@{/vendor/bootstrap.min.css}">
+  <link rel="stylesheet" th:href="@{/css/site.css}">
+</head>
+
+<body>
+<nav th:fragment="navigation" class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand fw-bold" th:href="@{/}">⚽ Five-a-Side Centre</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#mainNav" aria-controls="mainNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" th:href="@{/reserve}">Make a reservation</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item" th:if="${currentUser.authenticated}">
+          <span class="navbar-text me-3" th:text="'Signed in as ' + ${currentUser.displayName}">Signed in as user</span>
+        </li>
+        <li class="nav-item" th:if="${currentUser.authenticated}">
+          <form th:action="@{/logout}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
+          </form>
+        </li>
+        <li class="nav-item" th:unless="${currentUser.authenticated}">
+          <a class="btn btn-outline-light btn-sm" th:href="@{/oauth2/authorization/keycloak}">Log in</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<footer th:fragment="footer" class="border-top mt-auto py-3 bg-light">
+  <div class="container d-flex flex-wrap justify-content-between">
+    <span class="text-muted">Five-a-Side Football Centre</span>
+    <span class="text-muted">
+      <a class="text-muted" th:href="@{/}">Home</a> ·
+      <a class="text-muted" th:href="@{/reserve}">Reserve</a>
+    </span>
+  </div>
+</footer>
+
+<div th:fragment="messages">
+  <div th:if="${message}" class="container mt-3">
+    <div class="alert alert-info" role="status" th:text="${message}">message</div>
+  </div>
+  <div th:if="${error}" class="container mt-3">
+    <div class="alert alert-danger" role="alert" th:text="${error}">error</div>
+  </div>
+</div>
+</body>
+</html>

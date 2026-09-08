@@ -82,11 +82,13 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/error",
                                 "/favicon.ico",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
+                                "/vendor/**",
                                 "/webjars/**")
                         .permitAll()
                         .anyRequest().authenticated())

@@ -27,8 +27,9 @@ class WebSecurityIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void anonymousBrowserRequestRedirectsToKeycloakLogin() throws Exception {
-        // Step 1: protected page redirects to the local authorization endpoint.
-        mockMvc.perform(get("/"))
+        // Step 1: a protected page (the future reservation page) redirects to the
+        // local authorization endpoint. '/' itself is the permitted home page (T3).
+        mockMvc.perform(get("/reserve"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location",
                         org.hamcrest.Matchers.containsString("/oauth2/authorization/keycloak")));
