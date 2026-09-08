@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Find us', ~{::section})}">
+<head>
+  <title>Find us</title>
+</head>
+<body>
+<section class="container py-5">
+  <h1 class="mb-4" th:text="'Find us — ' + ${venue.name}">Find us</h1>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <h2 class="h5">Address</h2>
+      <p class="text-muted" th:text="${venue.address}">Address</p>
+      <h2 class="h5 mt-4">Getting here</h2>
+      <p class="text-muted">The venue is located in Wrocław. Parking is available
+        on site; the fields are floodlit for evening play.</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="h5">Contact</h2>
+      <p class="text-muted">For bookings use the online reservation page — it shows
+        live availability and the exact price. For anything else, talk to the staff
+        at the venue during opening hours.</p>
+      <a class="btn btn-primary" th:href="@{/reserve}">Make a reservation</a>
+      <a class="btn btn-outline-secondary" th:href="@{/opening-hours}">Opening hours</a>
+    </div>
+  </div>
+</section>
+</body>
+</html>
