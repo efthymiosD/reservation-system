@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)" lang="en">
+<head th:replace="~{fragments/head :: head(${title})}"></head>
+<body class="d-flex flex-column min-vh-100">
+  <nav th:replace="~{fragments/navigation :: navigation}"></nav>
+  <main class="flex-grow-1">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+    <div th:replace="${content}"></div>
+  </main>
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
+  <script th:src="@{/vendor/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

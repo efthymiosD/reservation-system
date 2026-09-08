@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Home', ~{::section})}">
+<head>
+  <title>Home</title>
+</head>
+<body>
+<section>
+  <div class="py-5 text-center bg-body-tertiary border-bottom">
+    <div class="container">
+      <h1 class="display-5 fw-bold">Book your pitch in seconds</h1>
+      <p class="lead col-lg-7 mx-auto">
+        Six full-size five-a-side pitches, one venue. Pick a date, choose a start time
+        and duration, select your field and see the price before you confirm.
+      </p>
+      <a class="btn btn-primary btn-lg mt-2" th:href="@{/reserve}">Make a reservation</a>
+    </div>
+  </div>
+  <div class="container py-5">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <h2 class="h5">Live availability</h2>
+        <p class="text-muted">The venue map shows every field: available, reserved or blocked — straight from the booking system.</p>
+      </div>
+      <div class="col-md-4">
+        <h2 class="h5">Upfront pricing</h2>
+        <p class="text-muted">The total price is calculated by the venue before you confirm. No surprises at the gate.</p>
+      </div>
+      <div class="col-md-4">
+        <h2 class="h5">Easy cancellation</h2>
+        <p class="text-muted">Plans change? Cancel your booking yourself until the venue's cancellation deadline.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

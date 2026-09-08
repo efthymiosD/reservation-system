@@ -1,0 +1,18 @@
+/* Web UI overrides on top of vendored Bootstrap 5. Keep minimal; Bootstrap
+   classes do the heavy lifting so the CSS stays small and cacheable. */
+
+:root {
+  --brand-accent: #0d6efd;
+}
+
+/* Keep the sticky-footer layout predictable on small screens */
+main.flex-grow-1 {
+  overflow-x: hidden;
+}
+
+/* Venue map container (T5) will rely on this: horizontal scrolling inside the
+   container preserves the venue geometry instead of squashing it. */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
