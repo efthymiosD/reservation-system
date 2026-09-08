@@ -16,3 +16,83 @@ main.flex-grow-1 {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* --- Venue map (reservation page) ------------------------------------- */
+
+.venue-map__svg {
+  width: 100%;
+  min-width: 720px;   /* keeps fields comfortably tappable on phones */
+  height: auto;
+  display: block;
+}
+
+.venue-map__background {
+  fill: #f1f8f4;
+  stroke: #cde3d5;
+}
+
+.resource rect {
+  stroke-width: 3;
+  transition: fill .15s ease, stroke .15s ease;
+}
+
+.resource__label {
+  font-size: 34px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.resource__state {
+  font-size: 26px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Available: green, clickable */
+.resource--available rect {
+  fill: #d1e7dd;
+  stroke: #198754;
+}
+.resource--available .resource__state { fill: #146c43; }
+.resource--available { cursor: pointer; }
+.resource--available:hover rect { fill: #bcd9cd; }
+
+/* Selected: accent outline + tint (set by JS in T6) */
+.resource--selected rect {
+  fill: #cfe2ff;
+  stroke: #0d6efd;
+  stroke-width: 6;
+}
+.resource--selected .resource__state { fill: #084298; }
+
+/* Reserved: red/muted, not clickable */
+.resource--reserved rect {
+  fill: #f8d7da;
+  stroke: #dc3545;
+}
+.resource--reserved .resource__state { fill: #a1262f; }
+.resource--reserved { cursor: not-allowed; }
+
+/* Blocked: dark gray, not clickable */
+.resource--blocked rect {
+  fill: #e9ecef;
+  stroke: #6c757d;
+}
+.resource--blocked .resource__state { fill: #495057; }
+.resource--blocked { cursor: not-allowed; }
+
+/* Keyboard focus: visible for every state */
+.resource:focus-visible rect {
+  stroke: #0d6efd;
+  stroke-width: 6;
+}
+
+/* --- Legend ------------------------------------------------------------ */
+
+.venue-legend__item { display: inline-flex; align-items: center; gap: .4rem; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 2px solid transparent; }
+.dot--available { background: #d1e7dd; border-color: #198754; }
+.dot--selected { background: #cfe2ff; border-color: #0d6efd; }
+.dot--reserved { background: #f8d7da; border-color: #dc3545; }
+.dot--blocked { background: #e9ecef; border-color: #6c757d; }
