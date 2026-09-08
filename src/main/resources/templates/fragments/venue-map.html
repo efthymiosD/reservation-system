@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="venue-map(fields)" class="venue-map scroll-x my-3" role="group"
+     aria-label="Venue map — one clickable field per pitch, availability is colour-coded and labelled">
+  <svg th:attr="viewBox='0 0 ' + ${fields[0] != null ? '1200' : '1200'} + ' 400'"
+       class="venue-map__svg" role="img" aria-label="Venue layout with six fields side by side">
+    <!-- soft venue background -->
+    <rect x="0" y="0" width="1200" height="400" class="venue-map__background" rx="8"/>
+
+    <g th:each="field : ${fields}"
+       th:class="'resource resource--' + ${field.statusClass}"
+       th:attr="role='button', tabindex=0, aria-label=${field.ariaLabel}, data-resource-id=${field.resourceId}"
+       th:aria-disabled="${field.statusClass != 'available'}">
+      <rect th:x="${field.x}" th:y="${field.y}"
+            th:width="${field.width}" th:height="${field.height}" rx="10"/>
+      <text class="resource__label" th:x="${field.x + field.width / 2}" th:y="${field.y + 60}"
+            th:text="${field.label}">Field</text>
+      <text class="resource__state" th:x="${field.x + field.width / 2}" th:y="${field.y + 110}"
+            th:switch="${field.statusClass}">
+        <th:block th:case="available">&#10003; free</th:block>
+        <th:block th:case="reserved">&#10005; reserved</th:block>
+        <th:block th:case="blocked">&#128274; blocked</th:block>
+      </text>
+    </g>
+  </svg>
+</div>
+
+<div th:fragment="legend" class="venue-legend d-flex flex-wrap gap-3 small my-2" aria-hidden="false">
+  <span class="venue-legend__item"><span class="dot dot--available" aria-hidden="true"></span> Available</span>
+  <span class="venue-legend__item"><span class="dot dot--selected" aria-hidden="true"></span> Selected</span>
+  <span class="venue-legend__item"><span class="dot dot--reserved" aria-hidden="true"></span> Reserved</span>
+  <span class="venue-legend__item"><span class="dot dot--blocked" aria-hidden="true"></span> Blocked</span>
+</div>
+
+</body>
+</html>

@@ -86,6 +86,7 @@ public class SecurityConfig {
                                 "/about",
                                 "/opening-hours",
                                 "/contact",
+                                "/reserve",
                                 "/error",
                                 "/favicon.ico",
                                 "/css/**",
