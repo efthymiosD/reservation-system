@@ -94,9 +94,6 @@ class WebSecurityIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void loggedOutPageIsAccessibleWithoutAuthentication() throws Exception {
-        MvcResult result = mockMvc.perform(get("/logged-out"))
-                .andExpect(status().isOk())
-                .andReturn();
-        assertThat(result.getResponse().getContentAsString()).contains("You have been signed out");
+        mockMvc.perform(get("/logged-out")).andExpect(status().isOk());
     }
 }

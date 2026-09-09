@@ -22,7 +22,7 @@ public abstract class PostgresIntegrationTest {
     }
 
     @Autowired
-    private JdbcTemplate jdbc;
+    public JdbcTemplate jdbc;
 
     // All integration test classes share one Postgres container and dataset; every
     // class must start from a clean booking state regardless of execution order.
