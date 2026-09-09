@@ -63,6 +63,23 @@ source ~/tools/env.sh          # sets JAVA_HOME + PATH for JDK 26 + Maven 3.9.16
 - `JwtSupport.customer(subject)` / `JwtSupport.admin(subject)` create mock JWTs for `MockMvc`. Admin needs `.authorities("ROLE_ADMIN")`.
 - **Integration tests are coupled to seed data**: they reference fixed resource UUIDs `a0000000-...-00000000010{1..6}` (Field 1–6) and rely on seeded defaults (durations 60/120 min, 30-min grid, P1M advance window, 120-min cancellation deadline, 80 PLN/hr). Changing `V2__seed_data.sql` will break them. E.g. a 90-min booking at 80 PLN/hr is asserted as `priceAmount=120.00`.
 
+## Module API convention (enforced by ModularityTests)
+
+Every module exports **exactly one API**: its `…api` package (`@NamedInterface("api")`) — an interface over the module's use cases plus the pure value types / DTO views that cross module boundaries. Everything else (domain model/service/port, adapters, `…internal` wiring) is private; `ModularityTests.verify()` fails on any internal cross-module import.
+
+- API views **delegate** to domain logic (e.g. `OpeningHoursView.fits`, `BookingPolicy.validate*`) — business rules are never duplicated in the API layer; api record components reference only api/shared/JDK types.
+- `webui` (and future REST-for-mobile) consume only module APIs; each module's own REST adapter may use its own internals.
+- `reservation.api.ReservationApi` is implemented by a module-internal facade over Create/Cancel/Query services; per-module `…internal/*ModuleConfig` classes do the bean wiring (root `DomainServicesConfig` was removed).
+- `shared.domain` remains the exposed shared kernel (Money, ReservationPeriod, BusinessException, ErrorCode, TransactionRunner).
+- `administration` has no API (single admin controller, internal only).
+
+## Testing conventions
+
+- **Integration tests are black-box only**: through the HTTP API (MockMvc, `JwtSupport`/`WebUserSupport` principals) or raw SQL at the DB boundary (`DatabaseConstraintsIntegrationTest`). No direct domain-service calls.
+- **Unit tests only for business logic**, which lives in domain models (`BookingPolicyTest`, `ReservationTest`, `MoneyTest`, …). **No unit tests for services with mocked dependencies.**
+- **Web-UI tests cover core flows only** (login/logout redirections, page reachability, status codes) — **never page internals** (no HTML text, buttons, tooltips, labels). Page rendering is verified manually/live.
+- Concurrency tests race through the HTTP API (`ConcurrencyIntegrationTest`): exactly one 201 among 409s.
+
 ## Architecture
 
 - **Spring Boot 4.1.1 + Spring Modulith 2.1.1** modular monolith (9 modules), Java 26, Maven
