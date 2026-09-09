@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Reservation confirmed', ~{::section})}">
+<head>
+  <title>Reservation confirmed</title>
+</head>
+<body>
+<section class="container py-4">
+  <div class="text-center mb-4">
+    <div class="display-6" aria-hidden="true">✅</div>
+    <h1 class="mb-0">Reservation confirmed</h1>
+  </div>
+
+  <div class="col-lg-7 mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-5">Field</dt>
+          <dd class="col-7" th:text="${confirmation.fieldName}">Field 3</dd>
+          <dt class="col-5">Date</dt>
+          <dd class="col-7" th:text="${#temporals.format(confirmation.date, 'd MMMM yyyy')}">12 September 2026</dd>
+          <dt class="col-5">Time</dt>
+          <dd class="col-7">
+            <span th:text="${confirmation.startTime}">18:00</span> –
+            <span th:text="${confirmation.endTime}">19:30</span>
+            <span class="text-muted">
+              (<span th:text="${confirmation.durationMinutes / 60} + ' h' + (${confirmation.durationMinutes % 60} > 0 ? ' ' + ${confirmation.durationMinutes % 60} + ' min' : '')">1 h 30 min</span>)
+            </span>
+          </dd>
+          <dt class="col-5">Total</dt>
+          <dd class="col-7 fw-bold"
+              th:text="${confirmation.priceAmount} + ' ' + ${confirmation.priceCurrency}">150 PLN</dd>
+          <dt class="col-5">Payment</dt>
+          <dd class="col-7">At the venue</dd>
+          <dt class="col-5">Reference</dt>
+          <dd class="col-7"><code th:text="${confirmation.reference}">ABC12345</code></dd>
+        </dl>
+      </div>
+    </div>
+    <div class="d-flex justify-content-between mt-4">
+      <a class="btn btn-outline-secondary" th:href="@{/reserve}">Back to booking</a>
+      <a class="btn btn-primary" th:href="@{/my-reservations}">My reservations</a>
+    </div>
+  </div>
+</section>
+</body>
+</html>

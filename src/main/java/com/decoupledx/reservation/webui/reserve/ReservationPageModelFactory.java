@@ -14,9 +14,15 @@ import org.springframework.stereotype.Component;
 import com.decoupledx.reservation.availability.domain.model.ResourceAvailability;
 import com.decoupledx.reservation.availability.domain.model.ResourceAvailabilityStatus;
 import com.decoupledx.reservation.availability.domain.service.AvailabilityService;
+import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
+import com.decoupledx.reservation.identity.domain.model.CustomerId;
 import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
 import com.decoupledx.reservation.policy.domain.service.PolicyService;
+import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
+import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.resource.domain.service.ResourceService;
 import com.decoupledx.reservation.shared.domain.BusinessException;
+import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 import com.decoupledx.reservation.venue.domain.model.DailyOpeningHours;
 import com.decoupledx.reservation.venue.domain.model.VenueInfo;
 import com.decoupledx.reservation.venue.domain.service.VenueService;
@@ -28,9 +34,10 @@ import lombok.extern.slf4j.Slf4j;
  * Assembles the reservation page view model from backend state: duration and
  * time options are shaped from the booking policy and opening hours, availability
  * and price come from the availability service, and the visual arrangement comes
- * from the venue layout configuration. All booking rules stay in the domain; the
- * factory only shapes what the UI may offer and degrades gracefully for
- * unbookable requests.
+ * from the venue layout configuration. The page itself is authenticated-only, so
+ * the current customer is always resolvable. All booking rules stay in the
+ * domain; the factory only shapes what the UI may offer and degrades gracefully
+ * for unbookable requests.
  */
 @Slf4j
 @Component
@@ -41,6 +48,9 @@ class ReservationPageModelFactory {
     private final AvailabilityService availabilityService;
     private final VenueService venueService;
     private final VenueLayoutLoader venueLayout;
+    private final ReservationQueryService reservationQueries;
+    private final ResourceService resourceService;
+    private final CurrentCustomerResolver currentCustomer;
     private final Clock clock;
 
     ReservationPageModel build(LocalDate requestedDate, LocalTime requestedStart, Integer requestedDuration) {
@@ -80,11 +90,45 @@ class ReservationPageModelFactory {
                     return durationOptions.get(0);
                 });
 
+        SlotSelection direct = forDate(date, requestedStart, duration, startStep, venue, zoneOf(venue), notes);
+        if (direct != null) {
+            return withNotes(direct, notes);
+        }
+        // The day itself has no bookable start times (closed, or every start has
+        // passed / fits the duration): advance to the next bookable day.
+        boolean closed = venue.openingHours().on(date.getDayOfWeek()).isEmpty();
+        String reason = closed
+                ? "The venue is closed on the selected day"
+                : "There are no bookable start times on the selected day";
+        for (LocalDate candidate = date.plusDays(1); !candidate.isAfter(maxDate); candidate = candidate.plusDays(1)) {
+            SlotSelection next = forDate(candidate, null, duration, startStep, venue, zoneOf(venue), notes);
+            if (next != null) {
+                notes.add(reason + " — showing " + candidate + " instead.");
+                return withNotes(next, notes);
+            }
+        }
+        return null;
+    }
+
+    private SlotSelection withNotes(SlotSelection selection, List<String> notes) {
+        String note = String.join(" ", notes);
+        return note.isEmpty() ? selection
+                : new SlotSelection(selection.date(), selection.start(), selection.duration(),
+                        selection.timeOptions(), note);
+    }
+
+    private ZoneId zoneOf(VenueInfo venue) {
+        return venue.timezone();
+    }
+
+    /** Fits one concrete day; null when closed or when no start time fits. */
+    private SlotSelection forDate(LocalDate date, LocalTime requestedStart, int duration,
+            Duration startStep, VenueInfo venue, ZoneId zone, List<String> notes) {
         DailyOpeningHours hours = venue.openingHours().on(date.getDayOfWeek()).orElse(null);
         if (hours == null) {
             return null;
         }
-        List<LocalTime> timeOptions = timeOptions(hours, duration, date, venue.timezone(), startStep);
+        List<LocalTime> timeOptions = timeOptions(hours, duration, date, zone, startStep);
         if (timeOptions.isEmpty()) {
             return null;
         }
@@ -94,7 +138,7 @@ class ReservationPageModelFactory {
         if (requestedStart != null && !start.equals(requestedStart)) {
             notes.add("The selected start time is not bookable; showing the first available start instead.");
         }
-        return new SlotSelection(date, start, duration, timeOptions, String.join(" ", notes));
+        return new SlotSelection(date, start, duration, timeOptions, null);
     }
 
     private ReservationPageModel availabilityModel(SlotSelection selection, VenueInfo venue, ZoneId zone,
@@ -113,7 +157,9 @@ class ReservationPageModelFactory {
                     selection.timeOptions(),
                     priceOf(resources),
                     mapFields(resources),
-                    selection.note());
+                    selection.note(),
+                    heldReservation(selection, resources),
+                    anyAvailable(resources));
         } catch (BusinessException exception) {
             log.info("Reservation page slot not bookable: {}", exception.getMessage());
             return new ReservationPageModel(
@@ -126,7 +172,9 @@ class ReservationPageModelFactory {
                     List.of(),
                     null,
                     List.of(),
-                    "The selected time is not bookable. Please choose another start time or duration.");
+                    "The selected time is not bookable. Please choose another start time or duration.",
+                    null,
+                    false);
         }
     }
 
@@ -141,7 +189,46 @@ class ReservationPageModelFactory {
                 List.of(),
                 null,
                 List.of(),
-                "The venue is closed on the selected day. Please choose another date.");
+                "No bookable slots within the booking window. Please choose another duration or check back later.",
+                null,
+                false);
+    }
+
+    /**
+     * UX hint for the overlapping-own-reservation business rule: when the current
+     * customer already holds an active reservation overlapping the selected slot,
+     * the page says so before they try to reserve. Anonymous visitors skip the
+     * check entirely.
+     */
+    private ReservationPageModel.HeldReservation heldReservation(SlotSelection selection,
+            List<ResourceAvailability> resources) {
+        CustomerId customer = currentCustomer.currentCustomerId();
+        if (resources.isEmpty()) {
+            return null;
+        }
+        ReservationPeriod period = ReservationPeriod.ofStartAndDuration(
+                selection.date().atTime(selection.start()).atZone(zone()).toInstant(),
+                Duration.ofMinutes(selection.duration()));
+        return reservationQueries.findActiveOverlappingCustomer(customer, period).stream()
+                .findFirst()
+                .map(held -> new ReservationPageModel.HeldReservation(
+                        held.id().value(),
+                        fieldName(held.resourceId()),
+                        held.start().atZone(zone()).toLocalTime(),
+                        held.end().atZone(zone()).toLocalTime()))
+                .orElse(null);
+    }
+
+    private ZoneId zone() {
+        return venueService.getVenue(venueService.singleVenueId()).timezone();
+    }
+
+    private String fieldName(ResourceId resourceId) {
+        try {
+            return resourceService.getResource(resourceId).name();
+        } catch (BusinessException gone) {
+            return "the selected field";
+        }
     }
 
     private List<Integer> durationOptions(BookingPolicy policy) {
@@ -180,6 +267,11 @@ class ReservationPageModelFactory {
         return requested != null && !requested.isBefore(today) && !requested.isAfter(maxDate)
                 ? java.util.Optional.of(requested)
                 : java.util.Optional.empty();
+    }
+
+    private boolean anyAvailable(List<ResourceAvailability> resources) {
+        return resources.stream()
+                .anyMatch(resource -> resource.status() == ResourceAvailabilityStatus.AVAILABLE);
     }
 
     private ReservationPageModel.MoneyView priceOf(List<ResourceAvailability> resources) {

@@ -12,7 +12,7 @@
 
   <!-- Slot selection: plain GET form — changing the slot re-renders the page
        without JavaScript. The interactive selection (T6) enhances this. -->
-  <form th:action="@{/reserve}" method="get" class="row g-3 align-items-end mb-2">
+  <form th:action="@{/reserve}" method="get" id="slot-form" class="row g-3 align-items-end mb-2">
     <div class="col-6 col-md-3">
       <label for="date" class="form-label">Date</label>
       <input type="date" id="date" name="date" class="form-control"
@@ -34,7 +34,7 @@
       </select>
     </div>
     <div class="col-6 col-md-3">
-      <button type="submit" class="btn btn-outline-primary w-100">Update availability</button>
+      <button type="submit" id="update-availability-button" class="btn btn-outline-primary w-100">Update availability</button>
     </div>
   </form>
 
@@ -48,7 +48,9 @@
   <div class="card mt-3" th:if="${page.price != null}">
     <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
       <div>
-        <div class="fw-bold">Selected slot</div>
+        <div class="fw-bold">
+          Field: <span id="selected-field-label" class="text-muted">— select a field on the map —</span>
+        </div>
         <div class="text-muted">
           <span th:text="${page.date}">2026-09-03</span>,
           <span th:text="${page.startTime}">18:00</span> –
@@ -59,11 +61,28 @@
         <div class="fw-bold" th:text="${page.price.amount} + ' ' + ${page.price.currency}">150 PLN</div>
         <div class="text-muted small">calculated by the venue for this slot</div>
       </div>
-      <!-- Submission (T6): requires an available field and an authenticated session;
-           the backend revalidates everything. -->
-      <button type="button" class="btn btn-primary btn-lg" disabled>Reserve</button>
+      <!-- Submission: the page is authenticated-only; the backend revalidates
+           everything and stale availability redirects back here with a fresh map. -->
+      <form th:action="@{/reserve}" method="post" id="reserve-form">
+        <input type="hidden" name="resourceId" id="hidden-resource-id" value="">
+        <input type="hidden" name="date" th:value="${page.date}">
+        <input type="hidden" name="start" th:value="${page.startTime}">
+        <input type="hidden" name="durationMinutes" th:value="${page.durationMinutes}">
+        <span th:if="${page.held != null}" tabindex="0" data-bs-toggle="tooltip"
+              th:title="|You already have a reservation for this slot: ${page.held.fieldName} (${page.held.start} – ${page.held.end}). Please choose a different time.|">
+          <button type="submit" class="btn btn-primary btn-lg" disabled>Reserve</button>
+        </span>
+        <span th:if="${page.held == null and !page.anyAvailable}" tabindex="0" data-bs-toggle="tooltip"
+              title="Reservation is not possible: all fields are reserved or blocked for this time window.">
+          <button type="submit" class="btn btn-secondary btn-lg" disabled>Reserve</button>
+        </span>
+        <button th:if="${page.held == null and page.anyAvailable}" type="submit" id="reserve-button"
+                class="btn btn-primary btn-lg" disabled>Reserve</button>
+      </form>
     </div>
   </div>
+
+  <script th:src="@{/js/reserve.js}" defer></script>
 </section>
 </body>
 </html>

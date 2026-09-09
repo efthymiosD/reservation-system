@@ -21,9 +21,15 @@ public record ReservationPageModel(
         List<LocalTime> timeOptions,
         MoneyView price,
         List<MapField> fields,
-        String message) {
+        String message,
+        HeldReservation held,
+        boolean anyAvailable) {
 
     public record MoneyView(BigDecimal amount, String currency) {
+    }
+
+    /** An own active reservation overlapping the selected slot, for the UI hint. */
+    public record HeldReservation(UUID reservationId, String fieldName, LocalTime start, LocalTime end) {
     }
 
     public record MapField(

@@ -1,6 +1,7 @@
 package com.decoupledx.reservation;
 
 import static com.decoupledx.reservation.testinfra.JwtSupport.customer;
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -22,10 +23,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
 /**
- * T5 reservation page (server side): the page is public, controls are shaped from
- * backend configuration (durations, grid, advance window), the SVG map renders
- * every resource with its status from the availability service, and the price is
- * backend-computed.
+ * T5/T6 reservation page (server side): the page is authenticated-only, controls
+ * are shaped from backend configuration (durations, grid, advance window), the
+ * SVG map renders every resource with its status from the availability service,
+ * and the price is backend-computed.
  */
 @AutoConfigureMockMvc
 class ReservationPageIntegrationTest extends PostgresIntegrationTest {
@@ -41,8 +42,8 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
     private JdbcTemplate jdbc;
 
     @Test
-    void pageIsPublicAndRendersVenueMapWithAllFields() throws Exception {
-        MvcResult result = mockMvc.perform(get("/reserve"))
+    void pageRendersVenueMapWithAllFieldsForAuthenticatedUsers() throws Exception {
+        MvcResult result = mockMvc.perform(get("/reserve").with(webUser("alice")))
                 .andExpect(status().isOk())
                 .andReturn();
         String html = result.getResponse().getContentAsString();
@@ -62,7 +63,7 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void controlOptionsComeFromBackendConfiguration() throws Exception {
-        String html = bodyOf(get("/reserve"));
+        String html = bodyOf(get("/reserve").with(webUser("alice")));
 
         // Duration options from the booking policy: 60..120 by 30.
         assertThat(html).contains("value=\"60\"");
@@ -80,7 +81,7 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void timeOptionsRespectTheSelectedDuration() throws Exception {
-        String html = flat(bodyOf(get("/reserve?date=2026-09-03&start=18:00&durationMinutes=90")));
+        String html = flat(bodyOf(get("/reserve?date=2026-09-03&start=18:00&durationMinutes=90").with(webUser("alice"))));
 
         assertThat(html).contains("2026-09-03");
         assertThat(html).contains("value=\"18:00\" selected=\"selected\"");
@@ -101,7 +102,8 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isCreated());
         insertBlock(UUID.fromString(FIELD_2), venueTime(18, 0), venueTime(19, 0));
 
-        String html = bodyOf(get("/reserve?date=2026-09-01&start=18:00&durationMinutes=60"));
+        String html = bodyOf(get("/reserve?date=2026-09-01&start=18:00&durationMinutes=60")
+                .with(webUser("alice")));
 
         assertThat(html).contains("resource--reserved");
         assertThat(html).contains("Field 1 — reserved — unavailable");
@@ -112,7 +114,7 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void outOfWindowDateFallsBackToTodayWithMessage() throws Exception {
-        String html = bodyOf(get("/reserve?date=2027-12-12"));
+        String html = bodyOf(get("/reserve?date=2027-12-12").with(webUser("alice")));
 
         assertThat(html).contains("2026-09-01");
         assertThat(html).contains("outside the booking window");
@@ -120,7 +122,7 @@ class ReservationPageIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void dateInputIsLimitedByAdvanceWindow() throws Exception {
-        String html = bodyOf(get("/reserve"));
+        String html = bodyOf(get("/reserve").with(webUser("alice")));
 
         assertThat(html).contains("min=\"2026-09-01\"");
         assertThat(html).contains("max=\"2026-10-01\"");  // today + P1M

@@ -49,14 +49,16 @@ main.flex-grow-1 {
   pointer-events: none;
 }
 
-/* Available: green, clickable */
+/* Available: green, clickable. The hover tint must not reach a selected field,
+   so hover is scoped away from .resource--selected (which JS adds on top of
+   .resource--available). */
 .resource--available rect {
   fill: #d1e7dd;
   stroke: #198754;
 }
 .resource--available .resource__state { fill: #146c43; }
 .resource--available { cursor: pointer; }
-.resource--available:hover rect { fill: #bcd9cd; }
+.resource--available:not(.resource--selected):hover rect { fill: #bcd9cd; }
 
 /* Selected: accent outline + tint (set by JS in T6) */
 .resource--selected rect {

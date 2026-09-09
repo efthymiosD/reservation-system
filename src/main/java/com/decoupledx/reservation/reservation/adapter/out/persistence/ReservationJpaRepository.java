@@ -51,4 +51,16 @@ interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID
             @Param("customerId") String customerId,
             @Param("startTime") Instant startTime,
             @Param("endTime") Instant endTime);
+
+    @Query("""
+            select r from ReservationEntity r
+            where r.customerId = :customerId
+              and r.status = 'ACTIVE'
+              and r.startTime < :endTime
+              and r.endTime > :startTime
+            """)
+    List<ReservationEntity> findActiveOverlappingCustomer(
+            @Param("customerId") String customerId,
+            @Param("startTime") Instant startTime,
+            @Param("endTime") Instant endTime);
 }
