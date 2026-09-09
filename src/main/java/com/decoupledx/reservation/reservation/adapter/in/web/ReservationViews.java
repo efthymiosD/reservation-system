@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.policy.domain.model.CancellationPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
+import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,8 +23,8 @@ import lombok.RequiredArgsConstructor;
 class ReservationViews {
 
     private final Clock clock;
-    private final PolicyService policyService;
-    private final VenueService venueService;
+    private final PolicyApi policyService;
+    private final VenueApi venueService;
 
     ReservationResponse from(ReservationInfo reservation) {
         return from(reservation, cancellationPolicy());
@@ -53,6 +53,6 @@ class ReservationViews {
     }
 
     private CancellationPolicy cancellationPolicy() {
-        return policyService.getCancellationPolicy(venueService.singleVenueId());
+        return policyService.cancellationPolicyFor(venueService.singleVenueId());
     }
 }

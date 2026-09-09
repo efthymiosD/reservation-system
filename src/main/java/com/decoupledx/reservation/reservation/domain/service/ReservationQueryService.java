@@ -1,14 +1,14 @@
 package com.decoupledx.reservation.reservation.domain.service;
 
 import java.util.List;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
-import com.decoupledx.reservation.reservation.domain.model.ReservationStatus;
+import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;

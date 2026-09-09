@@ -1,9 +1,11 @@
 package com.decoupledx.reservation.venue.domain.service;
 
 import java.util.List;
-import com.decoupledx.reservation.venue.domain.model.OpeningHours;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
-import com.decoupledx.reservation.venue.domain.model.VenueInfo;
+import java.util.UUID;
+import com.decoupledx.reservation.venue.api.OpeningHours;
+import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.venue.api.VenueInfo;
 
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
@@ -14,7 +16,7 @@ import com.decoupledx.reservation.venue.domain.port.VenueRepository;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class VenueService {
+public class VenueService implements VenueApi {
 
     private final VenueRepository venueRepository;
     private final TransactionRunner tx;
@@ -23,20 +25,34 @@ public class VenueService {
         return toInfo(singleVenue());
     }
 
+    @Override
+    public VenueInfo getVenue(UUID venueId) {
+        return getVenue(VenueId.of(venueId));
+    }
+
     public VenueInfo getVenue(VenueId venueId) {
         return toInfo(findVenue(venueId));
     }
 
-    public VenueId singleVenueId() {
+    @Override
+    public UUID singleVenueId() {
+        return singleVenueIdInternal().value();
+    }
+
+    private VenueId singleVenueIdInternal() {
         return singleVenue().getId();
     }
 
-    public void updateOpeningHours(VenueId venueId, OpeningHours openingHours) {
+    public void updateOpeningHours(UUID venueId, OpeningHours openingHours) {
         tx.run(() -> {
             Venue venue = findVenue(venueId);
             venue.updateOpeningHours(openingHours);
             venueRepository.save(venue);
         });
+    }
+
+    private Venue findVenue(UUID venueId) {
+        return findVenue(VenueId.of(venueId));
     }
 
     private Venue findVenue(VenueId venueId) {

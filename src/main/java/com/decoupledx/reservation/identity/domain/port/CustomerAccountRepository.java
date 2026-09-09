@@ -2,7 +2,7 @@ package com.decoupledx.reservation.identity.domain.port;
 
 import java.util.Optional;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 
 public interface CustomerAccountRepository {
 

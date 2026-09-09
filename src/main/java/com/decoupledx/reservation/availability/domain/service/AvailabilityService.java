@@ -7,41 +7,44 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.decoupledx.reservation.availability.domain.model.AvailableResource;
-import com.decoupledx.reservation.availability.domain.model.ResourceAvailability;
-import com.decoupledx.reservation.availability.domain.model.ResourceAvailabilityStatus;
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
-import com.decoupledx.reservation.pricing.domain.model.PricingPolicy;
-import com.decoupledx.reservation.pricing.domain.service.PricingService;
-import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockInfo;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.model.ResourceInfo;
-import com.decoupledx.reservation.resource.domain.service.ResourceService;
+import com.decoupledx.reservation.availability.api.AvailabilityApi;
+import com.decoupledx.reservation.availability.api.AvailableResource;
+import com.decoupledx.reservation.availability.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.pricing.api.PricingPolicy;
+import com.decoupledx.reservation.pricing.api.PricingApi;
+import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceInfo;
+import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.Money;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
-import com.decoupledx.reservation.venue.domain.model.VenueInfo;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AvailabilityService {
+public class AvailabilityService implements AvailabilityApi {
 
-    private final VenueService venueService;
-    private final ResourceService resourceService;
-    private final ReservationQueryService reservationQueries;
-    private final PolicyService policyService;
-    private final PricingService pricingService;
+    private final VenueApi venueService;
+    private final ResourceApi resourceService;
+    private final ReservationApi reservationQueries;
+    private final PolicyApi policyService;
+    private final PricingApi pricingService;
     private final Clock clock;
 
+    @Override
     public List<AvailableResource> findAvailable(LocalDate date, LocalTime startTime, int durationMinutes) {
         Slot slot = validatedSlot(date, startTime, durationMinutes);
         List<ResourceInfo> activeResources = activeResources(slot.venue());
@@ -62,7 +65,8 @@ public class AvailabilityService {
      * BLOCKED (overlapping active resource block). Includes the backend-computed
      * slot price so clients never calculate prices themselves.
      */
-    public List<ResourceAvailability> findResourceAvailability(LocalDate date, LocalTime startTime, int durationMinutes) {
+    @Override
+    public List<ResourceAvailability> resourceAvailability(LocalDate date, LocalTime startTime, int durationMinutes) {
         Slot slot = validatedSlot(date, startTime, durationMinutes);
         List<ResourceInfo> activeResources = activeResources(slot.venue());
         if (activeResources.isEmpty()) {
@@ -120,7 +124,7 @@ public class AvailabilityService {
 
     private void validateSlotRequest(VenueInfo venue, LocalDate date, ReservationPeriod period) {
         ZoneId zone = venue.timezone();
-        BookingPolicy bookingPolicy = policyService.getBookingPolicy(venue.id());
+        BookingPolicy bookingPolicy = policyService.bookingPolicyFor(venue.id().value());
         bookingPolicy.validateDuration(period.duration());
         if (!venue.openingHours().fits(period, zone)) {
             throw new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS);
@@ -134,23 +138,23 @@ public class AvailabilityService {
     }
 
     private Money priceFor(VenueId venueId, ReservationPeriod period) {
-        PricingPolicy pricingPolicy = pricingService.getPricingPolicy(venueId);
+        PricingPolicy pricingPolicy = pricingService.pricingPolicyFor(venueId.value());
         return pricingPolicy.calculatePrice(period);
     }
 
     private List<ResourceInfo> activeResources(VenueInfo venue) {
-        return resourceService.findActiveResources(venue.id());
+        return resourceService.findActiveResources(venue.id().value());
     }
 
     private Set<ResourceId> blockedResourceIds(List<ResourceInfo> resources, ReservationPeriod period) {
-        List<ResourceId> resourceIds = resources.stream().map(ResourceInfo::id).toList();
+        List<UUID> resourceIds = resources.stream().map(info -> info.id().value()).toList();
         return resourceService.findActiveBlocksOverlapping(resourceIds, period).stream()
                 .map(ResourceBlockInfo::resourceId)
                 .collect(Collectors.toSet());
     }
 
     private boolean isFree(ResourceId resourceId, ReservationPeriod period) {
-        return reservationQueries.findActiveOverlappingResource(resourceId, period).isEmpty();
+        return reservationQueries.isSlotFree(resourceId.value(), period);
     }
 
     private record Slot(VenueInfo venue, ReservationPeriod period, Money price) {

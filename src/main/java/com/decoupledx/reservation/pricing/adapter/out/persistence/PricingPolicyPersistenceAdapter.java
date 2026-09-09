@@ -7,10 +7,10 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.pricing.domain.model.PricingPolicy;
+import com.decoupledx.reservation.pricing.api.PricingPolicy;
 import com.decoupledx.reservation.pricing.domain.port.PricingPolicyRepository;
 import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+import com.decoupledx.reservation.venue.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 

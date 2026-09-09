@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.availability.domain.model.ResourceAvailability;
+import com.decoupledx.reservation.availability.api.ResourceAvailability;
 import com.decoupledx.reservation.availability.domain.service.AvailabilityService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ class PublicAvailabilityController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime start,
             @RequestParam int durationMinutes) {
         List<ResourceAvailability> resources =
-                availabilityService.findResourceAvailability(date, start, durationMinutes);
+                availabilityService.resourceAvailability(date, start, durationMinutes);
         return new AvailabilityMapResponse(
                 date,
                 start,

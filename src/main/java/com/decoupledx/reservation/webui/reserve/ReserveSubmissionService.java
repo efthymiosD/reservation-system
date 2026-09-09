@@ -6,10 +6,9 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
-import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +21,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class ReserveSubmissionService {
 
-    private final CreateReservationService createReservation;
+    private final ReservationApi createReservation;
 
     ReservationInfo submit(UUID resourceId, LocalDate date, LocalTime start, int durationMinutes,
             CustomerId customer) {
-        return createReservation.create(
-                ResourceId.of(resourceId), date.atTime(start), durationMinutes, customer);
+        return createReservation.create(resourceId, date.atTime(start), durationMinutes, customer);
     }
 }

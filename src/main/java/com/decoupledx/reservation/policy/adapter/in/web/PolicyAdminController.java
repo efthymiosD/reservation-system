@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.model.CancellationPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.venue.api.VenueApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -33,12 +33,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class PolicyAdminController {
 
-    private final PolicyService policyService;
-    private final VenueService venueService;
+    private final PolicyApi policyService;
+    private final VenueApi venueService;
 
     @GetMapping("/booking-policy")
     BookingPolicyGetResponse getBookingPolicy() {
-        BookingPolicy policy = policyService.getBookingPolicy(venueService.singleVenueId());
+        BookingPolicy policy = policyService.bookingPolicyFor(venueService.singleVenueId());
         return new BookingPolicyGetResponse(
                 policy.minDuration().toMinutes(),
                 policy.maxDuration().toMinutes(),
@@ -49,7 +49,7 @@ class PolicyAdminController {
 
     @GetMapping("/cancellation-policy")
     CancellationPolicyGetResponse getCancellationPolicy() {
-        CancellationPolicy policy = policyService.getCancellationPolicy(venueService.singleVenueId());
+        CancellationPolicy policy = policyService.cancellationPolicyFor(venueService.singleVenueId());
         return new CancellationPolicyGetResponse(policy.deadlineBeforeStart().toMinutes());
     }
 

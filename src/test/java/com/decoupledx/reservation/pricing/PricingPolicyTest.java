@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import com.decoupledx.reservation.shared.domain.Money;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.pricing.domain.model.PricingPolicy;
+import com.decoupledx.reservation.pricing.api.PricingPolicy;
 
 class PricingPolicyTest {
 

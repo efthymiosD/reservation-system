@@ -6,13 +6,13 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupId;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.model.ResourceStatus;
-import com.decoupledx.reservation.resource.domain.model.ResourceType;
+import com.decoupledx.reservation.resource.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceStatus;
+import com.decoupledx.reservation.resource.api.ResourceType;
 import com.decoupledx.reservation.resource.domain.model.Resource;
 import com.decoupledx.reservation.resource.domain.port.ResourceRepository;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+import com.decoupledx.reservation.venue.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 

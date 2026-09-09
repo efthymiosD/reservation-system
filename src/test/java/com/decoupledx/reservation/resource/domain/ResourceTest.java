@@ -7,10 +7,10 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupId;
-import com.decoupledx.reservation.resource.domain.model.ResourceStatus;
-import com.decoupledx.reservation.resource.domain.model.ResourceType;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+import com.decoupledx.reservation.resource.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.api.ResourceStatus;
+import com.decoupledx.reservation.resource.api.ResourceType;
+import com.decoupledx.reservation.venue.api.VenueId;
 import com.decoupledx.reservation.resource.domain.model.Resource;
 
 class ResourceTest {

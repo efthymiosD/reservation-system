@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.availability.domain.service.AvailabilityService;
-import com.decoupledx.reservation.availability.domain.model.AvailableResource;
+import com.decoupledx.reservation.availability.api.AvailableResource;
 
 import lombok.RequiredArgsConstructor;
 

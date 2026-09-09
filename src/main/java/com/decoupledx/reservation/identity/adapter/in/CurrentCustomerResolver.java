@@ -5,7 +5,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class CurrentCustomerResolver {
+public class CurrentCustomerResolver implements CurrentCustomerApi {
 
     private final CustomerAccountService customerAccounts;
 

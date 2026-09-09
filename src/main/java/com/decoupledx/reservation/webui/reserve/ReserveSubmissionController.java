@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 
@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 class ReserveSubmissionController {
 
     private final ReserveSubmissionService submission;
-    private final CurrentCustomerResolver currentCustomer;
+    private final CurrentCustomerApi currentCustomer;
 
     @PostMapping("/reserve")
     String reserve(@RequestParam UUID resourceId,

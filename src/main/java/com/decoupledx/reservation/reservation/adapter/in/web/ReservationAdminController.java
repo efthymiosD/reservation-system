@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService.ReservationPage;
-import com.decoupledx.reservation.reservation.domain.model.ReservationStatus;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
 
 import lombok.RequiredArgsConstructor;
 

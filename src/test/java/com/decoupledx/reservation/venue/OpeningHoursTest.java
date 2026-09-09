@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.domain.model.DailyOpeningHours;
-import com.decoupledx.reservation.venue.domain.model.OpeningHours;
+import com.decoupledx.reservation.venue.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.api.OpeningHours;
 
 class OpeningHoursTest {
 

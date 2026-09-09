@@ -4,9 +4,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,12 +19,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class PublicPolicyController {
 
-    private final PolicyService policyService;
-    private final VenueService venueService;
+    private final PolicyApi policyService;
+    private final VenueApi venueService;
 
     @GetMapping("/booking-policy")
     BookingPolicyPublicResponse bookingPolicy() {
-        BookingPolicy policy = policyService.getBookingPolicy(venueService.singleVenueId());
+        BookingPolicy policy = policyService.bookingPolicyFor(venueService.singleVenueId());
         return new BookingPolicyPublicResponse(
                 policy.minDuration().toMinutes(),
                 policy.maxDuration().toMinutes(),

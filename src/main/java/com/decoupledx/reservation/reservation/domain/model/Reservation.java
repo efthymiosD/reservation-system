@@ -3,11 +3,11 @@ package com.decoupledx.reservation.reservation.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.policy.domain.model.CancellationPolicy;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationStatus;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.Money;

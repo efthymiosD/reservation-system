@@ -3,10 +3,10 @@ package com.decoupledx.reservation.resource.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.resource.domain.model.BlockStatus;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockId;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.resource.api.BlockStatus;
+import com.decoupledx.reservation.resource.api.ResourceBlockId;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;

@@ -3,15 +3,18 @@ package com.decoupledx.reservation.resource.domain.service;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
-import com.decoupledx.reservation.resource.domain.model.CreateBlockCommand;
-import com.decoupledx.reservation.resource.domain.model.CreateResourceCommand;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockId;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockInfo;
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.model.ResourceInfo;
+import com.decoupledx.reservation.resource.api.CreateBlockCommand;
+import java.util.UUID;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.resource.api.ResourceApi;
+import com.decoupledx.reservation.resource.domain.model.CreateResourceCommand;
+import com.decoupledx.reservation.resource.api.ResourceBlockId;
+import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
+import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceInfo;
+
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.resource.domain.model.Resource;
 import com.decoupledx.reservation.resource.domain.model.ResourceBlock;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroup;
@@ -22,17 +25,47 @@ import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+import com.decoupledx.reservation.venue.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class ResourceService {
+public class ResourceService implements ResourceApi {
 
     private final ResourceRepository resources;
     private final ResourceGroupRepository groups;
     private final ResourceBlockRepository blocks;
     private final TransactionRunner tx;
+
+    @Override
+    public ResourceInfo getResource(UUID resourceId) {
+        return getResource(ResourceId.of(resourceId));
+    }
+
+    @Override
+    public ResourceInfo lockResource(UUID resourceId) {
+        return lockResource(ResourceId.of(resourceId));
+    }
+
+    @Override
+    public List<ResourceInfo> findActiveResources(UUID venueId) {
+        return findActiveResources(VenueId.of(venueId));
+    }
+
+    @Override
+    public ResourceBlockInfo getBlock(UUID blockId) {
+        return getBlock(ResourceBlockId.of(blockId));
+    }
+
+    @Override
+    public void cancelBlock(UUID blockId, CustomerId actor) {
+        cancelBlock(ResourceBlockId.of(blockId), actor);
+    }
+
+    @Override
+    public List<ResourceBlockInfo> findBlocksByResource(UUID resourceId) {
+        return findBlocksByResource(ResourceId.of(resourceId));
+    }
 
     public ResourceInfo getResource(ResourceId resourceId) {
         return toInfo(loadResource(resourceId));
@@ -116,10 +149,18 @@ public class ResourceService {
         return blocks.findAll().stream().map(this::toBlockInfo).toList();
     }
 
-    public List<ResourceBlockInfo> findActiveBlocksOverlapping(Collection<ResourceId> resourceIds,
-                                                               ReservationPeriod period) {
-        return blocks.findActiveOverlapping(resourceIds, period).stream().map(this::toBlockInfo).toList();
+    @Override
+    public List<ResourceBlockInfo> findActiveBlocksOverlapping(Collection<UUID> resourceIds,
+            ReservationPeriod period) {
+        return blocksOverlapping(
+                resourceIds.stream().map(ResourceId::of).toList(), period);
     }
+
+    private List<ResourceBlockInfo> blocksOverlapping(Collection<ResourceId> typedResourceIds,
+            ReservationPeriod period) {
+        return blocks.findActiveOverlapping(typedResourceIds, period).stream().map(this::toBlockInfo).toList();
+    }
+
 
     public void cancelBlock(ResourceBlockId blockId, CustomerId actor) {
         tx.run(() -> {

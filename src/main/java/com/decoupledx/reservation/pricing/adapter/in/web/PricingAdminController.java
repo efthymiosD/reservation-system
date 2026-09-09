@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.pricing.domain.model.PricingPolicy;
-import com.decoupledx.reservation.pricing.domain.service.PricingService;
+import com.decoupledx.reservation.pricing.api.PricingPolicy;
+import com.decoupledx.reservation.pricing.api.PricingApi;
+import com.decoupledx.reservation.venue.api.VenueApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -31,12 +31,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class PricingAdminController {
 
-    private final PricingService pricingService;
-    private final VenueService venueService;
+    private final PricingApi pricingService;
+    private final VenueApi venueService;
 
     @GetMapping
     PricingGetResponse getPricing() {
-        PricingPolicy policy = pricingService.getPricingPolicy(venueService.singleVenueId());
+        PricingPolicy policy = pricingService.pricingPolicyFor(venueService.singleVenueId());
         return new PricingGetResponse(
                 policy.hourlyPrice().amount(),
                 policy.hourlyPrice().currency().getCurrencyCode());

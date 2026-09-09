@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
 
 class BookingPolicyTest {
 
