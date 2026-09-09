@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Signed out', ~{::section})}">
+<head>
+  <title>Signed out</title>
+</head>
+<body>
+<section class="container py-5 text-center">
+  <h1 class="display-6">You have been signed out</h1>
+  <p class="lead text-muted">Thanks for playing — see you on the pitch.</p>
+  <a class="btn btn-primary" th:href="@{/}">Back to home</a>
+  <a class="btn btn-outline-primary" th:href="@{/oauth2/authorization/keycloak}">Log in</a>
+</section>
+</body>
+</html>

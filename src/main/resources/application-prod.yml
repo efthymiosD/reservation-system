@@ -22,6 +22,7 @@ app:
     # REQUIRED: a real OIDC issuer. There must be no dev-key fallback in prod.
     issuer-uri: ${JWT_ISSUER_URI}
     allow-dev-key: false
+    end-session-uri: ${KEYCLOAK_END_SESSION_URI}
 
 spring:
   security:

@@ -10,6 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
@@ -67,5 +70,33 @@ class WebSecurityIntegrationTest extends PostgresIntegrationTest {
     void apiStillAcceptsBearerTokens() throws Exception {
         mockMvc.perform(get("/api/reservations").with(customer("user-1")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void logoutRedirectsToKeycloakEndSessionWithIdTokenHint() throws Exception {
+        // Single logout: the browser is sent to Keycloak's end-session endpoint so
+        // the SSO session dies too — otherwise 'Log in' would re-authenticate
+        // silently as the previous user.
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .post("/logout")
+                        .with(com.decoupledx.reservation.testinfra.WebUserSupport.webUser("alice"))
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString(
+                                "http://localhost:8081/realms/reservation/protocol/openid-connect/logout")))
+                .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString("id_token_hint=")))
+                .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString(
+                                "post_logout_redirect_uri=http%3A%2F%2Flocalhost%2Flogged-out")));
+    }
+
+    @Test
+    void loggedOutPageIsAccessibleWithoutAuthentication() throws Exception {
+        MvcResult result = mockMvc.perform(get("/logged-out"))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(result.getResponse().getContentAsString()).contains("You have been signed out");
     }
 }

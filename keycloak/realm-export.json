@@ -67,6 +67,9 @@
       "webOrigins": [
         "http://localhost:8080"
       ],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8080/logged-out"
+      },
       "defaultClientScopes": [
         "web-origins",
         "acr",
