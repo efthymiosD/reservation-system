@@ -3,11 +3,11 @@ package com.decoupledx.reservation.reservation.domain.port;
 import java.util.List;
 import java.util.Optional;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationStatus;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 
 public interface ReservationRepository {

@@ -7,26 +7,27 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 import com.decoupledx.reservation.reservation.domain.model.CreateReservationCommand;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
-import com.decoupledx.reservation.pricing.domain.service.PricingService;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.pricing.api.PricingApi;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.model.ResourceInfo;
-import com.decoupledx.reservation.resource.domain.service.ResourceService;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceInfo;
+import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.Money;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.domain.model.OpeningHours;
-import com.decoupledx.reservation.venue.domain.model.VenueInfo;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.api.OpeningHours;
+import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CreateReservationService {
 
-    private final ResourceService resourceService;
-    private final VenueService venueService;
-    private final PolicyService policyService;
-    private final PricingService pricingService;
+    private final ResourceApi resourceService;
+    private final VenueApi venueService;
+    private final PolicyApi policyService;
+    private final PricingApi pricingService;
     private final ReservationRepository reservations;
     private final Clock clock;
     private final TransactionRunner tx;
@@ -48,11 +49,11 @@ public class CreateReservationService {
      * resolves the venue timezone and derives the UTC booking period itself, so
      * callers never touch timezone or period arithmetic.
      */
-    public ReservationInfo create(ResourceId resourceId, LocalDateTime startTime,
+    public ReservationInfo create(UUID resourceId, LocalDateTime startTime,
             int durationMinutes, CustomerId customerId) {
         Instant start = startTime.atZone(venueZone()).toInstant();
         Instant end = start.plus(Duration.ofMinutes(durationMinutes));
-        return create(new CreateReservationCommand(resourceId, start, end), customerId);
+        return create(new CreateReservationCommand(ResourceId.of(resourceId), start, end), customerId);
     }
 
     private ZoneId venueZone() {
@@ -64,12 +65,12 @@ public class CreateReservationService {
     }
 
     private ReservationInfo doCreate(CreateReservationCommand command, CustomerId customerId) {
-        ResourceInfo resource = resourceService.lockResource(command.resourceId());
+        ResourceInfo resource = resourceService.lockResource(command.resourceId().value());
         if (!resource.isActive()) {
             throw new BusinessException(ErrorCode.RESOURCE_INACTIVE);
         }
 
-        VenueInfo venue = venueService.getVenue(resource.venueId());
+        VenueInfo venue = venueService.getVenue(resource.venueId().value());
         Instant now = clock.instant();
         ReservationPeriod period = ReservationPeriod.of(command.start(), command.end());
 
@@ -77,7 +78,7 @@ public class CreateReservationService {
         requireNoBlockConflict(command.resourceId(), period);
         requireNoCustomerOverlap(customerId, period);
 
-        Money price = pricingService.getPricingPolicy(resource.venueId()).calculatePrice(period);
+        Money price = pricingService.pricingPolicyFor(resource.venueId().value()).calculatePrice(period);
         Reservation reservation = Reservation.create(command.resourceId(), customerId, period, price, now);
         ReservationInfo saved = toInfo(reservations.save(reservation));
         log.info("Reservation created id={} resourceId={} customerId={} price={}",
@@ -88,7 +89,7 @@ public class CreateReservationService {
     private void validatePeriod(CreateReservationCommand command, ReservationPeriod period,
                                 VenueInfo venue, Instant now) {
         ZoneId zone = venue.timezone();
-        BookingPolicy bookingPolicy = policyService.getBookingPolicy(venue.id());
+        BookingPolicy bookingPolicy = policyService.bookingPolicyFor(venue.id().value());
         bookingPolicy.validateDuration(period.duration());
 
         OpeningHours openingHours = venue.openingHours();
@@ -105,7 +106,7 @@ public class CreateReservationService {
 
     private void requireNoBlockConflict(ResourceId resourceId, ReservationPeriod period) {
         boolean blocked = !resourceService
-                .findActiveBlocksOverlapping(List.of(resourceId), period)
+                .findActiveBlocksOverlapping(List.of(resourceId.value()), period)
                 .isEmpty();
         if (blocked) {
             throw new BusinessException(ErrorCode.RESOURCE_NO_LONGER_AVAILABLE);

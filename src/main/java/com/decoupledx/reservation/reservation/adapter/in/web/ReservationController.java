@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationStatus;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
 import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceId;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -33,14 +33,14 @@ class ReservationController {
     private final CreateReservationService createReservation;
     private final CancelReservationService cancelReservation;
     private final ReservationQueryService reservationQueries;
-    private final CurrentCustomerResolver currentCustomer;
+    private final CurrentCustomerApi currentCustomer;
     private final ReservationViews views;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     ReservationResponse create(@Valid @RequestBody CreateReservationRequest request) {
         return views.from(createReservation.create(
-                ResourceId.of(request.resourceId()),
+                request.resourceId(),
                 request.startTime(),
                 request.durationMinutes(),
                 currentCustomer.currentCustomerId()));

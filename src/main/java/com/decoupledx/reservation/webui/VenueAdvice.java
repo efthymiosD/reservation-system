@@ -8,9 +8,9 @@ import java.util.Optional;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.decoupledx.reservation.venue.domain.model.DailyOpeningHours;
-import com.decoupledx.reservation.venue.domain.model.VenueInfo;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class VenueAdvice {
 
-    private final VenueService venueService;
+    private final VenueApi venueService;
 
     @ModelAttribute("venue")
     VenueInfo venue() {

@@ -2,7 +2,7 @@ package com.decoupledx.reservation.identity.domain.service;
 
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 
 import lombok.RequiredArgsConstructor;
 

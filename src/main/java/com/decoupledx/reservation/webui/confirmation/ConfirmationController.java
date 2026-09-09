@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 class ConfirmationController {
 
     private final ConfirmationModelFactory confirmationModel;
-    private final CurrentCustomerResolver currentCustomer;
+    private final CurrentCustomerApi currentCustomer;
 
     @GetMapping("/reservations/{reservationId}/confirmation")
     String confirmation(@PathVariable UUID reservationId, Model model, RedirectAttributes redirect) {

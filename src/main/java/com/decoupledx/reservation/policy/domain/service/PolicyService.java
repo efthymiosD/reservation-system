@@ -3,18 +3,40 @@ package com.decoupledx.reservation.policy.domain.service;
 import com.decoupledx.reservation.policy.domain.port.BookingPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.CancellationPolicyRepository;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.model.CancellationPolicy;
+import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import java.util.UUID;
+import com.decoupledx.reservation.policy.api.CancellationPolicy;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class PolicyService {
+public class PolicyService implements PolicyApi {
 
     private final BookingPolicyRepository bookingPolicies;
     private final CancellationPolicyRepository cancellationPolicies;
     private final TransactionRunner tx;
+
+    @Override
+    public BookingPolicy bookingPolicyFor(UUID venueId) {
+        return getBookingPolicy(VenueId.of(venueId));
+    }
+
+    @Override
+    public CancellationPolicy cancellationPolicyFor(UUID venueId) {
+        return getCancellationPolicy(VenueId.of(venueId));
+    }
+
+    @Override
+    public void updateBookingPolicy(UUID venueId, BookingPolicy policy) {
+        updateBookingPolicy(VenueId.of(venueId), policy);
+    }
+
+    @Override
+    public void updateCancellationPolicy(UUID venueId, CancellationPolicy policy) {
+        updateCancellationPolicy(VenueId.of(venueId), policy);
+    }
 
     public BookingPolicy getBookingPolicy(VenueId venueId) {
         return bookingPolicies.findByVenueId(venueId)

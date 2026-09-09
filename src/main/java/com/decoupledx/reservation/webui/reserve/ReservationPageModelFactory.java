@@ -11,21 +11,21 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.availability.domain.model.ResourceAvailability;
-import com.decoupledx.reservation.availability.domain.model.ResourceAvailabilityStatus;
-import com.decoupledx.reservation.availability.domain.service.AvailabilityService;
-import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.policy.domain.model.BookingPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
-import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.service.ResourceService;
+import com.decoupledx.reservation.availability.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.availability.api.AvailabilityApi;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.domain.model.DailyOpeningHours;
-import com.decoupledx.reservation.venue.domain.model.VenueInfo;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,19 +44,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 class ReservationPageModelFactory {
 
-    private final PolicyService policyService;
-    private final AvailabilityService availabilityService;
-    private final VenueService venueService;
+    private final PolicyApi policyService;
+    private final AvailabilityApi availabilityService;
+    private final VenueApi venueService;
     private final VenueLayoutLoader venueLayout;
-    private final ReservationQueryService reservationQueries;
-    private final ResourceService resourceService;
-    private final CurrentCustomerResolver currentCustomer;
+    private final ReservationApi reservationQueries;
+    private final ResourceApi resourceService;
+    private final CurrentCustomerApi currentCustomer;
     private final Clock clock;
 
     ReservationPageModel build(LocalDate requestedDate, LocalTime requestedStart, Integer requestedDuration) {
         VenueInfo venue = venueService.getVenue(venueService.singleVenueId());
         ZoneId zone = venue.timezone();
-        BookingPolicy policy = policyService.getBookingPolicy(venue.id());
+        BookingPolicy policy = policyService.bookingPolicyFor(venue.id().value());
 
         LocalDate today = clock.instant().atZone(zone).toLocalDate();
         LocalDate maxDate = today.plus(policy.maxAdvanceBooking());
@@ -145,7 +145,7 @@ class ReservationPageModelFactory {
             LocalDate today, LocalDate maxDate, List<Integer> durationOptions) {
 
         try {
-            List<ResourceAvailability> resources = availabilityService.findResourceAvailability(
+            List<ResourceAvailability> resources = availabilityService.resourceAvailability(
                     selection.date(), selection.start(), selection.duration());
             return new ReservationPageModel(
                     selection.date(),
@@ -225,7 +225,7 @@ class ReservationPageModelFactory {
 
     private String fieldName(ResourceId resourceId) {
         try {
-            return resourceService.getResource(resourceId).name();
+            return resourceService.getResource(resourceId.value()).name();
         } catch (BusinessException gone) {
             return "the selected field";
         }

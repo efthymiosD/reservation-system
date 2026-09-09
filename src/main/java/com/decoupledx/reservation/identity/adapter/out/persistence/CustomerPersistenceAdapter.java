@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 
 import lombok.RequiredArgsConstructor;

@@ -16,12 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.resource.domain.model.CreateResourceCommand;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupId;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
-import com.decoupledx.reservation.resource.domain.model.ResourceInfo;
+import com.decoupledx.reservation.resource.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.api.ResourceInfo;
 import com.decoupledx.reservation.resource.domain.service.ResourceService;
-import com.decoupledx.reservation.resource.domain.model.ResourceType;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.resource.api.ResourceType;
+import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.venue.api.VenueId;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -35,18 +36,18 @@ import lombok.RequiredArgsConstructor;
 class ResourceAdminController {
 
     private final ResourceService resourceService;
-    private final VenueService venueService;
+    private final VenueApi venueService;
 
     @GetMapping("/resources")
     List<ResourceResponse> listResources() {
-        return resourceService.findResources(venueService.singleVenueId()).stream()
+        return resourceService.findResources(VenueId.of(venueService.singleVenueId())).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @GetMapping("/resource-groups")
     List<ResourceGroupResponse> listResourceGroups() {
-        return resourceService.findResourceGroups(venueService.singleVenueId()).stream()
+        return resourceService.findResourceGroups(VenueId.of(venueService.singleVenueId())).stream()
                 .map(group -> new ResourceGroupResponse(
                         group.id().value(), group.name(), group.type().name()))
                 .toList();
@@ -56,7 +57,7 @@ class ResourceAdminController {
     @ResponseStatus(HttpStatus.CREATED)
     ResourceResponse create(@Valid @RequestBody CreateResourceRequest request) {
         CreateResourceCommand command = new CreateResourceCommand(
-                venueService.singleVenueId(),
+                VenueId.of(venueService.singleVenueId()),
                 ResourceGroupId.of(request.groupId()),
                 request.name(),
                 request.code(),

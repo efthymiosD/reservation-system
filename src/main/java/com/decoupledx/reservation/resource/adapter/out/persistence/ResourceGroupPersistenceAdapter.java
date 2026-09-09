@@ -6,11 +6,11 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupId;
-import com.decoupledx.reservation.resource.domain.model.ResourceType;
+import com.decoupledx.reservation.resource.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.api.ResourceType;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroup;
 import com.decoupledx.reservation.resource.domain.port.ResourceGroupRepository;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+import com.decoupledx.reservation.venue.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 

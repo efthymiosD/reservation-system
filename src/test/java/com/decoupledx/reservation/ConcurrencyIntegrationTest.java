@@ -20,11 +20,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.decoupledx.reservation.administration.domain.service.BlockResourceService;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.reservation.domain.model.CreateReservationCommand;
 import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
-import com.decoupledx.reservation.resource.domain.model.CreateBlockCommand;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.resource.api.CreateBlockCommand;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;

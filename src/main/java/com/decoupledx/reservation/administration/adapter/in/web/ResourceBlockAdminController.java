@@ -19,14 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.administration.domain.service.BlockResourceService;
 import com.decoupledx.reservation.administration.domain.service.OverrideResourceBlockService;
-import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.resource.domain.model.BlockStatus;
-import com.decoupledx.reservation.resource.domain.model.CreateBlockCommand;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockId;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockInfo;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.resource.api.BlockStatus;
+import com.decoupledx.reservation.resource.api.CreateBlockCommand;
+import com.decoupledx.reservation.resource.api.ResourceBlockId;
+import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -41,8 +41,8 @@ class ResourceBlockAdminController {
 
     private final BlockResourceService blockResource;
     private final OverrideResourceBlockService overrideResourceBlock;
-    private final VenueService venueService;
-    private final CurrentCustomerResolver currentCustomer;
+    private final VenueApi venueService;
+    private final CurrentCustomerApi currentCustomer;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

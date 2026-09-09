@@ -10,10 +10,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.resource.domain.model.BlockStatus;
-import com.decoupledx.reservation.resource.domain.model.ResourceBlockId;
-import com.decoupledx.reservation.resource.domain.model.ResourceId;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.resource.api.BlockStatus;
+import com.decoupledx.reservation.resource.api.ResourceBlockId;
+import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.resource.domain.model.ResourceBlock;
 import com.decoupledx.reservation.resource.domain.port.ResourceBlockRepository;
 import com.decoupledx.reservation.shared.domain.BusinessException;

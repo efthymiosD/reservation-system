@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 @AutoConfigureMockMvc

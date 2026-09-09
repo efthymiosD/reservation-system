@@ -1,18 +1,19 @@
 package com.decoupledx.reservation.reservation.domain.service;
 
 import java.time.Clock;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
+import java.util.UUID;
+import com.decoupledx.reservation.reservation.api.ReservationId;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.policy.domain.model.CancellationPolicy;
-import com.decoupledx.reservation.policy.domain.service.PolicyService;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.api.PolicyApi;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.domain.service.ResourceService;
+import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.domain.model.VenueId;
+
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CancelReservationService {
 
     private final ReservationRepository reservations;
-    private final ResourceService resourceService;
-    private final PolicyService policyService;
+    private final ResourceApi resourceService;
+    private final PolicyApi policyService;
     private final Clock clock;
     private final TransactionRunner tx;
 
@@ -33,7 +34,7 @@ public class CancelReservationService {
             if (!reservation.getCustomerId().equals(customerId)) {
                 throw new BusinessException(ErrorCode.RESERVATION_NOT_FOUND);
             }
-            CancellationPolicy currentPolicy = policyService.getCancellationPolicy(venueIdOf(reservation));
+            CancellationPolicy currentPolicy = policyService.cancellationPolicyFor(venueIdOf(reservation));
             reservation.cancel(clock.instant(), currentPolicy);
             reservations.save(reservation);
             log.info("Reservation cancelled id={} customerId={} actor=customer",
@@ -56,7 +57,7 @@ public class CancelReservationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
     }
 
-    private VenueId venueIdOf(Reservation reservation) {
-        return resourceService.getResource(reservation.getResourceId()).venueId();
+    private UUID venueIdOf(Reservation reservation) {
+        return resourceService.getResource(reservation.getResourceId().value()).venueId().value();
     }
 }

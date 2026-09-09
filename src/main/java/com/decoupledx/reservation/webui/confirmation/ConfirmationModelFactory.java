@@ -8,12 +8,11 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationId;
-import com.decoupledx.reservation.reservation.domain.model.ReservationInfo;
-import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.resource.domain.service.ResourceService;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.resource.api.ResourceApi;
+import com.decoupledx.reservation.venue.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,14 +25,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class ConfirmationModelFactory {
 
-    private final ReservationQueryService reservationQueries;
-    private final ResourceService resourceService;
-    private final VenueService venueService;
+    private final ReservationApi reservationQueries;
+    private final ResourceApi resourceService;
+    private final VenueApi venueService;
 
     ConfirmationModel build(UUID reservationId, CustomerId customer) {
-        ReservationInfo reservation = reservationQueries.getReservation(
-                ReservationId.of(reservationId), customer);
-        String fieldName = resourceService.getResource(reservation.resourceId()).name();
+        ReservationInfo reservation = reservationQueries.getReservation(reservationId, customer);
+        String fieldName = resourceService.getResource(reservation.resourceId().value()).name();
         ZoneId zone = venueService.getVenue(venueService.singleVenueId()).timezone();
 
         LocalDate date = reservation.start().atZone(zone).toLocalDate();

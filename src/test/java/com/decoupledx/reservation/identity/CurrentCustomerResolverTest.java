@@ -18,7 +18,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.identity.domain.model.CustomerId;
+import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 class CurrentCustomerResolverTest {
