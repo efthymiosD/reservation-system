@@ -27,7 +27,7 @@ jobs:
 
       # 1) Sync compose file + Keycloak realm to the QNAP (the QNAP never builds from source)
       - name: Copy deployment files to QNAP
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.QNAP_DEPLOY_HOST }}
           username: ${{ secrets.QNAP_DEPLOY_USER }}
