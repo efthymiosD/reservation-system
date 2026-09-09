@@ -48,6 +48,12 @@ public class ReservationQueryService {
                 .toList();
     }
 
+    public List<ReservationInfo> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period) {
+        return reservations.findActiveOverlappingCustomer(customerId, period).stream()
+                .map(CreateReservationService::toInfo)
+                .toList();
+    }
+
     public ReservationPage findAllForAdmin(ReservationStatus status, int page, int size) {
         List<ReservationInfo> items = reservations.findAll(status, page, size).stream()
                 .map(CreateReservationService::toInfo)

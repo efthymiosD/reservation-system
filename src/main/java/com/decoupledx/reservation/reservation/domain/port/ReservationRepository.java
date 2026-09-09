@@ -24,6 +24,8 @@ public interface ReservationRepository {
 
     List<Reservation> findActiveOverlappingResource(ResourceId resourceId, ReservationPeriod period);
 
+    List<Reservation> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);
+
     boolean existsActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);
 
     List<Reservation> findAll(ReservationStatus status, int page, int size);

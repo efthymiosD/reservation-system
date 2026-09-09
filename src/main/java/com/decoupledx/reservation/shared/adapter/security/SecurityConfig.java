@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,10 +25,14 @@ public class SecurityConfig {
 
     private final List<String> allowedOrigins;
 
-    SecurityConfig(@Value("${app.security.cors.allowed-origins:}") String allowedOrigins) {
+    private final KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler;
+
+    SecurityConfig(@Value("${app.security.cors.allowed-origins:}") String allowedOrigins,
+            KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler) {
         this.allowedOrigins = allowedOrigins == null || allowedOrigins.isBlank()
                 ? List.of()
                 : Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
+        this.keycloakLogoutSuccessHandler = keycloakLogoutSuccessHandler;
     }
 
     @Bean
@@ -73,20 +78,22 @@ public class SecurityConfig {
 
     /**
      * Browser: session-based OAuth2 login against Keycloak (authorization code) with
-     * CSRF protection on. Until the web UI adds public pages (T3+), every browser
-     * request redirects to Keycloak.
+     * CSRF protection on. Public venue pages are permitted for GET; the reservation
+     * page (/reserve) and personal pages require an authenticated session.
      */
     @Bean
     @Order(2)
     SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
+                        .requestMatchers(HttpMethod.GET,
                                 "/",
                                 "/about",
                                 "/opening-hours",
                                 "/contact",
-                                "/reserve",
+                                "/logged-out")
+                        .permitAll()
+                        .requestMatchers(
                                 "/error",
                                 "/favicon.ico",
                                 "/css/**",
@@ -98,7 +105,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorization")))
-                .logout(logout -> logout.logoutUrl("/logout"))
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(keycloakLogoutSuccessHandler))
                 .build();
     }
 }

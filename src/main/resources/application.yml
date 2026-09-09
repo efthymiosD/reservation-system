@@ -67,6 +67,7 @@ app:
     audience: ${APP_AUDIENCE:reservation-api}
     cors.allowed-origins: ${CORS_ALLOWED_ORIGINS:}
     dev-public-key: classpath:dev/jwt-public.pem
+    end-session-uri: ${KEYCLOAK_END_SESSION_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/logout}
   venue:
     timezone: Europe/Warsaw
 

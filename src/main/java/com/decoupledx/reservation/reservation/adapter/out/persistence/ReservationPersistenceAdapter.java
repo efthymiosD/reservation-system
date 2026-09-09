@@ -91,6 +91,15 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     }
 
     @Override
+    public List<Reservation> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period) {
+        return reservations
+                .findActiveOverlappingCustomer(customerId.value().toString(), period.start(), period.end())
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean existsActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period) {
         return reservations.existsActiveOverlappingCustomer(customerId.value(), period.start(), period.end());
     }

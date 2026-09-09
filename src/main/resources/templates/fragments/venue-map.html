@@ -11,7 +11,7 @@
 
     <g th:each="field : ${fields}"
        th:class="'resource resource--' + ${field.statusClass}"
-       th:attr="role='button', tabindex=0, aria-label=${field.ariaLabel}, data-resource-id=${field.resourceId}"
+       th:attr="role='button', tabindex=0, aria-label=${field.ariaLabel}, data-resource-id=${field.resourceId}, data-label=${field.label}"
        th:aria-disabled="${field.statusClass != 'available'}">
       <rect th:x="${field.x}" th:y="${field.y}"
             th:width="${field.width}" th:height="${field.height}" rx="10"/>

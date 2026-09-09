@@ -1,25 +1,16 @@
 package com.decoupledx.reservation;
 
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
-import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
@@ -79,18 +70,4 @@ class WebUiIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
-    /**
-     * Same principal shape the production oauth2Login session carries:
-     * an OidcUser resolved by 'sub' with a preferred_username display name.
-     */
-    private static RequestPostProcessor webUser(String displayName) {
-        Map<String, Object> claims = Map.of(
-                IdTokenClaimNames.SUB, "alice-sub-1",
-                StandardClaimNames.PREFERRED_USERNAME, displayName);
-        OidcIdToken idToken = new OidcIdToken(
-                "test-token", Instant.now(), Instant.now().plusSeconds(60), claims);
-        OidcUser user = new DefaultOidcUser(
-                AuthorityUtils.createAuthorityList("ROLE_CUSTOMER"), idToken, IdTokenClaimNames.SUB);
-        return oidcLogin().oidcUser(user);
-    }
 }

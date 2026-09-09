@@ -108,4 +108,20 @@ class BookingPolicyTest {
     private static ZonedDateTime at(String instant) {
         return Instant.parse(instant).atZone(Clock.systemUTC().getZone());
     }
+
+    @Test
+    void rejectsStartTimeInThePast() {
+        Instant now = Instant.parse("2026-09-01T10:00:00Z");
+
+        assertThatThrownBy(() -> POLICY.validateNotInPast(now,
+                Instant.parse("2026-09-01T09:59:59Z"), UTC))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("past")
+                .extracting(e -> ((BusinessException) e).errorCode())
+                .isEqualTo(ErrorCode.START_TIME_IN_PAST);
+
+        assertThatCode(() -> POLICY.validateNotInPast(now,
+                Instant.parse("2026-09-01T10:00:00Z"), UTC))
+                .doesNotThrowAnyException();
+    }
 }
