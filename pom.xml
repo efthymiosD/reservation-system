@@ -26,7 +26,7 @@
         <spring-modulith.version>2.1.1</spring-modulith.version>
         <springdoc.version>3.1.0</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <lombok.version>1.18.46</lombok.version>
+        <lombok.version>1.18.48</lombok.version>
         <surefire.excludedGroups>keycloak</surefire.excludedGroups>
     </properties>
 
