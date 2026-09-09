@@ -99,6 +99,7 @@ public class CreateReservationService {
                 .opensAt(command.start().atZone(zone).getDayOfWeek())
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS));
         bookingPolicy.validateStartTime(command.start().atZone(zone), opensAt);
+        bookingPolicy.validateNotInPast(now, command.start(), zone);
         bookingPolicy.validateAdvanceBooking(now, command.start(), zone);
     }
 

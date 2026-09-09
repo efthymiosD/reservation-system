@@ -72,6 +72,15 @@ class PublicApiIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void pastAvailabilitySlotIsRejected() throws Exception {
+        mockMvc.perform(get("/api/public/availability/map")
+                        .param("date", "2026-08-30")
+                        .param("start", "18:00")
+                        .param("durationMinutes", "60"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void availabilityMapMarksReservedAndBlockedResources() throws Exception {
         createReservation(FIELD_1, "map-user", 90);
         insertBlock(UUID.fromString(FIELD_2), venueTime(SLOT_DATE, 18, 0), venueTime(SLOT_DATE, 19, 30));

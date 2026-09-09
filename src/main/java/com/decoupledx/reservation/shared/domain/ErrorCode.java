@@ -11,6 +11,7 @@ public enum ErrorCode {
     CANCELLATION_DEADLINE_PASSED(409, "Cancellation deadline has passed"),
     INVALID_RESERVATION_DURATION(422, "Invalid reservation duration"),
     INVALID_START_TIME(422, "Start time does not match the allowed increment"),
+    START_TIME_IN_PAST(422, "Start time is in the past"),
     OUTSIDE_OPENING_HOURS(422, "Requested period is outside opening hours"),
     ADVANCE_BOOKING_LIMIT_EXCEEDED(422, "Reservation is too far in the future"),
     INVALID_RESERVATION_PERIOD(422, "Invalid reservation period"),

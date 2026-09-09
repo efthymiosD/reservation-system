@@ -129,6 +129,7 @@ public class AvailabilityService {
                 .opensAt(date.getDayOfWeek())
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS));
         bookingPolicy.validateStartTime(period.start().atZone(zone), opensAt);
+        bookingPolicy.validateNotInPast(clock.instant(), period.start(), zone);
         bookingPolicy.validateAdvanceBooking(clock.instant(), period.start(), zone);
     }
 

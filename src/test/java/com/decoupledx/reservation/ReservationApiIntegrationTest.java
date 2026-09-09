@@ -214,6 +214,16 @@ class ReservationApiIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void pastStartTimeIsRejected() throws Exception {
+        mockMvc.perform(post("/api/reservations")
+                        .with(customer("past-user"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createRequest(FIELD_1, "2026-08-30T18:00:00", 60)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("past")));
+    }
+
+    @Test
     void cannotCancelSomeoneElsesReservation() throws Exception {
         String reservationId = createReservation("user-owner", FIELD_3, "2026-09-03T20:00:00", 60);
 

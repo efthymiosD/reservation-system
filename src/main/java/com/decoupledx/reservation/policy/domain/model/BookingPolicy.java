@@ -70,4 +70,11 @@ public record BookingPolicy(
                     "Reservations can be made at most %s in advance".formatted(maxAdvanceBooking));
         }
     }
+
+    public void validateNotInPast(Instant now, Instant start, ZoneId zone) {
+        if (start.isBefore(now)) {
+            throw new BusinessException(ErrorCode.START_TIME_IN_PAST,
+                    "Reservations cannot be made for a start time in the past");
+        }
+    }
 }
