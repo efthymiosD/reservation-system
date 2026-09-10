@@ -1,40 +1,30 @@
-package com.decoupledx.reservation.reservation.internal;
+package com.decoupledx.reservation.reservation.domain;
+
+import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
+import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
+import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
+import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
-import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
-import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-
-import lombok.RequiredArgsConstructor;
-
-/**
- * Module-internal facade implementing {@link ReservationApi} on top of the
- * reservation domain services. The only bean other modules see for this module.
- */
-@Component
 @RequiredArgsConstructor
 public class ReservationApiFacade implements ReservationApi {
 
     private final CreateReservationService createReservation;
     private final CancelReservationService cancelReservation;
-    @Lazy
     private final ReservationQueryService reservationQueries;
 
     @Override
     public ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes,
-            CustomerId customer) {
+                                  CustomerId customer) {
         return createReservation.create(resourceId, startTime, durationMinutes, customer);
     }
 
@@ -55,7 +45,7 @@ public class ReservationApiFacade implements ReservationApi {
 
     @Override
     public ReservationPage findMyReservationsPage(CustomerId customer, ReservationStatus status,
-            int page, int size) {
+                                                  int page, int size) {
         ReservationQueryService.ReservationPage result =
                 reservationQueries.findMyReservationsPage(customer, status, page, size);
         return new ReservationPage(result.items(), result.total(), result.page(), result.size());

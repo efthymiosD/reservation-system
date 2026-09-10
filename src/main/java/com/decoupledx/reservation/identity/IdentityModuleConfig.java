@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.identity.internal;
+package com.decoupledx.reservation.identity;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

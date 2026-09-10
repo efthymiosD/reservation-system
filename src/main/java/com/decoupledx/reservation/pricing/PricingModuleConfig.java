@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.pricing.internal;
+package com.decoupledx.reservation.pricing;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

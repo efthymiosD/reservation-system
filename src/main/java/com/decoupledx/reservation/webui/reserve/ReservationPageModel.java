@@ -21,7 +21,6 @@ public record ReservationPageModel(
         List<LocalTime> timeOptions,
         MoneyView price,
         List<MapField> fields,
-        String message,
         HeldReservation held,
         boolean anyAvailable) {
 
