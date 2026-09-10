@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.venue.internal;
+package com.decoupledx.reservation.venue;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

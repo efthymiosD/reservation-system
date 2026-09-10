@@ -71,50 +71,33 @@ class ReservationPageModelFactory {
     }
 
     private record SlotSelection(LocalDate date, LocalTime start, int duration,
-            List<LocalTime> timeOptions, String note) {
+            List<LocalTime> timeOptions) {
     }
 
     private SlotSelection resolveSelection(LocalDate requestedDate, LocalTime requestedStart,
             Integer requestedDuration, LocalDate today, LocalDate maxDate,
             List<Integer> durationOptions, Duration startStep, VenueInfo venue) {
 
-        List<String> notes = new ArrayList<>();
-        LocalDate date = requestedDate == null ? today
-                : validDate(requestedDate, today, maxDate).orElseGet(() -> {
-                    notes.add("The selected date is outside the booking window; showing today instead.");
-                    return today;
-                });
-        int duration = requestedDuration == null ? durationOptions.get(0)
-                : validDuration(requestedDuration, durationOptions).orElseGet(() -> {
-                    notes.add("The selected duration is not offered; showing the shortest one instead.");
-                    return durationOptions.get(0);
-                });
+        LocalDate date = requestedDate == null || !validDate(requestedDate, today, maxDate).isPresent()
+                ? today
+                : requestedDate;
+        int duration = requestedDuration == null || !validDuration(requestedDuration, durationOptions).isPresent()
+                ? durationOptions.get(0)
+                : requestedDuration;
 
-        SlotSelection direct = forDate(date, requestedStart, duration, startStep, venue, zoneOf(venue), notes);
+        SlotSelection direct = forDate(date, requestedStart, duration, startStep, venue, zoneOf(venue));
         if (direct != null) {
-            return withNotes(direct, notes);
+            return direct;
         }
-        // The day itself has no bookable start times (closed, or every start has
-        // passed / fits the duration): advance to the next bookable day.
-        boolean closed = venue.openingHours().on(date.getDayOfWeek()).isEmpty();
-        String reason = closed
-                ? "The venue is closed on the selected day"
-                : "There are no bookable start times on the selected day";
+        // The day has no bookable start times (closed, or every start has passed or
+        // does not fit the duration): silently fall forward to the next bookable day.
         for (LocalDate candidate = date.plusDays(1); !candidate.isAfter(maxDate); candidate = candidate.plusDays(1)) {
-            SlotSelection next = forDate(candidate, null, duration, startStep, venue, zoneOf(venue), notes);
+            SlotSelection next = forDate(candidate, null, duration, startStep, venue, zoneOf(venue));
             if (next != null) {
-                notes.add(reason + " — showing " + candidate + " instead.");
-                return withNotes(next, notes);
+                return next;
             }
         }
         return null;
-    }
-
-    private SlotSelection withNotes(SlotSelection selection, List<String> notes) {
-        String note = String.join(" ", notes);
-        return note.isEmpty() ? selection
-                : new SlotSelection(selection.date(), selection.start(), selection.duration(),
-                        selection.timeOptions(), note);
     }
 
     private ZoneId zoneOf(VenueInfo venue) {
@@ -123,7 +106,7 @@ class ReservationPageModelFactory {
 
     /** Fits one concrete day; null when closed or when no start time fits. */
     private SlotSelection forDate(LocalDate date, LocalTime requestedStart, int duration,
-            Duration startStep, VenueInfo venue, ZoneId zone, List<String> notes) {
+            Duration startStep, VenueInfo venue, ZoneId zone) {
         DailyOpeningHours hours = venue.openingHours().on(date.getDayOfWeek()).orElse(null);
         if (hours == null) {
             return null;
@@ -132,13 +115,10 @@ class ReservationPageModelFactory {
         if (timeOptions.isEmpty()) {
             return null;
         }
-        LocalTime start = requestedStart == null ? timeOptions.get(0)
-                : timeOptions.contains(requestedStart) ? requestedStart
+        LocalTime start = requestedStart != null && timeOptions.contains(requestedStart)
+                ? requestedStart
                 : timeOptions.get(0);
-        if (requestedStart != null && !start.equals(requestedStart)) {
-            notes.add("The selected start time is not bookable; showing the first available start instead.");
-        }
-        return new SlotSelection(date, start, duration, timeOptions, null);
+        return new SlotSelection(date, start, duration, timeOptions);
     }
 
     private ReservationPageModel availabilityModel(SlotSelection selection, VenueInfo venue, ZoneId zone,
@@ -157,7 +137,6 @@ class ReservationPageModelFactory {
                     selection.timeOptions(),
                     priceOf(resources),
                     mapFields(resources),
-                    selection.note(),
                     heldReservation(selection, resources),
                     anyAvailable(resources));
         } catch (BusinessException exception) {
@@ -172,7 +151,6 @@ class ReservationPageModelFactory {
                     List.of(),
                     null,
                     List.of(),
-                    "The selected time is not bookable. Please choose another start time or duration.",
                     null,
                     false);
         }
@@ -189,7 +167,6 @@ class ReservationPageModelFactory {
                 List.of(),
                 null,
                 List.of(),
-                "No bookable slots within the booking window. Please choose another duration or check back later.",
                 null,
                 false);
     }

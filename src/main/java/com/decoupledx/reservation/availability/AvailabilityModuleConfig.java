@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.availability.internal;
+package com.decoupledx.reservation.availability;
 
 import java.time.Clock;
 

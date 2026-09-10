@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.policy.internal;
+package com.decoupledx.reservation.policy;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
