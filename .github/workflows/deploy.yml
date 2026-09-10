@@ -39,7 +39,7 @@ jobs:
 
       # 2-4) Pull the exact SHA, (re)start the stack
       - name: Pull and start stack
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.QNAP_DEPLOY_HOST }}
           username: ${{ secrets.QNAP_DEPLOY_USER }}
@@ -53,7 +53,7 @@ jobs:
 
       # 5) Wait for health; 6) smoke test; 7) fail the deployment if either fails
       - name: Health check and smoke test
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.QNAP_DEPLOY_HOST }}
           username: ${{ secrets.QNAP_DEPLOY_USER }}
