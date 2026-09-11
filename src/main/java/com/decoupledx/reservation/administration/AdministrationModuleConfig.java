@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.decoupledx.reservation.administration.domain.service.BlockResourceService;
+import com.decoupledx.reservation.administration.api.AdministrationApi;
+import com.decoupledx.reservation.administration.domain.BlockManagementFacade;
 import com.decoupledx.reservation.administration.domain.service.OverrideResourceBlockService;
 import com.decoupledx.reservation.reservation.api.ReservationApi;
 import com.decoupledx.reservation.resource.api.ResourceApi;
@@ -23,5 +25,11 @@ public class AdministrationModuleConfig {
     OverrideResourceBlockService overrideResourceBlockService(ResourceApi resourceService,
             ReservationApi reservationApi, TransactionRunner tx) {
         return new OverrideResourceBlockService(resourceService, reservationApi, tx);
+    }
+
+    @Bean
+    AdministrationApi blockManagementFacade(BlockResourceService blockResourceService,
+            OverrideResourceBlockService overrideResourceBlockService) {
+        return new BlockManagementFacade(blockResourceService, overrideResourceBlockService);
     }
 }

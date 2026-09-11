@@ -20,6 +20,16 @@ public interface ResourceApi {
 
     List<ResourceInfo> findActiveResources(UUID venueId);
 
+    List<ResourceInfo> findResources(UUID venueId);
+
+    ResourceInfo createResource(CreateResourceCommand command);
+
+    ResourceInfo activate(UUID resourceId);
+
+    ResourceInfo deactivate(UUID resourceId);
+
+    ResourceInfo rename(UUID resourceId, String newName);
+
     ResourceBlockInfo createBlock(CreateBlockCommand command);
 
     ResourceBlockInfo getBlock(UUID blockId);

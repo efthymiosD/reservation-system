@@ -7,7 +7,7 @@ import com.decoupledx.reservation.resource.api.CreateBlockCommand;
 import java.util.UUID;
 
 import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.resource.domain.model.CreateResourceCommand;
+import com.decoupledx.reservation.resource.api.CreateResourceCommand;
 import com.decoupledx.reservation.resource.api.ResourceBlockId;
 import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
@@ -45,6 +45,26 @@ public class ResourceService implements ResourceApi {
     @Override
     public ResourceInfo lockResource(UUID resourceId) {
         return lockResource(ResourceId.of(resourceId));
+    }
+
+    @Override
+    public List<ResourceInfo> findResources(UUID venueId) {
+        return findResources(VenueId.of(venueId));
+    }
+
+    @Override
+    public ResourceInfo activate(UUID resourceId) {
+        return activate(ResourceId.of(resourceId));
+    }
+
+    @Override
+    public ResourceInfo deactivate(UUID resourceId) {
+        return deactivate(ResourceId.of(resourceId));
+    }
+
+    @Override
+    public ResourceInfo rename(UUID resourceId, String newName) {
+        return rename(ResourceId.of(resourceId), newName);
     }
 
     @Override
@@ -86,6 +106,7 @@ public class ResourceService implements ResourceApi {
         return groups.findByVenueId(venueId).stream().map(this::toGroupInfo).toList();
     }
 
+    @Override
     public ResourceInfo createResource(CreateResourceCommand command) {
         return tx.run(() -> {
             groups.findById(command.groupId())
