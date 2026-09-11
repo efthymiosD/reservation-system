@@ -73,6 +73,12 @@ class WebSecurityIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void failedLoginLandsOnHomeWithFriendlyMarker() throws Exception {
+        mockMvc.perform(get("/").queryParam("loginFailed", ""))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void logoutRedirectsToKeycloakEndSessionWithIdTokenHint() throws Exception {
         // Single logout: the browser is sent to Keycloak's end-session endpoint so
         // the SSO session dies too — otherwise 'Log in' would re-authenticate

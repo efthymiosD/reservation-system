@@ -5,6 +5,11 @@
   <div th:if="${message}" class="container mt-3">
     <div class="alert alert-info" role="status" th:text="${message}">message</div>
   </div>
+  <div th:if="${param.loginFailed}" class="container mt-3">
+    <div class="alert alert-warning" role="status">
+      Sign-in was not successful. Please try again — use the Log in button.
+    </div>
+  </div>
   <div th:if="${error}" class="container mt-3">
     <div class="alert alert-danger" role="alert" th:text="${error}">error</div>
   </div>

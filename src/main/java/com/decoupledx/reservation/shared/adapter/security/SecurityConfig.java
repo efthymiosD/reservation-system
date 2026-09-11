@@ -13,7 +13,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,12 +29,19 @@ public class SecurityConfig {
 
     private final KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler;
 
+    private final ClientRegistrationRepository clientRegistrationRepository;
+
+    private final AuthenticationFailureHandler failedLoginRedirect = (request, response, exception) ->
+            response.sendRedirect("/?loginFailed");
+
     SecurityConfig(@Value("${app.security.cors.allowed-origins:}") String allowedOrigins,
+            ClientRegistrationRepository clientRegistrationRepository,
             KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler) {
         this.allowedOrigins = allowedOrigins == null || allowedOrigins.isBlank()
                 ? List.of()
                 : Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();
         this.keycloakLogoutSuccessHandler = keycloakLogoutSuccessHandler;
+        this.clientRegistrationRepository = clientRegistrationRepository;
     }
 
     @Bean
@@ -96,6 +105,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/error",
                                 "/favicon.ico",
+                                "/favicon.svg",
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
