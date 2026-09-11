@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 class CurrentUserAdvice {
 
+    private static final String ROLE_ADMIN = "ROLE_ADMIN";
+
     @ModelAttribute("currentUser")
     CurrentUser currentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -22,7 +24,9 @@ class CurrentUserAdvice {
                 || authentication instanceof AnonymousAuthenticationToken) {
             return CurrentUser.ANONYMOUS;
         }
-        return new CurrentUser(true, displayNameOf(authentication));
+        boolean administrator = authentication.getAuthorities().stream()
+                .anyMatch(authority -> ROLE_ADMIN.equals(authority.getAuthority()));
+        return new CurrentUser(true, displayNameOf(authentication), administrator);
     }
 
     private String displayNameOf(Authentication authentication) {

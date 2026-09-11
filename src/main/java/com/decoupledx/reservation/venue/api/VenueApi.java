@@ -11,4 +11,6 @@ public interface VenueApi {
     UUID singleVenueId();
 
     VenueInfo getVenue(UUID venueId);
+
+    void updateOpeningHours(UUID venueId, OpeningHours openingHours);
 }

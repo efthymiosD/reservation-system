@@ -4,6 +4,7 @@ import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.reservation.api.ReservationApi;
 import com.decoupledx.reservation.reservation.api.ReservationId;
 import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.api.ReservationPage;
 import com.decoupledx.reservation.reservation.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
 import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
@@ -60,6 +61,13 @@ public class ReservationApiFacade implements ReservationApi {
     public List<ReservationInfo> findActiveOverlappingResource(UUID resourceId, ReservationPeriod period) {
         return reservationQueries.findActiveOverlappingResource(
                 com.decoupledx.reservation.resource.api.ResourceId.of(resourceId), period);
+    }
+
+    @Override
+    public ReservationPage listAllForAdmin(ReservationStatus status, int page, int size) {
+        ReservationQueryService.ReservationPage result =
+                reservationQueries.findAllForAdmin(status, page, size);
+        return new ReservationPage(result.items(), result.total(), result.page(), result.size());
     }
 
     @Override

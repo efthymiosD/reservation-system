@@ -29,8 +29,7 @@ public interface ReservationApi {
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);
 
-    void cancelAdministratively(UUID reservationId, CustomerId actor);
+    ReservationPage listAllForAdmin(ReservationStatus status, int page, int size);
 
-    record ReservationPage(List<ReservationInfo> items, long total, int page, int size) {
-    }
+    void cancelAdministratively(UUID reservationId, CustomerId actor);
 }

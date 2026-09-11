@@ -20,6 +20,9 @@
         <li class="nav-item" th:if="${currentUser.authenticated}">
           <a class="nav-link" th:href="@{/my-reservations}">My reservations</a>
         </li>
+        <li class="nav-item" th:if="${currentUser.administrator}">
+          <a class="nav-link" th:href="@{/admin}">Admin</a>
+        </li>
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item" th:if="${currentUser.authenticated}">

@@ -15,6 +15,7 @@ import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.policy.api.PolicyApi;
 import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.reservation.api.ReservationPage;
 import com.decoupledx.reservation.reservation.api.ReservationInfo;
 import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.venue.api.VenueApi;
@@ -62,7 +63,7 @@ class MyReservationsModelFactory {
     private List<ReservationInfo> ownReservations(CustomerId customer, int pageSize) {
         List<ReservationInfo> all = new ArrayList<>();
         int page = 0;
-        ReservationApi.ReservationPage result;
+        ReservationPage result;
         do {
             result = reservationApi.findMyReservationsPage(customer, null, page, pageSize);
             all.addAll(result.items());

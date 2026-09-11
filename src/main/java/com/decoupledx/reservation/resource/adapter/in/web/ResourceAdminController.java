@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.resource.domain.model.CreateResourceCommand;
-import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
+import com.decoupledx.reservation.resource.api.CreateResourceCommand;
 import com.decoupledx.reservation.resource.api.ResourceGroupId;
 import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.resource.api.ResourceInfo;

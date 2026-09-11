@@ -1,10 +1,8 @@
-package com.decoupledx.reservation.resource.domain.model;
-
-import com.decoupledx.reservation.resource.api.ResourceType;
-import com.decoupledx.reservation.resource.api.ResourceGroupId;
-import java.util.Objects;
+package com.decoupledx.reservation.resource.api;
 
 import com.decoupledx.reservation.venue.api.VenueId;
+
+import java.util.Objects;
 
 public record CreateResourceCommand(
         VenueId venueId,

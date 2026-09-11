@@ -43,6 +43,7 @@ public class VenueService implements VenueApi {
         return singleVenue().getId();
     }
 
+    @Override
     public void updateOpeningHours(UUID venueId, OpeningHours openingHours) {
         tx.run(() -> {
             Venue venue = findVenue(venueId);

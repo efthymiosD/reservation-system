@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.testinfra;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -24,13 +25,22 @@ public final class WebUserSupport {
     }
 
     public static RequestPostProcessor webUser(String subject) {
+        return webUser(subject, AuthorityUtils.createAuthorityList("ROLE_CUSTOMER"));
+    }
+
+    /** Admin variant: ROLE_ADMIN session (guards /admin/** flows in tests). */
+    public static RequestPostProcessor webAdmin(String subject) {
+        return webUser(subject, AuthorityUtils.createAuthorityList("ROLE_ADMIN", "ROLE_CUSTOMER"));
+    }
+
+    private static RequestPostProcessor webUser(String subject,
+            List<org.springframework.security.core.GrantedAuthority> authorities) {
         Map<String, Object> claims = Map.of(
                 IdTokenClaimNames.SUB, subject,
                 StandardClaimNames.PREFERRED_USERNAME, subject);
         OidcIdToken idToken = new OidcIdToken(
                 "test-token", Instant.now(), Instant.now().plusSeconds(60), claims);
-        OidcUser user = new DefaultOidcUser(
-                AuthorityUtils.createAuthorityList("ROLE_CUSTOMER"), idToken, IdTokenClaimNames.SUB);
+        OidcUser user = new DefaultOidcUser(authorities, idToken, IdTokenClaimNames.SUB);
         return SecurityMockMvcRequestPostProcessors.oidcLogin().oidcUser(user);
     }
 }
