@@ -23,7 +23,7 @@ public record MyReservationsModel(
             LocalTime end,
             BigDecimal priceAmount,
             String priceCurrency,
-            String status,
+            String displayStatus,
             boolean cancellable) {
     }
 }

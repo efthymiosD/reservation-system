@@ -50,8 +50,8 @@ class MyReservationsModelFactory {
         List<MyReservationsModel.ReservationCard> upcoming = new ArrayList<>();
         List<MyReservationsModel.ReservationCard> past = new ArrayList<>();
         for (ReservationInfo reservation : reservations) {
-            var card = toCard(reservation, zone, deadline, now);
             boolean future = reservation.isActive() && !reservation.start().isBefore(now);
+            var card = toCard(reservation, zone, deadline, now, future);
             (future ? upcoming : past).add(card);
         }
         upcoming.sort(Comparator.comparing(MyReservationsModel.ReservationCard::start));
@@ -72,11 +72,13 @@ class MyReservationsModelFactory {
     }
 
     private MyReservationsModel.ReservationCard toCard(ReservationInfo reservation,
-            java.time.ZoneId zone, java.time.Duration deadline, java.time.Instant now) {
+            java.time.ZoneId zone, java.time.Duration deadline, java.time.Instant now, boolean future) {
         String fieldName = fieldName(reservation.resourceId());
         LocalDate date = reservation.start().atZone(zone).toLocalDate();
         LocalTime start = reservation.start().atZone(zone).toLocalTime();
         LocalTime end = reservation.end().atZone(zone).toLocalTime();
+        String displayStatus = !reservation.isActive() ? "Cancelled"
+                : future ? "Active" : "Completed";
         return new MyReservationsModel.ReservationCard(
                 reservation.id().value(),
                 fieldName,
@@ -85,7 +87,7 @@ class MyReservationsModelFactory {
                 end,
                 reservation.price().amount(),
                 reservation.price().currency().getCurrencyCode(),
-                reservation.status().name(),
+                displayStatus,
                 reservation.isCancellable(now, deadline));
     }
 
