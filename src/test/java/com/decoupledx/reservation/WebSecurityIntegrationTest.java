@@ -49,6 +49,8 @@ class WebSecurityIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(header().string("Location",
                         org.hamcrest.Matchers.containsString("response_type=code")))
                 .andExpect(header().string("Location",
+                        org.hamcrest.Matchers.containsString("prompt=login")))
+                .andExpect(header().string("Location",
                         org.hamcrest.Matchers.containsString(
                                 "redirect_uri=http://localhost/login/oauth2/code/keycloak")));
     }
