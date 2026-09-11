@@ -88,6 +88,19 @@ class ReservationTest {
     }
 
     @Test
+    void rejectsAdministrativeCancellationOfElapsedReservation() {
+        Reservation reservation = newReservation();  // ends START + 90m = 17:30Z
+        java.time.Instant afterEnd = Instant.parse("2026-09-01T17:31:00Z");
+
+        assertThatThrownBy(() -> reservation.cancelAdministratively(afterEnd,
+                CustomerId.of("admin-actor")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("no longer be cancelled");
+
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.ACTIVE);
+    }
+
+    @Test
     void rejectsAdministrativeCancellationOfCancelledReservation() {
         Reservation reservation = newReservation();
         reservation.cancelAdministratively(NOW, CustomerId.of("admin-actor"));

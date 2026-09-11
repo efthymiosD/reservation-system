@@ -28,17 +28,19 @@ public class CurrentCustomerResolver implements CurrentCustomerApi {
     public CustomerId currentCustomerId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof JwtAuthenticationToken jwt) {
-            return resolve(jwt.getName(), "JWT is missing the 'sub' claim required for customer identity");
+            return resolve(jwt.getName(), jwt.getToken().getClaimAsString("preferred_username"),
+                    "JWT is missing the 'sub' claim required for customer identity");
         }
         if (authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser) {
-            return resolve(oidcUser.getName(), "OIDC principal is missing the 'sub' claim required for customer identity");
+            return resolve(oidcUser.getName(), oidcUser.getPreferredUsername(),
+                    "OIDC principal is missing the 'sub' claim required for customer identity");
         }
         throw new IllegalStateException("No authenticated customer principal present");
     }
 
-    private CustomerId resolve(String subject, String missingSubjectMessage) {
+    private CustomerId resolve(String subject, String displayName, String missingSubjectMessage) {
         if (subject != null && !subject.isBlank()) {
-            return customerAccounts.resolveOrProvision(subject);
+            return customerAccounts.resolveOrProvision(subject, displayName);
         }
         throw new IllegalStateException(missingSubjectMessage);
     }

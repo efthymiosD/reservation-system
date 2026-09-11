@@ -8,6 +8,7 @@ public enum ErrorCode {
     CUSTOMER_HAS_OVERLAPPING_RESERVATION(409, "Customer already has an overlapping active reservation"),
     RESERVATION_NOT_FOUND(404, "Reservation not found"),
     RESERVATION_ALREADY_CANCELLED(409, "Reservation is already cancelled"),
+    RESERVATION_IN_PAST(409, "Reservation is in the past and can no longer be cancelled"),
     CANCELLATION_DEADLINE_PASSED(409, "Cancellation deadline has passed"),
     INVALID_RESERVATION_DURATION(422, "Invalid reservation duration"),
     INVALID_START_TIME(422, "Start time does not match the allowed increment"),

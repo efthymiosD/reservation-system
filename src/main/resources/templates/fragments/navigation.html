@@ -26,7 +26,14 @@
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item" th:if="${currentUser.authenticated}">
-          <span class="navbar-text me-3" th:text="'Signed in as ' + ${currentUser.displayName}">Signed in as user</span>
+          <span class="navbar-text me-3">Signed in as
+            <a href="#" class="fw-bold text-info text-decoration-none" tabindex="0" role="button"
+               data-bs-toggle="popover" data-bs-trigger="hover focus"
+               data-bs-placement="bottom" data-bs-html="true"
+               th:title="'Signed in as ' + ${currentUser.displayName}"
+               th:attr="data-bs-content=${'<div>' + 'Id: ' + (currentUser.customerId != null ? currentUser.customerId : '&mdash;') + '</div><div>Username: ' + currentUser.displayName + '</div><div>Email: ' + (currentUser.email != null ? currentUser.email : '&mdash;') + '</div>'}">
+              <span th:text="${currentUser.displayName}">alice</span></a>
+          </span>
         </li>
         <li class="nav-item" th:if="${currentUser.authenticated}">
           <form th:action="@{/logout}" method="post" class="d-inline">
