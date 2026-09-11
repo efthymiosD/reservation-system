@@ -2,10 +2,14 @@ package com.decoupledx.reservation.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -13,12 +17,15 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
@@ -36,9 +43,9 @@ class CurrentCustomerResolverTest {
     void resolvesInternalCustomerFromOidcWebSession() {
         SecurityContextHolder.getContext()
                 .setAuthentication(new OAuth2AuthenticationToken(
-                        oidcUserWithSubject("web-sub-1"), List.of(), "keycloak"));
+                        oidcUser("alice"), List.of(), "keycloak"));
         CustomerId customerId = CustomerId.random();
-        when(customerAccounts.resolveOrProvision("web-sub-1")).thenReturn(customerId);
+        when(customerAccounts.resolveOrProvision(any(), eq("alice"))).thenReturn(customerId);
 
         assertThat(resolver.currentCustomerId()).isEqualTo(customerId);
     }
@@ -47,7 +54,7 @@ class CurrentCustomerResolverTest {
     void resolvesInternalCustomerFromJwtBearerToken() {
         SecurityContextHolder.getContext().setAuthentication(jwtTokenWithSubject("api-sub-1"));
         CustomerId customerId = CustomerId.random();
-        when(customerAccounts.resolveOrProvision("api-sub-1")).thenReturn(customerId);
+        when(customerAccounts.resolveOrProvision(any(), any())).thenReturn(customerId);
 
         assertThat(resolver.currentCustomerId()).isEqualTo(customerId);
     }
@@ -55,7 +62,7 @@ class CurrentCustomerResolverTest {
     @Test
     void rejectsPrincipalWithoutSubject() {
         SecurityContextHolder.getContext().setAuthentication(new OAuth2AuthenticationToken(
-                oidcUserWithSubject(""), List.of(), "keycloak"));
+                oidcUser(""), List.of(), "keycloak"));
 
         assertThatThrownBy(resolver::currentCustomerId)
                 .isInstanceOf(IllegalStateException.class);
@@ -71,10 +78,16 @@ class CurrentCustomerResolverTest {
                 .hasMessageContaining("No authenticated customer principal present");
     }
 
-    private OidcUser oidcUserWithSubject(String subject) {
-        OidcUser user = mock(OidcUser.class);
-        when(user.getName()).thenReturn(subject);
-        return user;
+    private OidcUser oidcUser(String subject) {
+        Map<String, Object> claims = Map.of(
+                IdTokenClaimNames.SUB, subject,
+                StandardClaimNames.PREFERRED_USERNAME, subject);
+        OidcIdToken idToken = new OidcIdToken(
+                "test-token", Instant.now(), Instant.now().plusSeconds(60), claims);
+        return new DefaultOidcUser(
+                org.springframework.security.core.authority.AuthorityUtils
+                        .createAuthorityList("ROLE_CUSTOMER"),
+                idToken, IdTokenClaimNames.SUB);
     }
 
     private JwtAuthenticationToken jwtTokenWithSubject(String subject) {

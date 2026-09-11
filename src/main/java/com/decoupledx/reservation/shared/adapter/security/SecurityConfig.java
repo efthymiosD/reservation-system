@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     private final ClientRegistrationRepository clientRegistrationRepository;
 
-    private final AuthenticationFailureHandler failedLoginRedirect = (request, response, exception) ->
+    private final AuthenticationFailureHandler failedLoginRedirect = (_, response, _) ->
             response.sendRedirect("/?loginFailed");
 
     SecurityConfig(@Value("${app.security.cors.allowed-origins:}") String allowedOrigins,
@@ -62,7 +62,7 @@ public class SecurityConfig {
      */
     @Bean
     @Order(1)
-    SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain apiSecurity(HttpSecurity http) {
         return http
                 .securityMatcher("/api/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                         "/actuator/**")
@@ -92,7 +92,7 @@ public class SecurityConfig {
      */
     @Bean
     @Order(2)
-    SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain webSecurity(HttpSecurity http) {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -122,6 +122,10 @@ public class SecurityConfig {
                                 // just failed (or gave up on) a previous attempt.
                                 .authorizationRequestResolver(new PromptLoginAuthorizationRequestResolver(
                                         clientRegistrationRepository, "/oauth2/authorization")))
+                        // Lift Keycloak realm roles into session authorities
+                        // (ROLE_ADMIN) for the browser counterpart of the JWT path.
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(new RealmRoleOidcUserService()))
                         .failureHandler(failedLoginRedirect))
                 .logout(logout -> logout
                         .logoutUrl("/logout")

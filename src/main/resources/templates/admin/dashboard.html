@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Admin', ~{::section})}">
+<head>
+  <title>Admin</title>
+</head>
+<body>
+<section class="container py-4">
+  <h1 class="mb-4">Admin</h1>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <div class="display-6" th:text="${page.activeReservations}">0</div>
+          <div class="text-muted">active reservations</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <div class="display-6" th:text="${page.activeBlocks}">0</div>
+          <div class="text-muted">active resource blocks</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <div class="display-6" th:text="${page.resources}">0</div>
+          <div class="text-muted">resources</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" th:href="@{/admin/reservations}">Reservations</a>
+    <span class="text-muted align-self-center">other pages arrive with the next admin phases</span>
+  </div>
+</section>
+</body>
+</html>

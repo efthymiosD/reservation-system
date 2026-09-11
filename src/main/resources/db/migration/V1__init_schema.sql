@@ -186,7 +186,8 @@ CREATE INDEX resource_blocks_resource_lookup_idx ON resource_blocks (resource_id
 -- ---------------------------------------------------------------------------
 CREATE TABLE customers
 (
-    customer_id UUID         NOT NULL PRIMARY KEY,
-    idp_subject VARCHAR(128) NOT NULL UNIQUE,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+    customer_id  UUID         NOT NULL PRIMARY KEY,
+    idp_subject  VARCHAR(128) NOT NULL UNIQUE,
+    display_name VARCHAR(255) NULL,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
 );

@@ -71,6 +71,11 @@ public class Reservation {
 
     public void cancelAdministratively(Instant now, CustomerId actor) {
         requireActive();
+        // Past slots have already occurred: nothing left to cancel, even for
+        // admins (admin override bypasses the deadline, not the event itself).
+        if (period.end().isBefore(now)) {
+            throw new BusinessException(ErrorCode.RESERVATION_IN_PAST);
+        }
         this.status = ReservationStatus.CANCELLED;
         this.cancelledAt = now;
         this.cancelledBy = actor;
