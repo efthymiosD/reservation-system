@@ -114,7 +114,14 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endpoint -> endpoint.baseUri("/oauth2/authorization")))
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .baseUri("/oauth2/authorization")
+                                // Always prompt for credentials at Keycloak: a stale
+                                // SSO cookie must never silently re-login a user who
+                                // just failed (or gave up on) a previous attempt.
+                                .authorizationRequestResolver(new PromptLoginAuthorizationRequestResolver(
+                                        clientRegistrationRepository, "/oauth2/authorization")))
+                        .failureHandler(failedLoginRedirect))
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(keycloakLogoutSuccessHandler))
