@@ -3,7 +3,8 @@
 <head th:replace="~{fragments/head :: head(${title})}"></head>
 <body class="d-flex flex-column min-vh-100">
   <nav th:replace="~{fragments/navigation :: navigation}"></nav>
-  <main class="flex-grow-1">
+  <a class="visually-hidden-focusable" href="#main">Skip to content</a>
+  <main id="main" class="flex-grow-1">
     <div th:replace="~{fragments/messages :: messages}"></div>
     <div th:replace="${content}"></div>
   </main>

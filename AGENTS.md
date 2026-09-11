@@ -52,6 +52,8 @@ source ~/tools/env.sh          # sets JAVA_HOME + PATH for JDK 26 + Maven 3.9.16
 
 ## Build & test quirks
 
+- **JDK 26 formats `ISO_LOCAL_TIME` with seconds** — `LocalTime.of(18,0)` renders as `18:00:00`, not `18:00`. Matters wherever JSON templates append `:00` (e.g. `ConcurrencyIntegrationTest` JSON bodies).
+
 - **Lombok annotation processor is NOT implicit on JDK 25+** — `pom.xml` explicitly configures `annotationProcessorPaths` for lombok 1.18.46. Do not remove it.
 - **`spring-boot-webmvc-test` must be declared separately** — Spring Boot 4.1.1 does not bundle `@AutoConfigureMockMvc` in `spring-boot-starter-test`. It lives in `org.springframework.boot:spring-boot-webmvc-test` under `org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc`.
 - **Spring Boot 4 ships Jackson 3 (`tools.jackson`)** — the auto-configured bean is `tools.jackson.databind.ObjectMapper`, NOT `com.fasterxml.jackson.databind.ObjectMapper`. Tests injecting `ObjectMapper` must import `tools.jackson.databind.*`. (Old `com.fasterxml` Jackson 2 is only on the classpath transitively via springdoc.) API: `readTree(String)` returns `JsonNode`, `JsonNode.get(String).asText()` — same as Jackson 2.

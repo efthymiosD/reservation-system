@@ -22,7 +22,7 @@
             <span th:text="${card.start}">18:00</span> – <span th:text="${card.end}">19:30</span>
           </div>
           <div class="small text-muted"
-               th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.status}">150 PLN</div>
+               th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.displayStatus}">150 PLN · Completed</div>
         </div>
         <div class="d-flex gap-2">
           <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}">View</a>
@@ -49,7 +49,7 @@
             <span th:text="${card.start}">18:00</span> – <span th:text="${card.end}">19:30</span>
           </div>
           <div class="small text-muted"
-               th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.status}">150 PLN · CANCELLED</div>
+               th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.displayStatus}">150 PLN · Completed · CANCELLED</div>
         </div>
         <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}">View</a>
       </div>
