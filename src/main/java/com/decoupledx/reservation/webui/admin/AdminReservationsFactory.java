@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.webui.admin;
 
+import java.time.Clock;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,22 +18,28 @@ import com.decoupledx.reservation.reservation.api.ReservationStatus;
 import com.decoupledx.reservation.resource.api.ResourceApi;
 import com.decoupledx.reservation.venue.api.VenueApi;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * Assembles the admin reservations listing from module APIs: page query, field
  * names resolved per distinct resource, and customer display names from the
  * identity directory (fallback: internal reference prefix).
  */
 @Component
-@RequiredArgsConstructor
 class AdminReservationsFactory {
 
     private final ReservationApi reservationApi;
     private final ResourceApi resourceService;
     private final VenueApi venueService;
     private final CustomerDirectoryApi customerDirectory;
-    private final java.time.Clock clock;
+    private final Clock clock;
+
+    AdminReservationsFactory(ReservationApi reservationApi, ResourceApi resourceService,
+            VenueApi venueService, CustomerDirectoryApi customerDirectory, Clock clock) {
+        this.reservationApi = reservationApi;
+        this.resourceService = resourceService;
+        this.venueService = venueService;
+        this.customerDirectory = customerDirectory;
+        this.clock = clock;
+    }
 
     AdminReservationsModel build(ReservationStatus status, int page, int size) {
         ReservationPage result = reservationApi.listAllForAdmin(status, page, size);
