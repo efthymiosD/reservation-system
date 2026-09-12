@@ -5,7 +5,7 @@ INSERT INTO venues (id, name, description, address, timezone, created_at, update
 VALUES ('a0000000-0000-0000-0000-000000000001',
         'Five-a-Side Football Centre',
         'Six floodlit 5x5 football fields available for hourly booking.',
-        'Sportowa 5, 00-001 Warszawa',
+        'al Ignacego Jana Paderewskiego 35, 51-612 Wrocław',
         'Europe/Warsaw',
         now(), now(), 0);
 

@@ -8,10 +8,17 @@
   <h1 class="mb-3" th:text="${venue.name}">Venue</h1>
   <p class="lead" th:text="${venue.description}">Description</p>
 
+  <img th:src="@{/images/venue.jpeg}" th:alt="${venue.name}"
+       class="img-fluid rounded mb-4 w-100" style="max-height: 22rem; object-fit: cover;"
+       onerror="this.style.display='none'">
+
   <div class="row g-4 mt-2">
     <div class="col-md-4">
       <h2 class="h5">Address</h2>
       <p class="text-muted" th:text="${venue.address}">Address</p>
+      <a class="link-secondary"
+         th:href="@{'https://www.google.com/maps/search/?api=1&query=' + ${#uris.escapeQueryParam(venue.address)}}"
+         target="_blank" rel="noopener noreferrer">View on Google Maps&nbsp;&rarr;</a>
     </div>
     <div class="col-md-4">
       <h2 class="h5">Timezone</h2>
