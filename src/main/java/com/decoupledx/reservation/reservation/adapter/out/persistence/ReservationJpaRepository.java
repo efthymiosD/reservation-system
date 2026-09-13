@@ -63,4 +63,12 @@ interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID
             @Param("customerId") String customerId,
             @Param("startTime") Instant startTime,
             @Param("endTime") Instant endTime);
+
+    @Query("""
+            select r from ReservationEntity r
+            where r.recurringReservationId = :recurringReservationId
+              and r.status = 'ACTIVE'
+            order by r.startTime desc
+            """)
+    List<ReservationEntity> findActiveByRecurringReservationId(@Param("recurringReservationId") UUID recurringReservationId);
 }

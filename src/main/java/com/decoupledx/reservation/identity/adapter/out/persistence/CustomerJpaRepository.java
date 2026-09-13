@@ -13,5 +13,7 @@ interface CustomerJpaRepository extends JpaRepository<CustomerEntity, UUID> {
 
     List<CustomerEntity> findByCustomerIdIn(Collection<UUID> customerIds);
 
+    List<CustomerEntity> findAllByOrderByCreatedAtDesc();
+
     Optional<CustomerEntity> findFirstByCustomerId(UUID customerId);
 }

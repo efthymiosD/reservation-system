@@ -2,6 +2,7 @@ package com.decoupledx.reservation.reservation.domain.model;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.policy.api.CancellationPolicy;
@@ -27,10 +28,12 @@ public class Reservation {
     private final Instant createdAt;
     private Instant cancelledAt;
     private CustomerId cancelledBy;
+    private final UUID recurringReservationId;
 
     private Reservation(ReservationId id, ResourceId resourceId, CustomerId customerId,
                         ReservationPeriod period, Money price, ReservationStatus status,
-                        Instant createdAt, Instant cancelledAt, CustomerId cancelledBy) {
+                        Instant createdAt, Instant cancelledAt, CustomerId cancelledBy,
+                        UUID recurringReservationId) {
         this.id = id;
         this.resourceId = resourceId;
         this.customerId = customerId;
@@ -40,23 +43,39 @@ public class Reservation {
         this.createdAt = createdAt;
         this.cancelledAt = cancelledAt;
         this.cancelledBy = cancelledBy;
+        this.recurringReservationId = recurringReservationId;
     }
 
     public static Reservation create(ResourceId resourceId, CustomerId customerId,
                                      ReservationPeriod period, Money price, Instant now) {
+        return create(resourceId, customerId, period, price, now, null);
+    }
+
+    public static Reservation create(ResourceId resourceId, CustomerId customerId,
+                                     ReservationPeriod period, Money price, Instant now,
+                                     UUID recurringReservationId) {
         Objects.requireNonNull(resourceId, "resourceId must not be null");
         Objects.requireNonNull(customerId, "customerId must not be null");
         Objects.requireNonNull(period, "period must not be null");
         Objects.requireNonNull(price, "price must not be null");
         Objects.requireNonNull(now, "now must not be null");
         return new Reservation(ReservationId.random(), resourceId, customerId, period, price,
-                ReservationStatus.ACTIVE, now, null, null);
+                ReservationStatus.ACTIVE, now, null, null, recurringReservationId);
     }
 
     public static Reservation reconstitute(ReservationId id, ResourceId resourceId, CustomerId customerId,
                                            ReservationPeriod period, Money price, ReservationStatus status,
                                            Instant createdAt, Instant cancelledAt, CustomerId cancelledBy) {
-        return new Reservation(id, resourceId, customerId, period, price, status, createdAt, cancelledAt, cancelledBy);
+        return reconstitute(id, resourceId, customerId, period, price, status, createdAt, cancelledAt,
+                cancelledBy, null);
+    }
+
+    public static Reservation reconstitute(ReservationId id, ResourceId resourceId, CustomerId customerId,
+                                           ReservationPeriod period, Money price, ReservationStatus status,
+                                           Instant createdAt, Instant cancelledAt, CustomerId cancelledBy,
+                                           UUID recurringReservationId) {
+        return new Reservation(id, resourceId, customerId, period, price, status, createdAt, cancelledAt,
+                cancelledBy, recurringReservationId);
     }
 
     public void cancel(Instant now, CancellationPolicy currentPolicy) {

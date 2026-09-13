@@ -4,24 +4,25 @@ import java.util.List;
 import java.util.UUID;
 
 import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.resource.api.CreateBlockCommand;
-import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
 
 /**
- * Module API of the administration module: resource-block management use cases
- * (create with conflict checks, admin cancel, and the atomic override that
- * cancels conflicting reservations before the block is created). The only type
- * other modules may depend on.
+ * Module API of the administration module: recurring per-customer reservations
+ * (create with validation, cancel-whole-recurring-reservation) plus the materializer that
+ * turns upcoming occurrences into real reservations. The only type other
+ * modules may depend on.
  */
 public interface AdministrationApi {
 
-    ResourceBlockInfo block(CreateBlockCommand command);
+    RecurringReservationInfo createRecurringReservation(CreateRecurringReservationCommand command);
 
-    OverrideResult override(CreateBlockCommand command, CustomerId actor);
+    void cancelRecurringReservation(UUID recurringReservationId, CustomerId actor);
 
-    void cancelBlock(UUID blockId, CustomerId actor);
+    List<RecurringReservationInfo> findRecurringReservations();
 
-    List<ResourceBlockInfo> findBlocksByResource(UUID resourceId);
-
-    List<ResourceBlockInfo> findAllBlocks();
+    /**
+     * Materializes every active recurring reservation's upcoming occurrences inside the
+     * booking window. Safe to run repeatedly; the per-recurring-reservation cursor only
+     * moves forward.
+     */
+    RecurringReservationMaterializationSummary materializeDue();
 }

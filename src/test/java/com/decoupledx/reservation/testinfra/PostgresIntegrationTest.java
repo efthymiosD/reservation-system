@@ -10,7 +10,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(properties = {
         "app.clock.fixed-instant=2026-09-01T10:00:00Z",
-        "app.security.issuer-uri="
+        "app.security.issuer-uri=",
+        "app.recurring-reservation.materialization-enabled=false"
 })
 public abstract class PostgresIntegrationTest {
 
@@ -28,7 +29,7 @@ public abstract class PostgresIntegrationTest {
     // class must start from a clean booking state regardless of execution order.
     @BeforeEach
     void cleanBookingTables() {
-        jdbc.update("TRUNCATE resource_blocks, reservations");
+        jdbc.update("TRUNCATE recurring_reservations, reservations");
     }
 
     @DynamicPropertySource

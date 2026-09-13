@@ -1,9 +1,9 @@
 package com.decoupledx.reservation.webui.admin;
 
-import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
 import org.springframework.stereotype.Component;
 
 import com.decoupledx.reservation.administration.api.AdministrationApi;
+import com.decoupledx.reservation.administration.api.RecurringReservationInfo;
 import com.decoupledx.reservation.reservation.api.ReservationApi;
 import com.decoupledx.reservation.reservation.api.ReservationPage;
 import com.decoupledx.reservation.reservation.api.ReservationStatus;
@@ -27,7 +27,7 @@ class AdminDashboardFactory {
     AdminDashboardModel build() {
         return new AdminDashboardModel(
                 activeReservations(),
-                administrationApi.findAllBlocks().stream().filter(ResourceBlockInfo::isActive).count(),
+                administrationApi.findRecurringReservations().stream().filter(RecurringReservationInfo::isActive).count(),
                 resourceService.findResources(venueService.singleVenueId()).size());
     }
 

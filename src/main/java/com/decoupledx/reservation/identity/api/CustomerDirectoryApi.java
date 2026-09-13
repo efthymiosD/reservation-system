@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.identity.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -12,4 +13,11 @@ import java.util.UUID;
 public interface CustomerDirectoryApi {
 
     Map<UUID, String> displayNames(Collection<CustomerId> customers);
+
+    /**
+     * All provisioned customers (internal id + display name), most-recently
+     * created first. Used by the admin UI to pick a customer for a recurring
+     * reservation.
+     */
+    List<CustomerEntry> findAll();
 }

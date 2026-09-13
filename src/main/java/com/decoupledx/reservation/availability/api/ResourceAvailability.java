@@ -5,8 +5,8 @@ import java.util.UUID;
 
 /**
  * View-oriented availability of a single resource for one requested slot.
- * The status is derived from backend state (overlapping active reservations /
- * resource blocks); the price is the backend-computed price for the slot.
+ * The status is derived from backend state (overlapping active reservations);
+ * the price is the backend-computed price for the slot.
  */
 public record ResourceAvailability(
         UUID resourceId,

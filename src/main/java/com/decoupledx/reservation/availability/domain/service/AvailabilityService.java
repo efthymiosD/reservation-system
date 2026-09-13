@@ -7,9 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.UUID;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.decoupledx.reservation.availability.api.AvailabilityApi;
 import com.decoupledx.reservation.availability.api.AvailableResource;
@@ -20,7 +17,6 @@ import com.decoupledx.reservation.policy.api.PolicyApi;
 import com.decoupledx.reservation.pricing.api.PricingPolicy;
 import com.decoupledx.reservation.pricing.api.PricingApi;
 import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.resource.api.ResourceBlockInfo;
 import com.decoupledx.reservation.resource.api.ResourceId;
 import com.decoupledx.reservation.resource.api.ResourceInfo;
 import com.decoupledx.reservation.resource.api.ResourceApi;
@@ -51,9 +47,7 @@ public class AvailabilityService implements AvailabilityApi {
         if (activeResources.isEmpty()) {
             return List.of();
         }
-        Set<ResourceId> blockedIds = blockedResourceIds(activeResources, slot.period());
         return activeResources.stream()
-                .filter(resource -> !blockedIds.contains(resource.id()))
                 .filter(resource -> isFree(resource.id(), slot.period()))
                 .map(resource -> toAvailableResource(resource, slot.price()))
                 .toList();
@@ -61,9 +55,9 @@ public class AvailabilityService implements AvailabilityApi {
 
     /**
      * View-oriented availability of every active resource for one requested slot:
-     * each resource is AVAILABLE, RESERVED (overlapping active reservation) or
-     * BLOCKED (overlapping active resource block). Includes the backend-computed
-     * slot price so clients never calculate prices themselves.
+     * each resource is AVAILABLE or RESERVED (overlapping active reservation).
+     * Includes the backend-computed slot price so clients never calculate prices
+     * themselves.
      */
     @Override
     public List<ResourceAvailability> resourceAvailability(LocalDate date, LocalTime startTime, int durationMinutes) {
@@ -72,9 +66,8 @@ public class AvailabilityService implements AvailabilityApi {
         if (activeResources.isEmpty()) {
             return List.of();
         }
-        Set<ResourceId> blockedIds = blockedResourceIds(activeResources, slot.period());
         return activeResources.stream()
-                .map(resource -> toResourceAvailability(resource, slot, blockedIds))
+                .map(resource -> toResourceAvailability(resource, slot))
                 .toList();
     }
 
@@ -88,26 +81,21 @@ public class AvailabilityService implements AvailabilityApi {
                 price.currency().getCurrencyCode());
     }
 
-    private ResourceAvailability toResourceAvailability(ResourceInfo resource, Slot slot, Set<ResourceId> blockedIds) {
+    private ResourceAvailability toResourceAvailability(ResourceInfo resource, Slot slot) {
         return new ResourceAvailability(
                 resource.id().value(),
                 resource.name(),
                 resource.code(),
                 resource.type().name(),
-                statusOf(resource.id(), slot.period(), blockedIds),
+                statusOf(resource.id(), slot.period()),
                 slot.price().amount(),
                 slot.price().currency().getCurrencyCode());
     }
 
-    private ResourceAvailabilityStatus statusOf(ResourceId resourceId, ReservationPeriod period,
-            Set<ResourceId> blockedIds) {
-        if (blockedIds.contains(resourceId)) {
-            return ResourceAvailabilityStatus.BLOCKED;
-        }
-        if (isFree(resourceId, period)) {
-            return ResourceAvailabilityStatus.AVAILABLE;
-        }
-        return ResourceAvailabilityStatus.RESERVED;
+    private ResourceAvailabilityStatus statusOf(ResourceId resourceId, ReservationPeriod period) {
+        return isFree(resourceId, period)
+                ? ResourceAvailabilityStatus.AVAILABLE
+                : ResourceAvailabilityStatus.RESERVED;
     }
 
     private Slot validatedSlot(LocalDate date, LocalTime startTime, int durationMinutes) {
@@ -144,13 +132,6 @@ public class AvailabilityService implements AvailabilityApi {
 
     private List<ResourceInfo> activeResources(VenueInfo venue) {
         return resourceService.findActiveResources(venue.id().value());
-    }
-
-    private Set<ResourceId> blockedResourceIds(List<ResourceInfo> resources, ReservationPeriod period) {
-        List<UUID> resourceIds = resources.stream().map(info -> info.id().value()).toList();
-        return resourceService.findActiveBlocksOverlapping(resourceIds, period).stream()
-                .map(ResourceBlockInfo::resourceId)
-                .collect(Collectors.toSet());
     }
 
     private boolean isFree(ResourceId resourceId, ReservationPeriod period) {

@@ -30,6 +30,12 @@ public class ReservationApiFacade implements ReservationApi {
     }
 
     @Override
+    public ReservationInfo createForRecurringReservation(UUID resourceId, LocalDateTime startTime, int durationMinutes,
+                                                         CustomerId customer, UUID recurringReservationId) {
+        return createReservation.createForRecurringReservation(resourceId, startTime, durationMinutes, customer, recurringReservationId);
+    }
+
+    @Override
     public void cancel(UUID reservationId, CustomerId customer) {
         cancelReservation.cancel(ReservationId.of(reservationId), customer);
     }
@@ -61,6 +67,11 @@ public class ReservationApiFacade implements ReservationApi {
     public List<ReservationInfo> findActiveOverlappingResource(UUID resourceId, ReservationPeriod period) {
         return reservationQueries.findActiveOverlappingResource(
                 com.decoupledx.reservation.resource.api.ResourceId.of(resourceId), period);
+    }
+
+    @Override
+    public List<ReservationInfo> findActiveByRecurringReservation(UUID recurringReservationId) {
+        return reservationQueries.findActiveByRecurringReservation(recurringReservationId);
     }
 
     @Override

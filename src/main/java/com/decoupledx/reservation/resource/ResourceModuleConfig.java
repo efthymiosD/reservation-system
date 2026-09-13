@@ -3,7 +3,6 @@ package com.decoupledx.reservation.resource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.decoupledx.reservation.resource.domain.port.ResourceBlockRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceGroupRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceRepository;
 import com.decoupledx.reservation.resource.domain.service.ResourceService;
@@ -15,7 +14,7 @@ public class ResourceModuleConfig {
 
     @Bean
     ResourceService resourceService(ResourceRepository resources, ResourceGroupRepository groups,
-            ResourceBlockRepository blocks, TransactionRunner tx) {
-        return new ResourceService(resources, groups, blocks, tx);
+            TransactionRunner tx) {
+        return new ResourceService(resources, groups, tx);
     }
 }

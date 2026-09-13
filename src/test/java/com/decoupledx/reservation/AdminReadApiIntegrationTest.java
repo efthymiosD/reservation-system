@@ -34,7 +34,7 @@ class AdminReadApiIntegrationTest extends PostgresIntegrationTest {
 
     @BeforeEach
     void cleanTables() {
-        jdbc.update("TRUNCATE resource_blocks, reservations");
+        jdbc.update("TRUNCATE recurring_reservations, reservations");
     }
 
     @Test
@@ -88,16 +88,18 @@ class AdminReadApiIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void adminCanListAllResourceBlocks() throws Exception {
-        mockMvc.perform(post("/api/admin/resource-blocks")
+    void adminCanListAllRecurringReservations() throws Exception {
+        mockMvc.perform(post("/api/admin/recurring-reservations")
                         .with(admin("admin"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(blockRequest(FIELD_1, "2026-09-21T19:00:00", "2026-09-21T20:00:00", "report")))
-                .andExpect(status().isCreated());
+                        .content(recurringReservationRequest(FIELD_1, "WEDNESDAY", "19:00", "20:00")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        mockMvc.perform(get("/api/admin/resource-blocks").with(admin("admin")))
+        mockMvc.perform(get("/api/admin/recurring-reservations").with(admin("admin")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].weekday").value("WEDNESDAY"));
     }
 
     @Test
@@ -105,7 +107,7 @@ class AdminReadApiIntegrationTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/admin/reservations").with(customer("regular-user")))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(get("/api/admin/resource-blocks").with(customer("regular-user")))
+        mockMvc.perform(get("/api/admin/recurring-reservations").with(customer("regular-user")))
                 .andExpect(status().isForbidden());
     }
 
@@ -121,9 +123,14 @@ class AdminReadApiIntegrationTest extends PostgresIntegrationTest {
                 .andReturn();
     }
 
-    private String blockRequest(String resourceId, String startTime, String endTime, String reason) {
+    private String recurringReservationRequest(String resourceId, String weekday, String startTime, String endTime) {
         return """
-                {"resourceId": "%s", "startTime": "%s", "endTime": "%s", "reason": "%s"}
-                """.formatted(resourceId, startTime, endTime, reason);
+                {"resourceId": "%s",
+                 "customerId": "11111111-1111-1111-1111-111111111111",
+                 "weekday": "%s",
+                 "startTime": "%s",
+                 "endTime": "%s",
+                 "windowMonths": 1}
+                """.formatted(resourceId, weekday, startTime, endTime);
     }
 }

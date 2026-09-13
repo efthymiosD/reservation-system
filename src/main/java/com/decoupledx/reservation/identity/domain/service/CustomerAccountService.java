@@ -1,11 +1,13 @@
 package com.decoupledx.reservation.identity.domain.service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.decoupledx.reservation.identity.api.CustomerDirectoryApi;
+import com.decoupledx.reservation.identity.api.CustomerEntry;
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 import com.decoupledx.reservation.shared.domain.TransactionRunner;
@@ -48,6 +50,16 @@ public class CustomerAccountService implements CustomerDirectoryApi {
                 .collect(Collectors.toMap(
                         entry -> UUID.fromString(entry.getKey().value()),
                         Map.Entry::getValue));
+    }
+
+    @Override
+    public List<CustomerEntry> findAll() {
+        return customerAccounts.findAll().stream()
+                .filter(entry -> isUuid(entry.customerId().value()))
+                .map(entry -> new CustomerEntry(
+                        UUID.fromString(entry.customerId().value()),
+                        entry.displayName()))
+                .toList();
     }
 
     private boolean isUuid(String value) {

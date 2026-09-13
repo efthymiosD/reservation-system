@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Web submission use case: hands the browser-submitted slot to the reservation
- * domain. The domain revalidates everything (availability, blocks, policies,
+ * domain. The domain revalidates everything (availability, policies,
  * concurrency); this component adds nothing but the call.
  */
 @Component

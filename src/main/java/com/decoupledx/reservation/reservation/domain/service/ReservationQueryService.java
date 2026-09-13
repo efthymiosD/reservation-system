@@ -54,6 +54,12 @@ public class ReservationQueryService {
                 .toList();
     }
 
+    public List<ReservationInfo> findActiveByRecurringReservation(java.util.UUID recurringReservationId) {
+        return reservations.findActiveByRecurringReservationId(recurringReservationId).stream()
+                .map(CreateReservationService::toInfo)
+                .toList();
+    }
+
     public ReservationPage findAllForAdmin(ReservationStatus status, int page, int size) {
         List<ReservationInfo> items = reservations.findAll(status, page, size).stream()
                 .map(CreateReservationService::toInfo)

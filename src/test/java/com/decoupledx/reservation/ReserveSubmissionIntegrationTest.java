@@ -9,12 +9,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -151,13 +148,12 @@ class ReserveSubmissionIntegrationTest extends PostgresIntegrationTest {
     @Test
     void allFieldsUnavailableStillLoadsThePage() throws Exception {
         for (int i = 1; i <= 6; i++) {
-            jdbc.update("""
-                    INSERT INTO resource_blocks
-                        (id, resource_id, start_time, end_time, reason, status, created_at, version)
-                    VALUES (?, ?, ?, ?, 'maintenance', 'ACTIVE', now(), 0)
-                    """, UUID.randomUUID(),
-                    UUID.fromString("a0000000-0000-0000-0000-00000000010" + i),
-                    venueTime(18, 0), venueTime(19, 0));
+            String body = """
+                    {"resourceId": "%s", "startTime": "2026-09-01T18:00:00", "durationMinutes": 60}
+                    """.formatted("a0000000-0000-0000-0000-00000000010" + i);
+            mockMvc.perform(post("/api/reservations").with(customer("saturates-" + i))
+                            .contentType(APPLICATION_JSON).content(body))
+                    .andExpect(status().isCreated());
         }
         mockMvc.perform(get("/reserve?date=2026-09-01&start=18:00&durationMinutes=60")
                         .with(webUser("alice")))
@@ -173,10 +169,5 @@ class ReserveSubmissionIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
-    }
-
-    private java.time.OffsetDateTime venueTime(int hour, int minute) {
-        return java.time.LocalDate.of(2026, 9, 1).atTime(hour, minute)
-                .atZone(java.time.ZoneId.of("Europe/Warsaw")).toOffsetDateTime();
     }
 }

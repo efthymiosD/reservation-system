@@ -277,7 +277,6 @@ class ReservationPageModelFactory {
         String aria = switch (status) {
             case AVAILABLE -> resource.name() + " — available — select field";
             case RESERVED -> resource.name() + " — reserved — unavailable";
-            case BLOCKED -> resource.name() + " — blocked — unavailable";
         };
         return new ReservationPageModel.MapField(
                 resource.resourceId(),

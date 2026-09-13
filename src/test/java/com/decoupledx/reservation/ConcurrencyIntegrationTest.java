@@ -1,9 +1,16 @@
 package com.decoupledx.reservation;
 
-import static com.decoupledx.reservation.testinfra.JwtSupport.admin;
-import static com.decoupledx.reservation.testinfra.JwtSupport.customer;
-import static org.assertj.core.api.Assertions.assertThat;
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -16,22 +23,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.RepetitionInfo;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import static com.decoupledx.reservation.testinfra.JwtSupport.admin;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Black-box concurrency tests: every racer goes through the HTTP API
- * (reservations as customers, blocks as admin) exactly like real clients, and
- * the database exclusion constraints decide the winners.
+ * (reservations as customers, recurring reservations as admin) exactly like real clients,
+ * and the database exclusion constraints decide the winners.
  */
 @AutoConfigureMockMvc
 class ConcurrencyIntegrationTest extends PostgresIntegrationTest {
@@ -67,20 +65,31 @@ class ConcurrencyIntegrationTest extends PostgresIntegrationTest {
     }
 
     @RepeatedTest(3)
-    void reservationAndBlockRaceIsSerialized(RepetitionInfo repetitionInfo) throws Exception {
+    void recurringReservationCreatesForTheSameSlotSerializeToASingleReservation(RepetitionInfo repetitionInfo)
+            throws Exception {
         int day = 22 + repetitionInfo.getCurrentRepetition();
+        String weekday = LocalDate.of(2026, 9, day).getDayOfWeek().name();
         ExecutorService pool = Executors.newFixedThreadPool(2);
         try {
-            Future<Boolean> reservationAttempt = pool.submit(() -> attemptReservation(FIELD_1, day,
-                    LocalTime.of(18, 0), 60, com.decoupledx.reservation.testinfra.JwtSupport.customer("race-customer")));
-            Future<Boolean> blockAttempt = pool.submit(() -> attemptBlock(FIELD_1, day,
-                    LocalTime.of(18, 30), 60));
-
-            int successes = (reservationAttempt.get() ? 1 : 0) + (blockAttempt.get() ? 1 : 0);
-            assertThat(successes).isEqualTo(1);
+            Future<Boolean> first = pool.submit(() -> attemptRecurringReservation(FIELD_1, weekday,
+                    LocalTime.of(18, 0), 60, UUID.randomUUID()));
+            Future<Boolean> second = pool.submit(() -> attemptRecurringReservation(FIELD_1, weekday,
+                    LocalTime.of(18, 0), 60, UUID.randomUUID()));
+            first.get();
+            second.get();
         } finally {
             pool.shutdownNow();
         }
+
+        Instant racingStart = LocalDate.of(2026, 9, day).atTime(18, 0).atZone(WARSAW).toInstant();
+        Integer reservationsAtSlot = jdbc.queryForObject("""
+                SELECT count(*) FROM reservations
+                WHERE resource_id = ?
+                  AND status = 'ACTIVE'
+                  AND start_time = ?
+                """, Integer.class, UUID.fromString(FIELD_1),
+                java.sql.Timestamp.from(racingStart));
+        assertThat(reservationsAtSlot).isEqualTo(1);
     }
 
     private List<Callable<Boolean>> raceReservations(String resourceId, int day, LocalTime start,
@@ -103,15 +112,18 @@ class ConcurrencyIntegrationTest extends PostgresIntegrationTest {
         return post("/api/reservations", body, principal);
     }
 
-    private boolean attemptBlock(String resourceId, int day, LocalTime start, int durationMinutes) {
+    private boolean attemptRecurringReservation(String resourceId, String weekday, LocalTime startTime,
+            int durationMinutes, UUID customerId) {
         String body = """
                 {"resourceId": "%s",
-                 "startTime": "2026-09-%02dT%s",
-                 "endTime": "2026-09-%02dT%s",
-                 "reason": "race block"}
-                """.formatted(resourceId, day, TIME_FORMAT.format(start),
-                day, TIME_FORMAT.format(start.plusMinutes(durationMinutes)));
-        return post("/api/admin/resource-blocks", body, admin("admin"));
+                 "customerId": "%s",
+                 "weekday": "%s",
+                 "startTime": "%s",
+                 "endTime": "%s",
+                 "windowMonths": 1}
+                """.formatted(resourceId, customerId, weekday, TIME_FORMAT.format(startTime),
+                TIME_FORMAT.format(startTime.plusMinutes(durationMinutes)));
+        return post("/api/admin/recurring-reservations", body, admin("admin"));
     }
 
     private boolean post(String url, String body,

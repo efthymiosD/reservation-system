@@ -1,18 +1,5 @@
 package com.decoupledx.reservation.reservation.adapter.out.persistence;
 
-import java.time.Instant;
-import java.util.Currency;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.dao.ConcurrencyFailureException;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.reservation.api.ReservationId;
 import com.decoupledx.reservation.reservation.api.ReservationStatus;
@@ -23,8 +10,19 @@ import com.decoupledx.reservation.shared.domain.BusinessException;
 import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.Money;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+import java.util.Currency;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -105,6 +103,13 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     }
 
     @Override
+    public List<Reservation> findActiveByRecurringReservationId(UUID recurringReservationId) {
+        return reservations.findActiveByRecurringReservationId(recurringReservationId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Reservation> findAll(ReservationStatus status, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, 100));
         Page<ReservationEntity> result = status == null
@@ -149,7 +154,8 @@ class ReservationPersistenceAdapter implements ReservationRepository {
                 reservation.getPrice().currency().getCurrencyCode(),
                 reservation.getCreatedAt(),
                 reservation.getCancelledAt(),
-                reservation.getCancelledBy() == null ? null : reservation.getCancelledBy().value());
+                reservation.getCancelledBy() == null ? null : reservation.getCancelledBy().value(),
+                reservation.getRecurringReservationId());
     }
 
     private Reservation toDomain(ReservationEntity entity) {
@@ -162,6 +168,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
                 ReservationStatus.valueOf(entity.getStatus()),
                 entity.getCreatedAt(),
                 entity.getCancelledAt(),
-                entity.getCancelledBy() == null ? null : CustomerId.of(entity.getCancelledBy()));
+                entity.getCancelledBy() == null ? null : CustomerId.of(entity.getCancelledBy()),
+                entity.getRecurringReservationId());
     }
 }

@@ -2,6 +2,7 @@ package com.decoupledx.reservation.reservation.domain.port;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import com.decoupledx.reservation.identity.api.CustomerId;
 import com.decoupledx.reservation.reservation.api.ReservationId;
@@ -27,6 +28,8 @@ public interface ReservationRepository {
     List<Reservation> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);
 
     boolean existsActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);
+
+    List<Reservation> findActiveByRecurringReservationId(UUID recurringReservationId);
 
     List<Reservation> findAll(ReservationStatus status, int page, int size);
 
