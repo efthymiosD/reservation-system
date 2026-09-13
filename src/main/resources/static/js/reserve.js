@@ -31,14 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const STATE_LABELS = {
     'resource--available': '✓ free',
-    'resource--reserved': '✕ reserved',
-    'resource--blocked': '🔒 blocked'
+    'resource--reserved': '✕ reserved'
   };
 
   let selected = null;
 
   function stateClassOf(field) {
-    return ['resource--available', 'resource--reserved', 'resource--blocked']
+    return ['resource--available', 'resource--reserved']
         .find(cls => field.classList.contains(cls));
   }
 
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function select(field) {
-    if (!field.classList.contains('resource--available')) return;  // reserved/blocked are not selectable
+    if (!field.classList.contains('resource--available')) return;  // reserved is not selectable
     deselectCurrent();
     selected = field;
     field.classList.add('resource--selected');

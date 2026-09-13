@@ -42,7 +42,8 @@ class ReservationAdminController {
                         r.price().amount(),
                         r.price().currency().getCurrencyCode(),
                         r.createdAt(),
-                        r.cancelledAt()))
+                        r.cancelledAt(),
+                        r.recurringReservationId()))
                 .toList();
         return new AdminReservationPage(items, result.total(), result.page(), result.size());
     }
@@ -57,7 +58,8 @@ class ReservationAdminController {
             BigDecimal priceAmount,
             String priceCurrency,
             Instant createdAt,
-            Instant cancelledAt) {
+            Instant cancelledAt,
+            UUID recurringReservationId) {
     }
 
     record AdminReservationPage(

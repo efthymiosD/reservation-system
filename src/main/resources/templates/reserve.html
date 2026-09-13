@@ -72,7 +72,7 @@
           <button type="submit" class="btn btn-primary btn-lg" disabled>Reserve</button>
         </span>
         <span th:if="${page.held == null and !page.anyAvailable}" tabindex="0" data-bs-toggle="tooltip"
-              title="Reservation is not possible: all fields are reserved or blocked for this time window.">
+              title="Reservation is not possible: all fields are reserved for this time window.">
           <button type="submit" class="btn btn-secondary btn-lg" disabled>Reserve</button>
         </span>
         <button th:if="${page.held == null and page.anyAvailable}" type="submit" id="reserve-button"

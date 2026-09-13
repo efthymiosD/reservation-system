@@ -70,6 +70,9 @@ app:
     end-session-uri: ${KEYCLOAK_END_SESSION_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/logout}
   venue:
     timezone: Europe/Warsaw
+  recurring-reservation:
+    materialization-enabled: ${RECURRING_RESERVATION_MATERIALIZATION_ENABLED:true}
+    materialization-cron: ${RECURRING_RESERVATION_MATERIALIZATION_CRON:0 0 4 * * *}
 
 springdoc:
   swagger-ui:

@@ -37,7 +37,7 @@ class CustomerIdentityIntegrationTest extends PostgresIntegrationTest {
 
     @BeforeEach
     void cleanSharedDataset() {
-        jdbc.update("TRUNCATE resource_blocks, reservations, customers");
+        jdbc.update("TRUNCATE recurring_reservations, reservations, customers");
     }
 
     @Test

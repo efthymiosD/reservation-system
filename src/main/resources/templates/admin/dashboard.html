@@ -19,8 +19,8 @@
     <div class="col-md-4">
       <div class="card text-center h-100">
         <div class="card-body">
-          <div class="display-6" th:text="${page.activeBlocks}">0</div>
-          <div class="text-muted">active resource blocks</div>
+          <div class="display-6" th:text="${page.activeRecurringReservations}">0</div>
+          <div class="text-muted">active recurring reservations</div>
         </div>
       </div>
     </div>
@@ -36,7 +36,7 @@
 
   <div class="d-flex gap-2">
     <a class="btn btn-outline-primary" th:href="@{/admin/reservations}">Reservations</a>
-    <span class="text-muted align-self-center">other pages arrive with the next admin phases</span>
+    <a class="btn btn-outline-primary" th:href="@{/admin/recurring-reservations}">Recurring reservations</a>
   </div>
 </section>
 </body>

@@ -21,7 +21,6 @@
             th:switch="${field.statusClass}">
         <th:block th:case="available">&#10003; free</th:block>
         <th:block th:case="reserved">&#10005; reserved</th:block>
-        <th:block th:case="blocked">&#128274; blocked</th:block>
       </text>
     </g>
   </svg>
@@ -31,7 +30,6 @@
   <span class="venue-legend__item"><span class="dot dot--available" aria-hidden="true"></span> Available</span>
   <span class="venue-legend__item"><span class="dot dot--selected" aria-hidden="true"></span> Selected</span>
   <span class="venue-legend__item"><span class="dot dot--reserved" aria-hidden="true"></span> Reserved</span>
-  <span class="venue-legend__item"><span class="dot dot--blocked" aria-hidden="true"></span> Blocked</span>
 </div>
 
 </body>

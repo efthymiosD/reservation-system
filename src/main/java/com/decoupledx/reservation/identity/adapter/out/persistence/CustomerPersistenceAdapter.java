@@ -56,6 +56,15 @@ class CustomerPersistenceAdapter implements CustomerAccountRepository {
     }
 
     @Override
+    public List<CustomerAccountInfo> findAll() {
+        return customers.findAllByOrderByCreatedAtDesc().stream()
+                .map(entity -> new CustomerAccountInfo(
+                        CustomerId.of(entity.getCustomerId().toString()),
+                        entity.getDisplayName()))
+                .toList();
+    }
+
+    @Override
     public void updateDisplayName(CustomerId customerId, String displayName) {
         customers.findFirstByCustomerId(UUID.fromString(customerId.value()))
                 .ifPresent(entity -> {

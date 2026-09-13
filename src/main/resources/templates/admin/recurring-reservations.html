@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Recurring reservations — Admin', ~{::section})}">
+<head>
+  <title>Recurring reservations — Admin</title>
+</head>
+<body>
+<section class="container py-4">
+  <h1 class="mb-4">Recurring reservations</h1>
+
+  <div class="row">
+    <div class="col-md-4 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="h5 card-title">Assign a recurring slot</h2>
+          <form th:action="@{/admin/recurring-reservations}" method="post" class="d-grid gap-3">
+            <div>
+              <label for="resourceId" class="form-label">Resource</label>
+              <select id="resourceId" name="resourceId" class="form-select" required>
+                <option value="" disabled selected>Select a resource…</option>
+                <option th:each="r : ${page.resources}" th:value="${r.resourceId}" th:text="${r.name}">Field 1</option>
+              </select>
+            </div>
+            <div>
+              <label for="customerId" class="form-label">Customer</label>
+              <select id="customerId" name="customerId" class="form-select" required>
+                <option value="" disabled selected>Select a customer…</option>
+                <option th:each="c : ${page.customers}" th:value="${c.customerId}" th:text="${c.displayName}">alice</option>
+              </select>
+            </div>
+            <div>
+              <label for="weekday" class="form-label">Weekday</label>
+              <select id="weekday" name="weekday" class="form-select" required>
+                <option value="" disabled selected>Select a day…</option>
+                <option value="MONDAY">Monday</option>
+                <option value="TUESDAY">Tuesday</option>
+                <option value="WEDNESDAY">Wednesday</option>
+                <option value="THURSDAY">Thursday</option>
+                <option value="FRIDAY">Friday</option>
+                <option value="SATURDAY">Saturday</option>
+                <option value="SUNDAY">Sunday</option>
+              </select>
+            </div>
+            <div>
+              <label for="windowMonths" class="form-label">Booking window</label>
+              <select id="windowMonths" name="windowMonths" class="form-select" required>
+                <option value="" disabled selected>Book how far ahead…</option>
+                <option th:each="w : ${page.windows}" th:value="${w.months}" th:text="${w.label}">3 months</option>
+              </select>
+            </div>
+            <div class="row g-2" th:if="${!#lists.isEmpty(page.startTimeOptions)}">
+              <div class="col">
+                <label for="startTime" class="form-label">Start</label>
+                <select id="startTime" name="startTime" class="form-select" required>
+                  <option th:each="t : ${page.startTimeOptions}" th:value="${t}" th:text="${t}">18:00</option>
+                </select>
+              </div>
+              <div class="col">
+                <label for="durationMinutes" class="form-label">Duration</label>
+                <select id="durationMinutes" name="durationMinutes" class="form-select" required>
+                  <option th:each="d : ${page.durationOptions}" th:value="${d}"
+                          th:text="${d / 60} + ' h' + (${d % 60} > 0 ? ' ' + ${d % 60} + ' min' : '')">1 h</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Assign</button>
+          </form>
+          <p class="text-muted small mt-3 mb-0">Times are venue-local, aligned to the venue's half-hour
+            booking grid within opening hours. Assigning a slot materializes each upcoming occurrence inside
+            the selected booking window (1, 3 or 6 months) as a real reservation the customer can cancel;
+            weeks where the slot is already taken are skipped automatically.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8">
+      <div class="d-flex justify-content-end mb-3">
+        <form th:action="@{/admin/recurring-reservations/materialize}" method="post">
+          <button type="submit" class="btn btn-outline-primary">Materialize due occurrences</button>
+        </form>
+      </div>
+
+      <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+          <th scope="col">Resource</th>
+          <th scope="col">Customer</th>
+          <th scope="col">Weekday</th>
+          <th scope="col">Slot (venue time)</th>
+          <th scope="col">Window</th>
+          <th scope="col">Status</th>
+          <th scope="col">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="row : ${page.reservations}">
+          <td th:text="${row.fieldName}">Field 1</td>
+          <td th:text="${row.customerName}">alice</td>
+          <td th:text="${row.weekday}">Monday</td>
+          <td th:text="${row.startTime} + '–' + ${row.endTime}">18:00–19:00</td>
+          <td th:text="${row.windowLabel}">3 months</td>
+          <td th:text="${row.status}">ACTIVE</td>
+          <td>
+            <form th:if="${row.active}"
+                  th:action="@{/admin/recurring-reservations/{id}/cancel(id=${row.reference})}" method="post">
+              <button type="submit" class="btn btn-outline-danger btn-sm">Cancel recurring reservation</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(page.reservations)}">
+          <td colspan="7" class="text-muted text-center">No recurring reservations.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</body>
+</html>

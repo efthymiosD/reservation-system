@@ -8,8 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -32,14 +29,10 @@ class PublicApiIntegrationTest extends PostgresIntegrationTest {
 
     private static final String FIELD_1 = "a0000000-0000-0000-0000-000000000101";
     private static final String FIELD_2 = "a0000000-0000-0000-0000-000000000102";
-    private static final ZoneId VENUE_ZONE = ZoneId.of("Europe/Warsaw");
     private static final LocalDate SLOT_DATE = LocalDate.of(2026, 9, 3);
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private JdbcTemplate jdbc;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -81,14 +74,14 @@ class PublicApiIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void availabilityMapMarksReservedAndBlockedResources() throws Exception {
-        createReservation(FIELD_1, "map-user", 90);
-        insertBlock(UUID.fromString(FIELD_2), venueTime(SLOT_DATE, 18, 0), venueTime(SLOT_DATE, 19, 30));
+    void availabilityMapMarksReservedResources() throws Exception {
+        createReservation(FIELD_1, "map-user-1", 90);
+        createReservation(FIELD_2, "map-user-2", 90);
 
         JsonNode resources = fetchAvailabilityMap(SLOT_DATE, "18:00", 90);
 
         assertThat(statusOf(resources, FIELD_1)).isEqualTo("RESERVED");
-        assertThat(statusOf(resources, FIELD_2)).isEqualTo("BLOCKED");
+        assertThat(statusOf(resources, FIELD_2)).isEqualTo("RESERVED");
         assertThat(countWithStatus(resources, "AVAILABLE")).isEqualTo(4);
     }
 
@@ -131,17 +124,5 @@ class PublicApiIntegrationTest extends PostgresIntegrationTest {
         List<JsonNode> nodes = new ArrayList<>();
         array.forEach(nodes::add);
         return nodes.stream();
-    }
-
-    private void insertBlock(UUID resourceId, OffsetDateTime start, OffsetDateTime end) {
-        jdbc.update("""
-                INSERT INTO resource_blocks
-                    (id, resource_id, start_time, end_time, reason, status, created_at, version)
-                VALUES (?, ?, ?, ?, 'maintenance', 'ACTIVE', now(), 0)
-                """, UUID.randomUUID(), resourceId, start, end);
-    }
-
-    private OffsetDateTime venueTime(LocalDate date, int hour, int minute) {
-        return date.atTime(hour, minute).atZone(VENUE_ZONE).toOffsetDateTime();
     }
 }

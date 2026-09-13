@@ -19,6 +19,7 @@ class DatabaseConstraintsIntegrationTest extends PostgresIntegrationTest {
 
     private static final UUID FIELD_1 = UUID.fromString("a0000000-0000-0000-0000-000000000101");
     private static final UUID FIELD_2 = UUID.fromString("a0000000-0000-0000-0000-000000000102");
+    private static final UUID TEST_CUSTOMER = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final String DAY = "2026-09-10";
 
     @Autowired
@@ -26,7 +27,7 @@ class DatabaseConstraintsIntegrationTest extends PostgresIntegrationTest {
 
     @BeforeEach
     void cleanTables() {
-        jdbc.update("TRUNCATE resource_blocks, reservations");
+        jdbc.update("TRUNCATE recurring_reservations, reservations");
     }
 
     @Test
@@ -67,18 +68,27 @@ class DatabaseConstraintsIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void rejectsOverlappingActiveBlocksOnSameResource() {
-        insertBlock(FIELD_1, at(18, 0), at(20, 0), "maintenance");
-        assertThatThrownBy(() -> insertBlock(FIELD_1, at(19, 0), at(21, 0), "repair"))
+    void rejectsRecurringReservationPeriodWithEndNotAfterStart() {
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO recurring_reservations
+                    (id, resource_id, customer_id, weekday, start_time, end_time, status,
+                     next_occurrence, window_months, created_at, version)
+                VALUES (?, ?, ?, 'MONDAY', '18:00', '18:00', 'ACTIVE', '2026-09-10', 1, now(), 0)
+                """, UUID.randomUUID(), FIELD_1, TEST_CUSTOMER))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("resource_blocks_no_overlap");
+                .hasMessageContaining("recurring_reservation_period_check");
     }
 
     @Test
-    void allowsOverlappingBlocksOnDifferentResources() {
-        insertBlock(FIELD_1, at(14, 0), at(15, 0), "maintenance");
-        assertThatCode(() -> insertBlock(FIELD_2, at(14, 0), at(15, 0), "maintenance"))
-                .doesNotThrowAnyException();
+    void rejectsRecurringReservationWithUnsupportedWeekday() {
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO recurring_reservations
+                    (id, resource_id, customer_id, weekday, start_time, end_time, status,
+                     next_occurrence, window_months, created_at, version)
+                VALUES (?, ?, ?, 'FRIDAYZ', '18:00', '19:00', 'ACTIVE', '2026-09-10', 1, now(), 0)
+                """, UUID.randomUUID(), FIELD_1, TEST_CUSTOMER))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("recurring_reservation_day_check");
     }
 
     private void insertReservation(UUID resourceId, String customerId, OffsetDateTime start,
@@ -90,15 +100,6 @@ class DatabaseConstraintsIntegrationTest extends PostgresIntegrationTest {
                 VALUES (?, ?, ?, ?, ?, ?, 80.00, 'PLN', now(), 0)
                 """,
                 UUID.randomUUID(), resourceId, customerId, start, end, status);
-    }
-
-    private void insertBlock(UUID resourceId, OffsetDateTime start, OffsetDateTime end, String reason) {
-        jdbc.update("""
-                INSERT INTO resource_blocks
-                    (id, resource_id, start_time, end_time, reason, status, created_at, version)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVE', now(), 0)
-                """,
-                UUID.randomUUID(), resourceId, start, end, reason);
     }
 
     private static OffsetDateTime at(int hour, int minute) {

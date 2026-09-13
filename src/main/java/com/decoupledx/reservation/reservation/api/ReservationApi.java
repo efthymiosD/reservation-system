@@ -17,6 +17,14 @@ public interface ReservationApi {
 
     ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes, CustomerId customer);
 
+    /**
+     * Creates a reservation on behalf of a recurring reservation (used by the
+     * recurring-reservation materializer). The produced reservation is linked to the
+     * recurring reservation via its {@code recurringReservationId}.
+     */
+    ReservationInfo createForRecurringReservation(UUID resourceId, LocalDateTime startTime, int durationMinutes,
+                                                  CustomerId customer, UUID recurringReservationId);
+
     void cancel(UUID reservationId, CustomerId customer);
 
     ReservationInfo getReservation(UUID reservationId, CustomerId customer);
@@ -26,6 +34,8 @@ public interface ReservationApi {
     List<ReservationInfo> findActiveOverlappingCustomer(CustomerId customer, ReservationPeriod period);
 
     List<ReservationInfo> findActiveOverlappingResource(UUID resourceId, ReservationPeriod period);
+
+    List<ReservationInfo> findActiveByRecurringReservation(UUID recurringReservationId);
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);
 

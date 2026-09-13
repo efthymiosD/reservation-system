@@ -114,18 +114,19 @@ CREATE INDEX resources_venue_idx ON resources (venue_id);
 -- ---------------------------------------------------------------------------
 CREATE TABLE reservations
 (
-    id             UUID PRIMARY KEY,
-    resource_id    UUID           NOT NULL REFERENCES resources (id),
-    customer_id    VARCHAR(128)   NOT NULL,
-    start_time     TIMESTAMPTZ    NOT NULL,
-    end_time       TIMESTAMPTZ    NOT NULL,
-    status         VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
-    price_amount   NUMERIC(12, 2) NOT NULL,
-    price_currency VARCHAR(3)     NOT NULL,
-    created_at     TIMESTAMPTZ    NOT NULL,
-    cancelled_at   TIMESTAMPTZ,
-    cancelled_by   VARCHAR(128),
-    version        BIGINT         NOT NULL DEFAULT 0,
+    id                       UUID PRIMARY KEY,
+    resource_id              UUID           NOT NULL REFERENCES resources (id),
+    customer_id              VARCHAR(128)   NOT NULL,
+    start_time               TIMESTAMPTZ    NOT NULL,
+    end_time                 TIMESTAMPTZ    NOT NULL,
+    status                   VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
+    price_amount             NUMERIC(12, 2) NOT NULL,
+    price_currency           VARCHAR(3)     NOT NULL,
+    created_at               TIMESTAMPTZ    NOT NULL,
+    cancelled_at             TIMESTAMPTZ,
+    cancelled_by             VARCHAR(128),
+    recurring_reservation_id  UUID,
+    version                  BIGINT         NOT NULL DEFAULT 0,
     CONSTRAINT reservation_period_check CHECK (end_time > start_time),
     CONSTRAINT reservation_status_check CHECK (status IN ('ACTIVE', 'CANCELLED'))
 );
@@ -148,35 +149,7 @@ ALTER TABLE reservations
 
 CREATE INDEX reservations_resource_lookup_idx ON reservations (resource_id, status, start_time);
 CREATE INDEX reservations_customer_lookup_idx ON reservations (customer_id, status, start_time);
-
--- ---------------------------------------------------------------------------
--- Resource blocks
--- ---------------------------------------------------------------------------
-CREATE TABLE resource_blocks
-(
-    id           UUID        NOT NULL PRIMARY KEY,
-    resource_id  UUID        NOT NULL REFERENCES resources (id),
-    start_time   TIMESTAMPTZ NOT NULL,
-    end_time     TIMESTAMPTZ NOT NULL,
-    reason       TEXT        NOT NULL,
-    status       VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
-    created_at   TIMESTAMPTZ NOT NULL,
-    cancelled_by VARCHAR(128),
-    cancelled_at TIMESTAMPTZ,
-    version      BIGINT      NOT NULL DEFAULT 0,
-    CONSTRAINT resource_block_period_check CHECK (end_time > start_time),
-    CONSTRAINT resource_block_status_check CHECK (status IN ('ACTIVE', 'CANCELLED'))
-);
-
--- Two active blocks on the same resource must not overlap.
-ALTER TABLE resource_blocks
-    ADD CONSTRAINT resource_blocks_no_overlap
-        EXCLUDE USING gist (
-            resource_id WITH =,
-            (tstzrange(start_time, end_time, '[)')) WITH &&
-            ) WHERE (status = 'ACTIVE');
-
-CREATE INDEX resource_blocks_resource_lookup_idx ON resource_blocks (resource_id, status, start_time);
+CREATE INDEX reservations_recurring_reservation_lookup_idx ON reservations (recurring_reservation_id);
 
 -- ---------------------------------------------------------------------------
 -- Internal, application-owned customer identity.
@@ -191,3 +164,36 @@ CREATE TABLE customers
     display_name VARCHAR(255) NULL,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
+
+-- ---------------------------------------------------------------------------
+-- Recurring reservations: a customer is assigned a recurring weekly slot on a
+-- resource (venue-local weekday + start/end time). The materializer turns each
+-- upcoming occurrence inside the recurring reservation's booking window
+-- (1/3/6 months, `window_months`) into a real reservation.
+-- `next_occurrence` is the cursor: the next date (venue-local) to materialize.
+-- ---------------------------------------------------------------------------
+CREATE TABLE recurring_reservations
+(
+    id              UUID        NOT NULL PRIMARY KEY,
+    resource_id     UUID        NOT NULL REFERENCES resources (id),
+    customer_id     UUID        NOT NULL,
+    weekday         VARCHAR(9)  NOT NULL,
+    start_time      TIME        NOT NULL,
+    end_time        TIME        NOT NULL,
+    status          VARCHAR(16) NOT NULL DEFAULT 'ACTIVE',
+    next_occurrence DATE        NOT NULL,
+    window_months   INT         NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL,
+    cancelled_at    TIMESTAMPTZ,
+    cancelled_by    VARCHAR(128),
+    version         BIGINT      NOT NULL DEFAULT 0,
+    CONSTRAINT recurring_reservation_period_check CHECK (end_time > start_time),
+    CONSTRAINT recurring_reservation_status_check CHECK (status IN ('ACTIVE', 'CANCELLED')),
+    CONSTRAINT recurring_reservation_window_check CHECK (window_months IN (1, 3, 6)),
+    CONSTRAINT recurring_reservation_day_check CHECK (weekday IN
+                                                      ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY',
+                                                       'SATURDAY', 'SUNDAY'))
+);
+
+CREATE INDEX recurring_reservations_resource_idx ON recurring_reservations (resource_id, status);
+CREATE INDEX recurring_reservations_customer_idx ON recurring_reservations (customer_id, status);

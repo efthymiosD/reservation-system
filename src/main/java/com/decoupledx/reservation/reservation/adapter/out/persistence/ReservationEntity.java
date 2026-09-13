@@ -52,12 +52,16 @@ class ReservationEntity {
     @Column(name = "cancelled_by")
     private String cancelledBy;
 
+    @Column(name = "recurring_reservation_id")
+    private UUID recurringReservationId;
+
     @Version
     private long version;
 
     ReservationEntity(UUID id, UUID resourceId, String customerId, Instant startTime, Instant endTime,
                       String status, BigDecimal priceAmount, String priceCurrency,
-                      Instant createdAt, Instant cancelledAt, String cancelledBy) {
+                      Instant createdAt, Instant cancelledAt, String cancelledBy,
+                      UUID recurringReservationId) {
         this.id = id;
         this.resourceId = resourceId;
         this.customerId = customerId;
@@ -69,6 +73,7 @@ class ReservationEntity {
         this.createdAt = createdAt;
         this.cancelledAt = cancelledAt;
         this.cancelledBy = cancelledBy;
+        this.recurringReservationId = recurringReservationId;
     }
 
     void updateFrom(String status, Instant cancelledAt, String cancelledBy) {

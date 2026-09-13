@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.UUID;
 import com.decoupledx.reservation.reservation.domain.model.CreateReservationCommand;
 import com.decoupledx.reservation.reservation.api.ReservationInfo;
@@ -51,9 +50,24 @@ public class CreateReservationService {
      */
     public ReservationInfo create(UUID resourceId, LocalDateTime startTime,
             int durationMinutes, CustomerId customerId) {
+        return create(resourceId, startTime, durationMinutes, customerId, null);
+    }
+
+    /**
+     * Entry point for the recurring-reservation materializer: identical to {@link #create}
+     * but links the created reservation to the recurring reservation that
+     * produced it.
+     */
+    public ReservationInfo createForRecurringReservation(UUID resourceId, LocalDateTime startTime,
+            int durationMinutes, CustomerId customerId, UUID recurringReservationId) {
+        return create(resourceId, startTime, durationMinutes, customerId, recurringReservationId);
+    }
+
+    private ReservationInfo create(UUID resourceId, LocalDateTime startTime,
+            int durationMinutes, CustomerId customerId, UUID recurringReservationId) {
         Instant start = startTime.atZone(venueZone()).toInstant();
         Instant end = start.plus(Duration.ofMinutes(durationMinutes));
-        return create(new CreateReservationCommand(ResourceId.of(resourceId), start, end), customerId);
+        return create(new CreateReservationCommand(ResourceId.of(resourceId), start, end), customerId, recurringReservationId);
     }
 
     private ZoneId venueZone() {
@@ -61,10 +75,16 @@ public class CreateReservationService {
     }
 
     public ReservationInfo create(CreateReservationCommand command, CustomerId customerId) {
-        return tx.run(() -> doCreate(command, customerId));
+        return create(command, customerId, null);
     }
 
-    private ReservationInfo doCreate(CreateReservationCommand command, CustomerId customerId) {
+    private ReservationInfo create(CreateReservationCommand command, CustomerId customerId,
+            UUID recurringReservationId) {
+        return tx.run(() -> doCreate(command, customerId, recurringReservationId));
+    }
+
+    private ReservationInfo doCreate(CreateReservationCommand command, CustomerId customerId,
+            UUID recurringReservationId) {
         ResourceInfo resource = resourceService.lockResource(command.resourceId().value());
         if (!resource.isActive()) {
             throw new BusinessException(ErrorCode.RESOURCE_INACTIVE);
@@ -74,20 +94,19 @@ public class CreateReservationService {
         Instant now = clock.instant();
         ReservationPeriod period = ReservationPeriod.of(command.start(), command.end());
 
-        validatePeriod(command, period, venue, now);
-        requireNoBlockConflict(command.resourceId(), period);
+        validatePeriod(command, period, venue, now, recurringReservationId != null);
         requireNoCustomerOverlap(customerId, period);
 
         Money price = pricingService.pricingPolicyFor(resource.venueId().value()).calculatePrice(period);
-        Reservation reservation = Reservation.create(command.resourceId(), customerId, period, price, now);
+        Reservation reservation = Reservation.create(command.resourceId(), customerId, period, price, now, recurringReservationId);
         ReservationInfo saved = toInfo(reservations.save(reservation));
-        log.info("Reservation created id={} resourceId={} customerId={} price={}",
-                saved.id(), saved.resourceId(), saved.customerId(), saved.price());
+        log.info("Reservation created id={} resourceId={} customerId={} price={} recurringReservationId={}",
+                saved.id(), saved.resourceId(), saved.customerId(), saved.price(), saved.recurringReservationId());
         return saved;
     }
 
     private void validatePeriod(CreateReservationCommand command, ReservationPeriod period,
-                                VenueInfo venue, Instant now) {
+                                VenueInfo venue, Instant now, boolean forRecurringReservation) {
         ZoneId zone = venue.timezone();
         BookingPolicy bookingPolicy = policyService.bookingPolicyFor(venue.id().value());
         bookingPolicy.validateDuration(period.duration());
@@ -101,15 +120,10 @@ public class CreateReservationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS));
         bookingPolicy.validateStartTime(command.start().atZone(zone), opensAt);
         bookingPolicy.validateNotInPast(now, command.start(), zone);
-        bookingPolicy.validateAdvanceBooking(now, command.start(), zone);
-    }
-
-    private void requireNoBlockConflict(ResourceId resourceId, ReservationPeriod period) {
-        boolean blocked = !resourceService
-                .findActiveBlocksOverlapping(List.of(resourceId.value()), period)
-                .isEmpty();
-        if (blocked) {
-            throw new BusinessException(ErrorCode.RESOURCE_NO_LONGER_AVAILABLE);
+        if (!forRecurringReservation) {
+            // Recurring-reservation-created bookings are governed by the recurring reservation's own
+            // booking window (1/3/6 months), not the venue's public advance cap.
+            bookingPolicy.validateAdvanceBooking(now, command.start(), zone);
         }
     }
 
@@ -129,6 +143,7 @@ public class CreateReservationService {
                 reservation.getStatus(),
                 reservation.getPrice(),
                 reservation.getCreatedAt(),
-                reservation.getCancelledAt());
+                reservation.getCancelledAt(),
+                reservation.getRecurringReservationId());
     }
 }
