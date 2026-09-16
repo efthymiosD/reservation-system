@@ -1,10 +1,10 @@
 {
   "realm": "reservation",
   "enabled": true,
-  "registrationAllowed": false,
-  "loginWithEmailAllowed": false,
-  "duplicateEmailsAllowed": true,
-  "resetPasswordAllowed": false,
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
   "sslRequired": "external",
   "roles": {
     "realm": [
@@ -146,7 +146,7 @@
       "enabled": true,
       "emailVerified": true,
       "email": "admin@reservation.local",
-      "firstName": "Reza",
+      "firstName": "Max",
       "lastName": "Admin",
       "credentials": [
         {
