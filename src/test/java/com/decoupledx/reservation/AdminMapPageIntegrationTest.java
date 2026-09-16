@@ -17,6 +17,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
+import java.util.UUID;
+
 /**
  * Core-flow /admin/map field-layout editor tests (testing convention): role
  * gating, page reachability, add-field (which persists a placement), layout
@@ -66,6 +68,35 @@ class AdminMapPageIntegrationTest extends PostgresIntegrationTest {
         assertThat(jdbc.queryForObject(
                 "SELECT count(*) FROM resources WHERE code LIKE 'FIELD-%'", Integer.class))
                 .isEqualTo(before + 1);
+
+        // Shared-container discipline (AGENTS.md): /admin/map/fields persists an
+        // ACTIVE FIELD-% row AND upserts its placement into the shared
+        // 'venue.map.layout' JSON. The public availability map asserts 6 seeded
+        // FIELD-% resources regardless of class order, so undo both traces
+        // before returning (order-independent shared dataset).
+        UUID createdId = jdbc.queryForObject(
+                "SELECT id FROM resources WHERE name = ? AND code LIKE 'FIELD-%'", UUID.class,
+                "End Zone");
+
+        // 1) drop the persisted placement from the shared layout JSON
+        String layout = jdbc.queryForObject(
+                "SELECT body FROM site_content WHERE key = 'venue.map.layout'", String.class);
+        tools.jackson.databind.ObjectMapper mapper = new tools.jackson.databind.ObjectMapper();
+        tools.jackson.databind.node.ObjectNode root =
+                (tools.jackson.databind.node.ObjectNode) mapper.readTree(layout);
+        tools.jackson.databind.node.ArrayNode placements =
+                (tools.jackson.databind.node.ArrayNode) root.get("placements");
+        for (int i = placements.size() - 1; i >= 0; i--) {
+            if (placements.get(i).path("resourceId").asText().equals(createdId.toString())) {
+                placements.remove(i);
+            }
+        }
+        jdbc.update("UPDATE site_content SET body = ? WHERE key = 'venue.map.layout'",
+                mapper.writeValueAsString(root));
+
+        // 2) remove the resource row (reservations referencing it, if any)
+        jdbc.update("DELETE FROM reservations WHERE resource_id = ?", createdId);
+        jdbc.update("DELETE FROM resources WHERE id = ?", createdId);
     }
 
     @Test
@@ -83,7 +114,7 @@ class AdminMapPageIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(jdbc.queryForObject(
                 "SELECT name FROM resources WHERE id = ?", String.class,
-                java.util.UUID.fromString(FIELD_1))).isEqualTo("Court A");
+                UUID.fromString(FIELD_1))).isEqualTo("Court A");
         String layout = jdbc.queryForObject(
                 "SELECT body FROM site_content WHERE key = 'venue.map.layout'", String.class);
         assertThat(layout).contains("\"resourceId\":\"a0000000-0000-0000-0000-000000000101\"")
@@ -103,7 +134,7 @@ class AdminMapPageIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(jdbc.queryForObject(
                 "SELECT status FROM resources WHERE id = ?", String.class,
-                java.util.UUID.fromString(FIELD_1))).isEqualTo("INACTIVE");
+                UUID.fromString(FIELD_1))).isEqualTo("INACTIVE");
 
         mockMvc.perform(post("/admin/map/field/{id}/activate", FIELD_1)
                         .with(webAdmin("admin"))
@@ -113,6 +144,6 @@ class AdminMapPageIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(jdbc.queryForObject(
                 "SELECT status FROM resources WHERE id = ?", String.class,
-                java.util.UUID.fromString(FIELD_1))).isEqualTo("ACTIVE");
+                UUID.fromString(FIELD_1))).isEqualTo("ACTIVE");
     }
 }
