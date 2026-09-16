@@ -53,15 +53,21 @@ class VenuePersistenceAdapter implements VenueRepository {
     }
 
     private void replaceOpeningHours(Venue venue) {
-        openingHours.deleteByVenueId(venue.getId().value());
-        List<OpeningHoursEntity> rows = venue.getOpeningHours().perDay().entrySet().stream()
-                .map(entry -> new OpeningHoursEntity(
+        Map<DayOfWeek, OpeningHoursEntity> existingByDay = openingHours.findByVenueId(venue.getId().value()).stream()
+                .collect(Collectors.toMap(OpeningHoursEntity::getDayOfWeek, entity -> entity));
+        for (Map.Entry<DayOfWeek, DailyOpeningHours> entry : venue.getOpeningHours().perDay().entrySet()) {
+            OpeningHoursEntity entity = existingByDay.remove(entry.getKey());
+            if (entity != null) {
+                entity.update(entry.getValue().opensAt(), entry.getValue().closesAt());
+            } else {
+                openingHours.save(new OpeningHoursEntity(
                         venue.getId().value(),
                         entry.getKey(),
                         entry.getValue().opensAt(),
-                        entry.getValue().closesAt()))
-                .toList();
-        openingHours.saveAll(rows);
+                        entry.getValue().closesAt()));
+            }
+        }
+        openingHours.deleteAll(existingByDay.values());
         openingHours.flush();
     }
 

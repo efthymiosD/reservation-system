@@ -65,9 +65,11 @@ class ReservationPageModelFactory {
         SlotSelection selection = resolveSelection(requestedDate, requestedStart, requestedDuration,
                 today, maxDate, durationOptions, policy.startTimeStep(), venue);
 
+        VenueLayout layout = venueLayout.get();
+
         return selection == null
-                ? unavailableModel(today, maxDate, durationOptions)
-                : availabilityModel(selection, venue, zone, today, maxDate, durationOptions);
+                ? unavailableModel(today, maxDate, durationOptions, layout)
+                : availabilityModel(selection, venue, zone, today, maxDate, durationOptions, layout);
     }
 
     private record SlotSelection(LocalDate date, LocalTime start, int duration,
@@ -122,7 +124,7 @@ class ReservationPageModelFactory {
     }
 
     private ReservationPageModel availabilityModel(SlotSelection selection, VenueInfo venue, ZoneId zone,
-            LocalDate today, LocalDate maxDate, List<Integer> durationOptions) {
+            LocalDate today, LocalDate maxDate, List<Integer> durationOptions, VenueLayout layout) {
 
         try {
             List<ResourceAvailability> resources = availabilityService.resourceAvailability(
@@ -136,9 +138,11 @@ class ReservationPageModelFactory {
                     durationOptions,
                     selection.timeOptions(),
                     priceOf(resources),
-                    mapFields(resources),
+                    mapFields(resources, layout),
                     heldReservation(selection, resources),
-                    anyAvailable(resources));
+                    anyAvailable(resources),
+                    layout.canvasWidth(),
+                    layout.canvasHeight());
         } catch (BusinessException exception) {
             log.info("Reservation page slot not bookable: {}", exception.getMessage());
             return new ReservationPageModel(
@@ -152,11 +156,14 @@ class ReservationPageModelFactory {
                     null,
                     List.of(),
                     null,
-                    false);
+                    false,
+                    layout.canvasWidth(),
+                    layout.canvasHeight());
         }
     }
 
-    private ReservationPageModel unavailableModel(LocalDate today, LocalDate maxDate, List<Integer> durationOptions) {
+    private ReservationPageModel unavailableModel(LocalDate today, LocalDate maxDate,
+            List<Integer> durationOptions, VenueLayout layout) {
         return new ReservationPageModel(
                 today,
                 null,
@@ -168,7 +175,9 @@ class ReservationPageModelFactory {
                 null,
                 List.of(),
                 null,
-                false);
+                false,
+                layout.canvasWidth(),
+                layout.canvasHeight());
     }
 
     /**
@@ -220,14 +229,21 @@ class ReservationPageModelFactory {
     private List<LocalTime> timeOptions(DailyOpeningHours hours, int durationMinutes, LocalDate date,
             ZoneId zone, Duration startStep) {
         List<LocalTime> options = new ArrayList<>();
-        LocalTime close = hours.closesAt();
-        for (LocalTime candidate = hours.opensAt(); !candidate.plusMinutes(durationMinutes).isAfter(close);
-                candidate = candidate.plus(startStep)) {
+        int step = (int) startStep.toMinutes();
+        int dayMinutes = 24 * 60;
+        int opens = minutesOfDay(hours.opensAt());
+        int closes = minutesOfDay(hours.closesAt()) + (hours.overnight() ? dayMinutes : 0);
+        for (int start = opens; start < dayMinutes && start + durationMinutes <= closes; start += step) {
+            LocalTime candidate = LocalTime.of(start / 60, start % 60);
             if (isNotPast(candidate, date, zone)) {
                 options.add(candidate);
             }
         }
         return options;
+    }
+
+    private int minutesOfDay(LocalTime time) {
+        return time.getHour() * 60 + time.getMinute();
     }
 
     private boolean isNotPast(LocalTime candidate, LocalDate date, ZoneId zone) {
@@ -257,8 +273,7 @@ class ReservationPageModelFactory {
                         resources.get(0).priceAmount(), resources.get(0).priceCurrency());
     }
 
-    private List<ReservationPageModel.MapField> mapFields(List<ResourceAvailability> resources) {
-        VenueLayout layout = venueLayout.get();
+    private List<ReservationPageModel.MapField> mapFields(List<ResourceAvailability> resources, VenueLayout layout) {
         return resources.stream()
                 .flatMap(resource -> placementOf(layout, resource).stream()
                         .map(placement -> mapField(resource, placement)))

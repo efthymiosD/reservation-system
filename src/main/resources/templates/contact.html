@@ -1,27 +1,58 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Find us', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Contact us', ~{::section})}">
 <head>
-  <title>Find us</title>
+  <title>Contact us</title>
 </head>
 <body>
 <section class="container py-5">
-  <h1 class="mb-4" th:text="'Find us — ' + ${venue.name}">Find us</h1>
+  <h1 class="mb-4" th:text="'Contact us — ' + ${venue.name}">Contact us</h1>
 
   <div class="row g-4">
     <div class="col-md-6">
       <h2 class="h5">Address</h2>
       <p class="text-muted" th:text="${venue.address}">Address</p>
+
       <h2 class="h5 mt-4">Getting here</h2>
-      <p class="text-muted">The venue is located in Wrocław. Parking is available
+      <p class="text-muted" th:text="${siteContent['contact.getting_here.body'] ?: 'The venue is located in Wrocław. Parking is available on site; the fields are floodlit for evening play.'}">The venue is located in Wrocław. Parking is available
         on site; the fields are floodlit for evening play.</p>
-    </div>
-    <div class="col-md-6">
-      <h2 class="h5">Contact</h2>
-      <p class="text-muted">For bookings use the online reservation page — it shows
+
+      <h2 class="h5 mt-4">Contact</h2>
+      <p class="text-muted" th:text="${siteContent['contact.contact.body'] ?: 'For bookings use the online reservation page — it shows live availability and the exact price. For anything else, talk to the staff at the venue during opening hours.'}">For bookings use the online reservation page — it shows
         live availability and the exact price. For anything else, talk to the staff
         at the venue during opening hours.</p>
-      <a class="btn btn-primary" th:href="@{/reserve}">Make a reservation</a>
-      <a class="btn btn-outline-secondary" th:href="@{/opening-hours}">Opening hours</a>
+      <p class="mb-1" th:if="${!#strings.isEmpty(siteContent['contact.phone'])}">
+        Phone: <a th:href="'tel:' + ${siteContent['contact.phone']}" class="text-muted"
+                  th:text="${siteContent['contact.phone']}">+48 000 000 000</a>
+      </p>
+      <p class="mb-1" th:if="${!#strings.isEmpty(siteContent['contact.email'])}">
+        Email: <a th:href="'mailto:' + ${siteContent['contact.email']}" class="text-muted"
+                  th:text="${siteContent['contact.email']}">bookings@example.com</a>
+      </p>
+
+      <div class="mt-4">
+        <a class="btn btn-primary" th:href="@{/reserve}">Make a reservation</a>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <h2 class="h5">Opening hours</h2>
+      <p class="text-muted">Venue-local time (<span th:text="${venue.timezone}">Europe/Warsaw</span>).</p>
+      <table class="table table-hover align-middle">
+        <thead>
+        <tr>
+          <th scope="col">Day</th>
+          <th scope="col">Hours</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${weeklyHours}">
+          <th scope="row" th:text="${#strings.capitalize(#strings.toLowerCase(entry.key))}">Monday</th>
+          <td th:if="${entry.value.present}"
+              th:text="${entry.value.get.opensAt} + ' – ' + ${entry.value.get.closesAt}">14:00 – 23:00</td>
+          <td th:unless="${entry.value.present}" class="text-muted">Closed</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </section>

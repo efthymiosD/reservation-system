@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Site content — Admin', ~{::section})}">
+<head>
+  <title>Site content — Admin</title>
+</head>
+<body>
+<section class="container py-4">
+  <h1 class="mb-4">Site content</h1>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">Venue profile</h2>
+          <p class="text-muted small">Shown on the home, about and contact pages.</p>
+          <form th:action="@{/admin/content/venue}" method="post" class="d-grid gap-3">
+            <div>
+              <label for="name" class="form-label">Name</label>
+              <input type="text" id="name" name="name" class="form-control" required
+                     th:value="${page.venue.name}">
+            </div>
+            <div>
+              <label for="description" class="form-label">Description</label>
+              <textarea id="description" name="description" class="form-control" rows="3"
+                        th:text="${page.venue.description}">Description</textarea>
+            </div>
+            <div>
+              <label for="address" class="form-label">Address</label>
+              <input type="text" id="address" name="address" class="form-control"
+                     th:value="${page.venue.address}">
+            </div>
+            <button type="submit" class="btn btn-primary">Save venue profile</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">Hero photo</h2>
+          <p class="text-muted small">The main image on the home page.
+            PNG, JPEG or WebP, up to 5 MB.</p>
+          <form th:action="@{/admin/content/photo}" method="post" enctype="multipart/form-data"
+                class="d-grid gap-3">
+            <input type="hidden" name="photoKey" value="home.hero.photo">
+            <div>
+              <img th:if="${!#strings.isEmpty(page.photoPath)}" th:src="${page.photoPath}"
+                   th:alt="${page.venue.name}" class="img-fluid rounded mb-2"
+                   style="max-height: 12rem; object-fit: cover;">
+              <input type="file" id="photo" name="photo" class="form-control" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload hero photo</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">About page photo</h2>
+          <p class="text-muted small">The image on the about page.
+            PNG, JPEG or WebP, up to 5 MB.</p>
+          <form th:action="@{/admin/content/photo}" method="post" enctype="multipart/form-data"
+                class="d-grid gap-3">
+            <input type="hidden" name="photoKey" value="about.photo">
+            <div>
+              <img th:if="${!#strings.isEmpty(page.aboutPhotoPath)}" th:src="${page.aboutPhotoPath}"
+                   th:alt="${page.venue.name}" class="img-fluid rounded mb-2"
+                   style="max-height: 12rem; object-fit: cover;">
+              <input type="file" id="about-photo" name="photo" class="form-control" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload about page photo</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">Opening hours</h2>
+          <p class="text-muted small">Weekday opening hours used for availability and bookings.</p>
+          <form th:action="@{/admin/content/opening-hours}" method="post" class="d-grid gap-2">
+            <div th:each="day : ${page.weekly}" class="row g-2 align-items-center">
+              <div class="col-4">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                         th:id="'enabled-' + ${day.dayOfWeek}" th:name="'enabled-' + ${day.dayOfWeek}"
+                         th:checked="${day.enabled}">
+                  <label class="form-check-label" th:for="'enabled-' + ${day.dayOfWeek}"
+                         th:text="${day.label}">Monday</label>
+                </div>
+              </div>
+              <div class="col-3">
+                <input type="time" class="form-control form-control-sm"
+                       th:id="'opens-' + ${day.dayOfWeek}" th:name="'opens-' + ${day.dayOfWeek}"
+                       th:value="${day.opensAt}">
+              </div>
+              <div class="col-2 text-center text-muted">–</div>
+              <div class="col-3">
+                <input type="time" class="form-control form-control-sm"
+                       th:id="'closes-' + ${day.dayOfWeek}" th:name="'closes-' + ${day.dayOfWeek}"
+                       th:value="${day.closesAt}">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save opening hours</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">Page text</h2>
+          <p class="text-muted small">The marketing text blocks rendered on the public pages.</p>
+          <form th:each="block : ${page.blocks}" class="mb-3"
+                th:action="@{/admin/content/{key}(key=${block.key})}" method="post">
+            <label th:for="'body-' + ${block.key}" class="form-label small fw-semibold"
+                   th:text="${block.label}">Home — feature 1 title</label>
+            <input type="hidden" name="key" th:value="${block.key}">
+            <textarea th:id="'body-' + ${block.key}" name="body" class="form-control mb-2" rows="2"
+                      th:text="${block.body}">Body</textarea>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-secondary btn-sm" th:href="@{/admin}">Back to dashboard</a>
+  </div>
+</section>
+</body>
+</html>

@@ -8,7 +8,8 @@
   <h1 class="mb-3" th:text="${venue.name}">Venue</h1>
   <p class="lead" th:text="${venue.description}">Description</p>
 
-  <img th:src="@{/images/venue.jpeg}" th:alt="${venue.name}"
+  <img th:src="${#strings.isEmpty(siteContent['about.photo']) ? '/images/default_about_page.jpeg' : siteContent['about.photo']}"
+       th:alt="${venue.name}"
        class="img-fluid rounded mb-4 w-100" style="max-height: 22rem; object-fit: cover;"
        onerror="this.style.display='none'">
 
@@ -27,15 +28,13 @@
     </div>
     <div class="col-md-4">
       <h2 class="h5">Booking</h2>
-      <p class="text-muted">Reserve a field online — pick a date, start time and
-        duration, and see the price before you confirm.</p>
+      <p class="text-muted" th:text="${siteContent['about.booking.body'] ?: 'Reserve a field online — pick a date, start time and duration, and see the price before you confirm.'}">Reserve a field online — pick a date, start time and duration, and see the price before you confirm.</p>
       <a class="btn btn-primary btn-sm" th:href="@{/reserve}">Make a reservation</a>
     </div>
   </div>
 
   <div class="mt-4">
-    <a class="link-secondary me-3" th:href="@{/opening-hours}">Opening hours</a>
-    <a class="link-secondary me-3" th:href="@{/contact}">Find us</a>
+    <a class="link-secondary me-3" th:href="@{/contact}">Contact us</a>
     <a class="link-secondary" th:href="@{/}">Home</a>
   </div>
 </section>

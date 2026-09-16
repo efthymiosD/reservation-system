@@ -3,7 +3,7 @@
 <body>
 <nav th:fragment="navigation" class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
   <div class="container">
-    <a class="navbar-brand fw-bold" th:href="@{/}">⚽ Five-a-Side Centre</a>
+    <a class="navbar-brand fw-bold" th:href="@{/}">⚽ <span th:text="${venue != null ? venue.name : 'Five-a-Side Centre'}">Five-a-Side Centre</span></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#mainNav" aria-controls="mainNav"
             aria-expanded="false" aria-label="Toggle navigation">

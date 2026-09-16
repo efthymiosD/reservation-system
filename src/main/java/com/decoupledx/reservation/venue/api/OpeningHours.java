@@ -2,6 +2,7 @@ package com.decoupledx.reservation.venue.api;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -27,14 +28,15 @@ public record OpeningHours(Map<DayOfWeek, DailyOpeningHours> perDay) {
     }
 
     public boolean fits(ReservationPeriod period, ZoneId zone) {
-        ZonedDateTime start = period.start().atZone(zone);
-        ZonedDateTime end = period.end().atZone(zone);
-        LocalDate startDate = start.toLocalDate();
-        if (!startDate.equals(end.toLocalDate())) {
-            return false;
+        LocalDate startDate = period.start().atZone(zone).toLocalDate();
+        LocalDateTime start = period.start().atZone(zone).toLocalDateTime();
+        LocalDateTime end = period.end().atZone(zone).toLocalDateTime();
+        if (on(startDate.getDayOfWeek())
+                .map(hours -> hours.contains(startDate, start, end)).orElse(false)) {
+            return true;
         }
-        return on(start.getDayOfWeek())
-                .map(hours -> hours.covers(start.toLocalDateTime(), end.toLocalDateTime()))
-                .orElse(false);
+        LocalDate previousDay = startDate.minusDays(1);
+        return on(previousDay.getDayOfWeek())
+                .map(hours -> hours.contains(previousDay, start, end)).orElse(false);
     }
 }

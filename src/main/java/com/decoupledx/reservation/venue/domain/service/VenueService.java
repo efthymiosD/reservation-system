@@ -52,6 +52,18 @@ public class VenueService implements VenueApi {
         });
     }
 
+    @Override
+    public void updateProfile(UUID venueId, String name, String description, String address) {
+        tx.run(() -> {
+            if (name == null || name.isBlank()) {
+                throw new BusinessException(ErrorCode.INVALID_VENUE_NAME);
+            }
+            Venue venue = findVenue(venueId);
+            venue.updateProfile(name, description, address);
+            venueRepository.save(venue);
+        });
+    }
+
     private Venue findVenue(UUID venueId) {
         return findVenue(VenueId.of(venueId));
     }

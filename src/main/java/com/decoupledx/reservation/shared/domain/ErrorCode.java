@@ -21,6 +21,7 @@ public enum ErrorCode {
     INVALID_RECURRING_RESERVATION_PERIOD(422, "Recurring reservation end time must be after start time"),
     INVALID_RECURRING_RESERVATION_WINDOW(422, "Recurring reservation window must be one of the predefined booking windows"),
     VENUE_NOT_FOUND(404, "Venue not found"),
+    INVALID_VENUE_NAME(422, "Venue name must not be empty"),
     RESOURCE_GROUP_NOT_FOUND(404, "Resource group not found"),
     RESOURCE_CODE_EXISTS(409, "A resource with this code already exists"),
     INVALID_OPENING_HOURS(422, "Closing time must be after opening time"),

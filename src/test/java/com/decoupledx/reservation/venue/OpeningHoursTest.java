@@ -13,7 +13,6 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
 import com.decoupledx.reservation.shared.domain.ReservationPeriod;
 import com.decoupledx.reservation.venue.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.api.OpeningHours;
@@ -25,6 +24,9 @@ class OpeningHoursTest {
     private static final OpeningHours HOURS = new OpeningHours(Map.of(
             DayOfWeek.MONDAY, new DailyOpeningHours(LocalTime.of(14, 0), LocalTime.of(23, 0)),
             DayOfWeek.TUESDAY, new DailyOpeningHours(LocalTime.of(14, 15), LocalTime.of(22, 15))));
+
+    private static final OpeningHours OVERNIGHT = new OpeningHours(Map.of(
+            DayOfWeek.MONDAY, new DailyOpeningHours(LocalTime.of(20, 0), LocalTime.of(2, 0))));
 
     private static Instant warsaw(String localDateTime) {
         return LocalDateTime.parse(localDateTime).atZone(WARSAW).toInstant();
@@ -75,11 +77,27 @@ class OpeningHoursTest {
     }
 
     @Test
-    void rejectsDailyHoursClosingBeforeOpening() {
-        assertThatThrownBy(() -> new DailyOpeningHours(LocalTime.of(23, 0), LocalTime.of(14, 0)))
-                .isInstanceOf(BusinessException.class)
-                .extracting(e -> ((BusinessException) e).errorCode())
-                .isEqualTo(ErrorCode.INVALID_OPENING_HOURS);
+    void acceptsOvernightWindowPeriodCrossingMidnight() {
+        ReservationPeriod period = ReservationPeriod.of(warsaw("2026-08-31T22:00"), warsaw("2026-09-01T01:00"));
+        assertThat(OVERNIGHT.fits(period, WARSAW)).isTrue();
+    }
+
+    @Test
+    void acceptsEarlyMorningPeriodInsidePreviousDaysOvernightWindow() {
+        ReservationPeriod period = ReservationPeriod.of(warsaw("2026-09-01T01:00"), warsaw("2026-09-01T01:30"));
+        assertThat(OVERNIGHT.fits(period, WARSAW)).isTrue();
+    }
+
+    @Test
+    void rejectsPeriodEndingAfterOvernightClose() {
+        ReservationPeriod period = ReservationPeriod.of(warsaw("2026-08-31T23:00"), warsaw("2026-09-01T02:30"));
+        assertThat(OVERNIGHT.fits(period, WARSAW)).isFalse();
+    }
+
+    @Test
+    void acceptsClosingBeforeOpeningAsOvernightWindow() {
+        DailyOpeningHours hours = new DailyOpeningHours(LocalTime.of(23, 0), LocalTime.of(14, 0));
+        assertThat(hours.overnight()).isTrue();
     }
 
     @Test

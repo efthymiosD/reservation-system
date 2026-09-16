@@ -13,4 +13,6 @@ public interface VenueApi {
     VenueInfo getVenue(UUID venueId);
 
     void updateOpeningHours(UUID venueId, OpeningHours openingHours);
+
+    void updateProfile(UUID venueId, String name, String description, String address);
 }

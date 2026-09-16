@@ -7,25 +7,40 @@ import java.io.UncheckedIOException;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import com.decoupledx.reservation.content.api.ContentApi;
+
+import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Loads the seeded venue layout from the classpath once at startup.
+ * Loads the venue layout for the reservation page venue map. The layout is
+ * admin-editable and persists in the site-content block {@code venue.map.layout}
+ * (seeded to mirror the bundled {@code webui/venue-layout.json}). It is parsed
+ * on every read so admin changes take effect without a restart; an empty or
+ * unparseable block falls back to the seeded classpath file.
  */
 @Component
-class VenueLayoutLoader {
+@RequiredArgsConstructor
+public class VenueLayoutLoader {
 
-    private final VenueLayout layout;
+    public static final String LAYOUT_KEY = "venue.map.layout";
 
-    VenueLayoutLoader(ObjectMapper objectMapper) {
-        this.layout = read(objectMapper);
+    private final ContentApi contentApi;
+    private final ObjectMapper objectMapper;
+
+    public VenueLayout get() {
+        String stored = contentApi.get(LAYOUT_KEY);
+        if (!stored.isBlank()) {
+            try {
+                return objectMapper.readValue(stored, VenueLayout.class);
+            } catch (Exception exception) {
+                // fall through to the seeded classpath layout
+            }
+        }
+        return readClasspath();
     }
 
-    VenueLayout get() {
-        return layout;
-    }
-
-    private static VenueLayout read(ObjectMapper objectMapper) {
+    private VenueLayout readClasspath() {
         try (InputStream in = new ClassPathResource("webui/venue-layout.json").getInputStream()) {
             return objectMapper.readValue(in, VenueLayout.class);
         } catch (IOException exception) {

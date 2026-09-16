@@ -22,7 +22,9 @@ public record ReservationPageModel(
         MoneyView price,
         List<MapField> fields,
         HeldReservation held,
-        boolean anyAvailable) {
+        boolean anyAvailable,
+        int canvasWidth,
+        int canvasHeight) {
 
     public record MoneyView(BigDecimal amount, String currency) {
     }

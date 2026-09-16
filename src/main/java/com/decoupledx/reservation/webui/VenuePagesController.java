@@ -4,8 +4,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * Public venue pages (about, opening hours, contact). All venue data reaches the
- * views through VenueAdvice; the controllers only select templates.
+ * Public venue pages (about, contact). All venue data reaches the views through
+ * VenueAdvice; the controllers only select templates. The opening-hours page was
+ * merged into the contact page; /opening-hours redirects there.
  */
 @Controller
 class VenuePagesController {
@@ -15,13 +16,13 @@ class VenuePagesController {
         return "about";
     }
 
-    @GetMapping("/opening-hours")
-    String openingHours() {
-        return "opening-hours";
-    }
-
     @GetMapping("/contact")
     String contact() {
         return "contact";
+    }
+
+    @GetMapping("/opening-hours")
+    String openingHours() {
+        return "redirect:/contact";
     }
 }

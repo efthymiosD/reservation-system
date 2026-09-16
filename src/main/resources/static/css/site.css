@@ -98,3 +98,41 @@ main.flex-grow-1 {
 .dot--selected { background: #cfe2ff; border-color: #0d6efd; }
 .dot--reserved { background: #f8d7da; border-color: #dc3545; }
 .dot--blocked { background: #e9ecef; border-color: #6c757d; }
+
+/* --- Field-layout editor (admin /admin/map) --------------------------- */
+
+.map-editor__svg {
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  display: block;
+  touch-action: none;     /* dragging must not scroll the page */
+}
+
+.map-editor__background { fill: #fafcfb; }
+.map-editor__grid-line { stroke: #e2e8e4; stroke-width: 1; }
+
+/* Active field: green like the reservation map */
+.map-field { cursor: grab; }
+.map-field--dragging { cursor: grabbing; }
+.map-field--active .map-field__body { fill: #d1e7dd; stroke: #198754; }
+.map-field--inactive .map-field__body { fill: #e9ecef; stroke: #6c757d; stroke-dasharray: 6 4; }
+.map-field__body { stroke-width: 3; }
+.map-field:hover .map-field__body { stroke-width: 5; }
+.map-field:active .map-field__body { stroke-width: 5; }
+
+.map-field__label {
+  font-size: 24px;
+  font-weight: 600;
+  text-anchor: middle;
+  pointer-events: none;
+  fill: #1b2c22;
+}
+
+.map-field__handle {
+  fill: #0d6efd;
+  stroke: #fff;
+  stroke-width: 2;
+  cursor: nwse-resize;
+}
+.map-field__handle:hover { fill: #084298; }
