@@ -32,3 +32,4 @@ jwt-private.pem
 
 ### Runtime output ###
 logs/
+uploads/

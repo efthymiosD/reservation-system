@@ -31,8 +31,10 @@ class PublicPagesIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
-    void openingHoursPageIsAccessibleWithoutAuthentication() throws Exception {
-        mockMvc.perform(get("/opening-hours")).andExpect(status().isOk());
+    void oldOpeningHoursPageRedirectsToContact() throws Exception {
+        mockMvc.perform(get("/opening-hours"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(result -> result.getResponse().getRedirectedUrl().endsWith("/contact"));
     }
 
     @Test

@@ -28,7 +28,7 @@ CREATE TABLE opening_hours
     CONSTRAINT opening_hours_day_check CHECK (day_of_week IN
                                               ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY',
                                                'SATURDAY', 'SUNDAY')),
-    CONSTRAINT opening_hours_interval_check CHECK (closes_at > opens_at)
+    CONSTRAINT opening_hours_interval_check CHECK (closes_at <> opens_at)
 );
 
 -- ---------------------------------------------------------------------------
@@ -197,3 +197,17 @@ CREATE TABLE recurring_reservations
 
 CREATE INDEX recurring_reservations_resource_idx ON recurring_reservations (resource_id, status);
 CREATE INDEX recurring_reservations_customer_idx ON recurring_reservations (customer_id, status);
+
+-- ---------------------------------------------------------------------------
+-- Editable site content for the public pages (home, about, contact). These keys
+-- used to be hardcoded in the templates; they now live here so an admin can
+-- edit them from the admin panel. Keys are stable so future i18n can suffix a
+-- locale. The home.hero.photo key holds the web path of the uploaded hero image
+-- (empty default -> the bundled default_homepage.jpeg is used).
+-- ---------------------------------------------------------------------------
+CREATE TABLE site_content
+(
+    key        TEXT PRIMARY KEY,
+    body       TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL
+);

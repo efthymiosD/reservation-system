@@ -37,7 +37,7 @@
     </div>
   </form>
 
-  <div th:fragment="map" th:replace="~{fragments/venue-map :: venue-map(${page.fields})}"></div>
+  <div th:fragment="map" th:replace="~{fragments/venue-map :: venue-map(${page.fields}, ${page.canvasWidth}, ${page.canvasHeight})}"></div>
   <div th:replace="~{fragments/venue-map :: legend}"></div>
 
   <div th:if="${#lists.isEmpty(page.fields)}" class="alert alert-info" role="status">

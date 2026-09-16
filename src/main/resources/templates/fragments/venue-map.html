@@ -2,12 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="venue-map(fields)" class="venue-map scroll-x my-3" role="group"
+<div th:fragment="venue-map(fields, canvasWidth, canvasHeight)" class="venue-map scroll-x my-3" role="group"
      aria-label="Venue map — one clickable field per pitch, availability is colour-coded and labelled">
-  <svg th:attr="viewBox='0 0 ' + ${fields[0] != null ? '1200' : '1200'} + ' 400'"
-       class="venue-map__svg" role="img" aria-label="Venue layout with six fields side by side">
+  <svg th:attr="viewBox='0 0 ' + (${canvasWidth} ?: 1200) + ' ' + (${canvasHeight} ?: 400)"
+       class="venue-map__svg" role="img" aria-label="Venue layout with fields side by side">
     <!-- soft venue background -->
-    <rect x="0" y="0" width="1200" height="400" class="venue-map__background" rx="8"/>
+    <rect x="0" y="0" th:attr="width=${canvasWidth} ?: 1200, height=${canvasHeight} ?: 400" class="venue-map__background" rx="8"/>
 
     <g th:each="field : ${fields}"
        th:class="'resource resource--' + ${field.statusClass}"

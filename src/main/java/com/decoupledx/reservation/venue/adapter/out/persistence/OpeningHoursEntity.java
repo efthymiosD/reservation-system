@@ -43,4 +43,9 @@ class OpeningHoursEntity {
         this.opensAt = opensAt;
         this.closesAt = closesAt;
     }
+
+    void update(LocalTime opensAt, LocalTime closesAt) {
+        this.opensAt = opensAt;
+        this.closesAt = closesAt;
+    }
 }

@@ -9,22 +9,26 @@
     <div class="container">
       <h1 class="display-5 fw-bold" th:text="${venue.name}">Venue</h1>
       <p class="lead col-lg-7 mx-auto" th:text="${venue.description}">Description</p>
+      <img th:src="${#strings.isEmpty(siteContent['home.hero.photo']) ? '/images/default_homepage.jpeg' : siteContent['home.hero.photo']}"
+           th:alt="${venue.name}" class="img-fluid rounded w-100 mt-3"
+           style="max-height: 22rem; object-fit: cover;"
+           onerror="this.style.display='none'">
       <a class="btn btn-primary btn-lg mt-2" th:href="@{/reserve}">Make a reservation</a>
     </div>
   </div>
   <div class="container py-5">
     <div class="row g-4">
       <div class="col-md-4">
-        <h2 class="h5">Live availability</h2>
-        <p class="text-muted">The venue map shows every field: available or reserved — straight from the booking system.</p>
+        <h2 class="h5" th:text="${siteContent['home.feature.1.title'] ?: 'Live availability'}">Live availability</h2>
+        <p class="text-muted" th:text="${siteContent['home.feature.1.body'] ?: 'The venue map shows every field: available or reserved — straight from the booking system.'}">The venue map shows every field: available or reserved — straight from the booking system.</p>
       </div>
       <div class="col-md-4">
-        <h2 class="h5">Upfront pricing</h2>
-        <p class="text-muted">The total price is calculated by the venue before you confirm. No surprises at the gate.</p>
+        <h2 class="h5" th:text="${siteContent['home.feature.2.title'] ?: 'Upfront pricing'}">Upfront pricing</h2>
+        <p class="text-muted" th:text="${siteContent['home.feature.2.body'] ?: 'The total price is calculated by the venue before you confirm. No surprises at the gate.'}">The total price is calculated by the venue before you confirm. No surprises at the gate.</p>
       </div>
       <div class="col-md-4">
-        <h2 class="h5">Easy cancellation</h2>
-        <p class="text-muted">Plans change? Cancel your booking yourself until the venue's cancellation deadline.</p>
+        <h2 class="h5" th:text="${siteContent['home.feature.3.title'] ?: 'Easy cancellation'}">Easy cancellation</h2>
+        <p class="text-muted" th:text="${siteContent['home.feature.3.body'] ?: 'Plans change? Cancel your booking yourself until the venue\u0027s cancellation deadline.'}">Plans change? Cancel your booking yourself until the venue's cancellation deadline.</p>
       </div>
     </div>
   </div>

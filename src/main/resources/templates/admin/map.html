@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Field layout — Admin', ~{::section})}">
+<head>
+  <title>Field layout — Admin</title>
+</head>
+<body>
+<section class="container py-4">
+  <h1 class="mb-2">Field layout</h1>
+  <p class="text-muted">The fields drawn on the reservation page map. Drag a field to move it,
+    drag its corner handle to resize — positions snap to the grid. Inactive fields stay on
+    the map but are not bookable.</p>
+
+  <form id="map-layout-form" th:action="@{/admin/map/layout}" method="post">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h5 card-title">Venue map</h2>
+            <div class="map-editor my-2">
+              <svg id="map-editor-svg"
+                   th:attr="viewBox='0 0 ' + (${page.canvasWidth} ?: 1200) + ' ' + (${page.canvasHeight} ?: 400)"
+                   class="map-editor__svg" role="img" aria-label="Draggable venue layout editor">
+                <defs>
+                  <pattern id="editor-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 H 0 V 40" fill="none" class="map-editor__grid-line"/>
+                  </pattern>
+                </defs>
+                <rect class="map-editor__background" width="100%" height="100%"/>
+                <rect class="map-editor__grid" width="100%" height="100%" fill="url(#editor-grid)"/>
+
+                <g th:each="field : ${page.fields}"
+                   class="map-field"
+                   th:classappend="${field.active} ? 'map-field--active' : 'map-field--inactive'"
+                   th:attr="data-id=${field.resourceId},
+                            data-name=${field.name},
+                            data-active=${field.active},
+                            data-x=${field.x},
+                            data-y=${field.y},
+                            data-w=${field.width},
+                            data-h=${field.height}">
+                  <rect class="map-field__body" th:x="${field.x}" th:y="${field.y}"
+                        th:width="${field.width}" th:height="${field.height}" rx="8"/>
+                  <text class="map-field__label" th:x="${field.x + field.width / 2}"
+                        th:y="${field.y + field.height / 2}" th:text="${field.name}">Field</text>
+                  <rect class="map-field__handle" th:x="${field.x + field.width - 20}"
+                        th:y="${field.y + field.height - 20}" width="20" height="20" rx="4"/>
+                </g>
+              </svg>
+            </div>
+            <p class="text-muted small mb-0">Tip: drag on a touch screen works like a mouse.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h5 card-title">Fields</h2>
+            <div class="border rounded p-2 mb-2" th:each="field : ${page.fields}">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <label th:for="'name-' + ${field.resourceId}" class="form-label small text-muted mb-0">Name</label>
+                <span th:classappend="${field.active} ? 'text-success' : 'text-muted'" class="small"
+                      th:text="${field.active} ? 'Active' : 'Inactive'">Active</span>
+              </div>
+              <input type="text" th:id="'name-' + ${field.resourceId}" th:name="'name-' + ${field.resourceId}"
+                     class="form-control form-control-sm mb-2" th:value="${field.name}" required>
+              <div class="row g-1">
+                <div class="col-3">
+                  <label th:for="'x-' + ${field.resourceId}" class="form-label small text-muted mb-0">X</label>
+                  <input type="number" th:id="'x-' + ${field.resourceId}" th:name="'x-' + ${field.resourceId}"
+                         class="form-control form-control-sm" min="0" th:value="${field.x}">
+                </div>
+                <div class="col-3">
+                  <label th:for="'y-' + ${field.resourceId}" class="form-label small text-muted mb-0">Y</label>
+                  <input type="number" th:id="'y-' + ${field.resourceId}" th:name="'y-' + ${field.resourceId}"
+                         class="form-control form-control-sm" min="0" th:value="${field.y}">
+                </div>
+                <div class="col-3">
+                  <label th:for="'width-' + ${field.resourceId}" class="form-label small text-muted mb-0">W</label>
+                  <input type="number" th:id="'width-' + ${field.resourceId}" th:name="'width-' + ${field.resourceId}"
+                         class="form-control form-control-sm" min="1" th:value="${field.width}">
+                </div>
+                <div class="col-3">
+                  <label th:for="'height-' + ${field.resourceId}" class="form-label small text-muted mb-0">H</label>
+                  <input type="number" th:id="'height-' + ${field.resourceId}" th:name="'height-' + ${field.resourceId}"
+                         class="form-control form-control-sm" min="1" th:value="${field.height}">
+                </div>
+              </div>
+              <div class="mt-2 d-flex gap-1">
+                <button type="submit" class="btn btn-outline-danger btn-sm" th:if="${field.active}"
+                        th:formaction="@{/admin/map/field/{id}/deactivate(id=${field.resourceId})}">Deactivate</button>
+                <button type="submit" class="btn btn-outline-success btn-sm" th:unless="${field.active}"
+                        th:formaction="@{/admin/map/field/{id}/activate(id=${field.resourceId})}">Activate</button>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" th:formaction="@{/admin/map/layout}">Save layout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <div class="card mt-2">
+    <div class="card-body">
+      <h2 class="h5 card-title">Add a field</h2>
+      <form th:action="@{/admin/map/fields}" method="post" class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label for="new-field-name" class="form-label small text-muted mb-0">New field name</label>
+          <input type="text" id="new-field-name" name="name" class="form-control form-control-sm" required>
+        </div>
+        <div class="col-md-auto">
+          <button type="submit" class="btn btn-outline-primary btn-sm">Add field</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-secondary btn-sm" th:href="@{/admin}">Back to dashboard</a>
+  </div>
+  <script th:src="@{/js/map-editor.js}" defer></script>
+</section>
+</body>
+</html>

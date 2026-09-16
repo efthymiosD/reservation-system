@@ -31,4 +31,10 @@ public class Venue {
     public void updateOpeningHours(OpeningHours openingHours) {
         this.openingHours = Objects.requireNonNull(openingHours, "openingHours must not be null");
     }
+
+    public void updateProfile(String name, String description, String address) {
+        this.name = Objects.requireNonNull(name, "name must not be null");
+        this.description = description;
+        this.address = address;
+    }
 }

@@ -110,6 +110,7 @@ public class SecurityConfig {
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",
+                                "/uploads/**",
                                 "/vendor/**",
                                 "/webjars/**")
                         .permitAll()

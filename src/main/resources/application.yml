@@ -11,6 +11,10 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
   security:
     oauth2:
       client:
@@ -70,6 +74,8 @@ app:
     end-session-uri: ${KEYCLOAK_END_SESSION_URI:http://localhost:8081/realms/reservation/protocol/openid-connect/logout}
   venue:
     timezone: Europe/Warsaw
+  content:
+    upload-dir: ${CONTENT_UPLOAD_DIR:uploads}
   recurring-reservation:
     materialization-enabled: ${RECURRING_RESERVATION_MATERIALIZATION_ENABLED:true}
     materialization-cron: ${RECURRING_RESERVATION_MATERIALIZATION_CRON:0 0 4 * * *}
