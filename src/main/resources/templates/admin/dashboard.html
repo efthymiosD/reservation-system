@@ -5,9 +5,17 @@
 </head>
 <body>
 <section class="container py-4">
-  <h1 class="mb-4">Admin</h1>
+  <h1 class="mb-4">Admin panel</h1>
 
   <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <div class="display-6" th:text="${page.resources}">0</div>
+          <div class="text-muted">resources</div>
+        </div>
+      </div>
+    </div>
     <div class="col-md-4">
       <div class="card text-center h-100">
         <div class="card-body">
@@ -24,21 +32,13 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card text-center h-100">
-        <div class="card-body">
-          <div class="display-6" th:text="${page.resources}">0</div>
-          <div class="text-muted">resources</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" th:href="@{/admin/content}">Site content</a>
+    <a class="btn btn-outline-primary" th:href="@{/admin/map}">Field customization</a>
     <a class="btn btn-outline-primary" th:href="@{/admin/reservations}">Reservations</a>
     <a class="btn btn-outline-primary" th:href="@{/admin/recurring-reservations}">Recurring reservations</a>
-    <a class="btn btn-outline-primary" th:href="@{/admin/content}">Site content</a>
-    <a class="btn btn-outline-primary" th:href="@{/admin/map}">Field layout</a>
   </div>
 </section>
 </body>

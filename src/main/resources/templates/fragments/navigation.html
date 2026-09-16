@@ -14,14 +14,14 @@
         <li class="nav-item">
           <a class="nav-link" th:href="@{/about}">About</a>
         </li>
+        <li class="nav-item" th:if="${currentUser.administrator}">
+          <a class="nav-link" th:href="@{/admin}">Admin panel</a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" th:href="@{/reserve}">Make a reservation</a>
         </li>
         <li class="nav-item" th:if="${currentUser.authenticated}">
           <a class="nav-link" th:href="@{/my-reservations}">My reservations</a>
-        </li>
-        <li class="nav-item" th:if="${currentUser.administrator}">
-          <a class="nav-link" th:href="@{/admin}">Admin</a>
         </li>
       </ul>
       <ul class="navbar-nav">
