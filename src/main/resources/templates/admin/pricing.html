@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Pricing — Admin', ~{::section})}">
+<head>
+  <title>Pricing — Admin</title>
+</head>
+<body>
+<section class="container py-4">
+  <h1 class="mb-4">Pricing</h1>
+
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title">Hourly rate</h2>
+          <p class="text-muted small">The hourly price new reservations are
+            booked at. Past reservations keep the price they were quoted at
+            booking time; changing the rate never rewrites history.</p>
+
+          <form th:action="@{/admin/pricing}" method="post" class="d-grid gap-3">
+            <div class="row g-2">
+              <div class="col-7">
+                <label for="hourlyPrice" class="form-label">Hourly price</label>
+                <input type="number" id="hourlyPrice" name="hourlyPrice"
+                       class="form-control" step="0.01" min="0" required
+                       th:value="${page.hourlyPrice}">
+              </div>
+              <div class="col-5">
+                <label for="currency" class="form-label">Currency</label>
+                <input type="text" id="currency" name="currency"
+                       class="form-control" maxlength="3" required
+                       th:value="${page.currencyCode}">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save hourly rate</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-secondary btn-sm" th:href="@{/admin}">Back to dashboard</a>
+  </div>
+</section>
+</body>
+</html>

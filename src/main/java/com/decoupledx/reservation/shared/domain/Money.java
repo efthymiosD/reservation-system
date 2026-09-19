@@ -30,6 +30,26 @@ public record Money(BigDecimal amount, Currency currency) {
         return new Money(amount.add(other.amount), currency);
     }
 
+    /**
+     * Exact integer amount in the currency's minor units (e.g. PLN 80.00 → 8000
+     * groszy). This is the loss-free seam payment providers such as Stripe
+     * operate on (integer amounts + ISO-4217 code); it never rounds the stored
+     * amount. {@code LongOverflowError} if it does not fit in a {@code long}.
+     */
+    public long minorUnits() {
+        return amount
+                .movePointRight(currency.getDefaultFractionDigits())
+                .longValueExact();
+    }
+
+    /**
+     * Inverse of {@link #minorUnits()}: reconstructs the canonical scale-2
+     * amount from a provider-supplied integer minor-unit value.
+     */
+    public static Money ofMinorUnits(long minorUnits, Currency currency) {
+        return new Money(BigDecimal.valueOf(minorUnits, currency.getDefaultFractionDigits()), currency);
+    }
+
     private void requireSameCurrency(Money other) {
         if (!currency.equals(other.currency)) {
             throw new IllegalArgumentException(
