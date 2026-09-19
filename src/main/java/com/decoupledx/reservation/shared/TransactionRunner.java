@@ -12,6 +12,4 @@ public interface TransactionRunner {
 
     void run(Runnable work);
 
-    @SuppressWarnings({})
-    <T> T runReadOnly(Supplier<T> work);
 }

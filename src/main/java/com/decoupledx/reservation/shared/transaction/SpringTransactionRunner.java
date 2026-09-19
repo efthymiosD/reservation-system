@@ -43,8 +43,4 @@ class SpringTransactionRunner implements TransactionRunner {
         transactionTemplate.executeWithoutResult(_ -> work.run());
     }
 
-    @Override
-    public <T> T runReadOnly(Supplier<T> work) {
-        return readOnlyTransactionTemplate.execute(_ -> work.get());
-    }
 }

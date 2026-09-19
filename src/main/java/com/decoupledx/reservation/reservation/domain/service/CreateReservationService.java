@@ -58,9 +58,9 @@ public class CreateReservationService {
      * but links the created reservation to the recurring reservation that
      * produced it.
      */
-    public ReservationInfo createForRecurringReservation(UUID resourceId, LocalDateTime startTime,
-            int durationMinutes, CustomerId customerId, UUID recurringReservationId) {
-        return create(resourceId, startTime, durationMinutes, customerId, recurringReservationId);
+    public void createForRecurringReservation(UUID resourceId, LocalDateTime startTime,
+                                              int durationMinutes, CustomerId customerId, UUID recurringReservationId) {
+        create(resourceId, startTime, durationMinutes, customerId, recurringReservationId);
     }
 
     private ReservationInfo create(UUID resourceId, LocalDateTime startTime,
