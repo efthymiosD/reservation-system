@@ -8,25 +8,25 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
-import com.decoupledx.reservation.availability.api.AvailabilityApi;
-import com.decoupledx.reservation.availability.api.AvailableResource;
-import com.decoupledx.reservation.availability.api.ResourceAvailability;
-import com.decoupledx.reservation.availability.api.ResourceAvailabilityStatus;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.pricing.api.PricingApi;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.api.VenueId;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.availability.adapter.api.AvailabilityApi;
+import com.decoupledx.reservation.availability.adapter.api.AvailableResource;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -121,7 +121,7 @@ public class AvailabilityService implements AvailabilityApi {
                 .opensAt(date.getDayOfWeek())
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS));
         bookingPolicy.validateStartTime(period.start().atZone(zone), opensAt);
-        bookingPolicy.validateNotInPast(clock.instant(), period.start(), zone);
+        bookingPolicy.validateNotInPast(clock.instant(), period.start());
         bookingPolicy.validateAdvanceBooking(clock.instant(), period.start(), zone);
     }
 

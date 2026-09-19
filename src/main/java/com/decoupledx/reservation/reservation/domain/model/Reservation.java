@@ -4,15 +4,15 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 
 import lombok.Getter;
 

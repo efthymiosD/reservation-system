@@ -8,9 +8,9 @@ import java.util.Optional;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 

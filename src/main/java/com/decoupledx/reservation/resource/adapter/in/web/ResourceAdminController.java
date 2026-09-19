@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.resource.api.CreateResourceCommand;
-import com.decoupledx.reservation.resource.api.ResourceGroupId;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
+import com.decoupledx.reservation.resource.adapter.api.CreateResourceCommand;
+import com.decoupledx.reservation.resource.adapter.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.resource.domain.service.ResourceService;
-import com.decoupledx.reservation.resource.api.ResourceType;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceType;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

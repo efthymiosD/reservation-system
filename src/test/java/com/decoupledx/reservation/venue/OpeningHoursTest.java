@@ -12,10 +12,10 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.OpeningHours;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 
 class OpeningHoursTest {
 

@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.OpeningHours;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import com.decoupledx.reservation.venue.domain.model.Venue;
 import com.decoupledx.reservation.venue.domain.port.VenueRepository;
 

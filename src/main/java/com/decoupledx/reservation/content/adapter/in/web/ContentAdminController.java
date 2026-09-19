@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.content.api.SiteContentBlock;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

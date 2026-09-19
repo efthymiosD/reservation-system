@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 /**
@@ -50,7 +50,7 @@ class KeycloakTokenContractIntegrationTest extends PostgresIntegrationTest {
         assertThat(subNode)
                 .as("access token must carry a 'sub' claim (Keycloak subject mapper)")
                 .isNotNull();
-        String sub = subNode.asText();
+        String sub = subNode.asString();
         assertThat(sub).isNotBlank();
 
         CustomerId first = customerAccounts.resolveOrProvision(sub);
@@ -63,15 +63,17 @@ class KeycloakTokenContractIntegrationTest extends PostgresIntegrationTest {
                 + "&grant_type=password"
                 + "&username=" + USERNAME
                 + "&password=" + PASSWORD;
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder(URI.create(REALM + "/protocol/openid-connect/token"))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response;
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder(URI.create(REALM + "/protocol/openid-connect/token"))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        }
         assertThat(response.statusCode()).as("token endpoint status").isEqualTo(200);
         JsonNode json = objectMapper.readTree(response.body());
-        return json.get("access_token").asText();
+        return json.get("access_token").asString();
     }
 
     private JsonNode decode(String token) {

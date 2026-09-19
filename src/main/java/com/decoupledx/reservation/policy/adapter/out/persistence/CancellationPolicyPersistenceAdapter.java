@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 import com.decoupledx.reservation.policy.domain.port.CancellationPolicyRepository;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 

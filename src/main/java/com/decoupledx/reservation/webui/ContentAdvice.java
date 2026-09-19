@@ -3,10 +3,11 @@ package com.decoupledx.reservation.webui;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.decoupledx.reservation.content.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,6 @@ class ContentAdvice {
     @ModelAttribute("siteContent")
     Map<String, String> content() {
         return contentApi.all().stream()
-                .collect(Collectors.toMap(block -> block.key(), block -> block.body()));
+                .collect(Collectors.toMap(SiteContentBlock::key, SiteContentBlock::body));
     }
 }

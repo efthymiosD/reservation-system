@@ -26,11 +26,12 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import com.decoupledx.reservation.identity.adapter.in.CurrentCustomerResolver;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 class CurrentCustomerResolverTest {
 
+    private static final String API_SUB_1 = "api-sub-1";
     private final CustomerAccountService customerAccounts = mock(CustomerAccountService.class);
     private final CurrentCustomerResolver resolver = new CurrentCustomerResolver(customerAccounts);
 
@@ -52,7 +53,7 @@ class CurrentCustomerResolverTest {
 
     @Test
     void resolvesInternalCustomerFromJwtBearerToken() {
-        SecurityContextHolder.getContext().setAuthentication(jwtTokenWithSubject("api-sub-1"));
+        SecurityContextHolder.getContext().setAuthentication(jwtTokenWithSubject());
         CustomerId customerId = CustomerId.random();
         when(customerAccounts.resolveOrProvision(any(), any())).thenReturn(customerId);
 
@@ -90,10 +91,10 @@ class CurrentCustomerResolverTest {
                 idToken, IdTokenClaimNames.SUB);
     }
 
-    private JwtAuthenticationToken jwtTokenWithSubject(String subject) {
+    private JwtAuthenticationToken jwtTokenWithSubject() {
         Jwt jwt = Jwt.withTokenValue("token")
                 .header("alg", "none")
-                .subject(subject)
+                .subject(API_SUB_1)
                 .build();
         return new JwtAuthenticationToken(jwt);
     }

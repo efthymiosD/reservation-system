@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.pricing.api.PricingApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.Money;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;

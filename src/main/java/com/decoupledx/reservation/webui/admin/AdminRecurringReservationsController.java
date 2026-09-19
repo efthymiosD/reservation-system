@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.decoupledx.reservation.administration.api.AdministrationApi;
-import com.decoupledx.reservation.administration.api.CreateRecurringReservationCommand;
-import com.decoupledx.reservation.administration.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
+import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
+import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import com.decoupledx.reservation.shared.BusinessException;
 
 import lombok.RequiredArgsConstructor;
 

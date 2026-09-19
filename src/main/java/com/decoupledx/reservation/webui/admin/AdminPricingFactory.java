@@ -1,9 +1,9 @@
 package com.decoupledx.reservation.webui.admin;
 
-import com.decoupledx.reservation.pricing.api.PricingApi;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

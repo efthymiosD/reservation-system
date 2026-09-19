@@ -3,8 +3,8 @@ package com.decoupledx.reservation.venue.domain.model;
 import java.time.ZoneId;
 import java.util.Objects;
 
-import com.decoupledx.reservation.venue.api.OpeningHours;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import lombok.Getter;
 

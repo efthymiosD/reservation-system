@@ -7,7 +7,7 @@ import java.io.UncheckedIOException;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.content.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
 
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;

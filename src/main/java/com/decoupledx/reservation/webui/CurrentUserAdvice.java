@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 
 import lombok.RequiredArgsConstructor;
 

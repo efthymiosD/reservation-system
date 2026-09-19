@@ -2,13 +2,13 @@ package com.decoupledx.reservation.webui.admin;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.administration.api.AdministrationApi;
-import com.decoupledx.reservation.administration.api.RecurringReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationPage;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 

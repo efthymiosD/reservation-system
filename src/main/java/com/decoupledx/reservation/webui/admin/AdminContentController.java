@@ -10,7 +10,9 @@ import java.time.DateTimeException;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import com.decoupledx.reservation.shared.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,11 +23,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.OpeningHours;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -165,9 +167,9 @@ class AdminContentController {
     }
 
     private String userMessage(BusinessException exception) {
-        return switch (exception.errorCode()) {
-            case INVALID_VENUE_NAME -> "The venue name must not be empty.";
-            default -> exception.getMessage();
-        };
+        if (Objects.requireNonNull(exception.errorCode()) == ErrorCode.INVALID_VENUE_NAME) {
+            return "The venue name must not be empty.";
+        }
+        return exception.getMessage();
     }
 }

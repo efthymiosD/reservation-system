@@ -14,9 +14,9 @@ import java.time.ZonedDateTime;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 
 class BookingPolicyTest {
 
@@ -114,14 +114,14 @@ class BookingPolicyTest {
         Instant now = Instant.parse("2026-09-01T10:00:00Z");
 
         assertThatThrownBy(() -> POLICY.validateNotInPast(now,
-                Instant.parse("2026-09-01T09:59:59Z"), UTC))
+                Instant.parse("2026-09-01T09:59:59Z")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("past")
                 .extracting(e -> ((BusinessException) e).errorCode())
                 .isEqualTo(ErrorCode.START_TIME_IN_PAST);
 
         assertThatCode(() -> POLICY.validateNotInPast(now,
-                Instant.parse("2026-09-01T10:00:00Z"), UTC))
+                Instant.parse("2026-09-01T10:00:00Z")))
                 .doesNotThrowAnyException();
     }
 }

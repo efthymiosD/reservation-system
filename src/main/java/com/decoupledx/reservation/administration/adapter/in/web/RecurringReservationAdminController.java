@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.administration.api.AdministrationApi;
-import com.decoupledx.reservation.administration.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.administration.api.CreateRecurringReservationCommand;
-import com.decoupledx.reservation.administration.api.RecurringReservationInfo;
-import com.decoupledx.reservation.administration.api.RecurringReservationStatus;
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
+import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
+import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

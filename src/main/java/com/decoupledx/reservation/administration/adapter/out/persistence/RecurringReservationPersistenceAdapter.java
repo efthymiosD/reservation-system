@@ -7,10 +7,10 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.administration.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
 import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationRepository;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 
 import lombok.RequiredArgsConstructor;
 

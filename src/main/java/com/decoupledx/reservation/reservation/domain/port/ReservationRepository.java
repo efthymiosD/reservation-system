@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 
 public interface ReservationRepository {
 

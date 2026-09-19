@@ -1,10 +1,11 @@
 package com.decoupledx.reservation.webui.admin;
 
-import com.decoupledx.reservation.pricing.api.PricingApi;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -63,9 +65,9 @@ class AdminPricingController {
     }
 
     private String userMessage(BusinessException exception) {
-        return switch (exception.errorCode()) {
-            case INVALID_PRICING_POLICY -> "The hourly price must be zero or positive.";
-            default -> exception.getMessage();
-        };
+        if (Objects.requireNonNull(exception.errorCode()) == ErrorCode.INVALID_PRICING_POLICY) {
+            return "The hourly price must be zero or positive.";
+        }
+        return exception.getMessage();
     }
 }

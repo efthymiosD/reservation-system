@@ -11,11 +11,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.administration.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
 import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 
 class RecurringReservationTest {
 

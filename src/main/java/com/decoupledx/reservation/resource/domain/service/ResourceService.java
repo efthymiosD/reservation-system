@@ -4,20 +4,20 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.resource.api.CreateResourceCommand;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.CreateResourceCommand;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroupInfo;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 
 import com.decoupledx.reservation.resource.domain.model.Resource;
 import com.decoupledx.reservation.resource.domain.model.ResourceGroup;
 import com.decoupledx.reservation.resource.domain.port.ResourceGroupRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceRepository;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.TransactionRunner;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import lombok.RequiredArgsConstructor;
 
@@ -44,8 +44,8 @@ public class ResourceService implements ResourceApi {
     }
 
     @Override
-    public ResourceInfo activate(UUID resourceId) {
-        return activate(ResourceId.of(resourceId));
+    public void activate(UUID resourceId) {
+        activate(ResourceId.of(resourceId));
     }
 
     @Override
@@ -54,8 +54,8 @@ public class ResourceService implements ResourceApi {
     }
 
     @Override
-    public ResourceInfo rename(UUID resourceId, String newName) {
-        return rename(ResourceId.of(resourceId), newName);
+    public void rename(UUID resourceId, String newName) {
+        rename(ResourceId.of(resourceId), newName);
     }
 
     @Override

@@ -15,13 +15,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 @AutoConfigureMockMvc
 class CustomerIdentityIntegrationTest extends PostgresIntegrationTest {
 
     private static final String FIELD_1 = "a0000000-0000-0000-0000-000000000101";
+    private static final int DEFAULT_DURATION_MINUTES = 90;
 
     @Autowired
     MockMvc mockMvc;
@@ -78,13 +79,13 @@ class CustomerIdentityIntegrationTest extends PostgresIntegrationTest {
         mockMvc.perform(post("/api/reservations")
                         .with(customer(subject))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequest(startTime, 90)))
+                        .content(createRequest(startTime)))
                 .andExpect(status().isCreated());
     }
 
-    private String createRequest(String startTime, int durationMinutes) {
+    private String createRequest(String startTime) {
         return """
                 {"resourceId": "%s", "startTime": "%s", "durationMinutes": %d}
-                """.formatted(FIELD_1, startTime, durationMinutes);
+                """.formatted(FIELD_1, startTime, DEFAULT_DURATION_MINUTES);
     }
 }

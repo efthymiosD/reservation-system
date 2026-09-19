@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 
 public interface CustomerAccountRepository {
 

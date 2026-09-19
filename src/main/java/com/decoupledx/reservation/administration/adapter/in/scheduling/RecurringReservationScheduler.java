@@ -1,8 +1,7 @@
 package com.decoupledx.reservation.administration.adapter.in.scheduling;
 
-import com.decoupledx.reservation.administration.domain.service.RecurringReservationMaterializationService;
+import com.decoupledx.reservation.administration.domain.RecurringReservationMaterializationService;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import lombok.RequiredArgsConstructor;

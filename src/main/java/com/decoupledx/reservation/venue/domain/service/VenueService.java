@@ -2,14 +2,14 @@ package com.decoupledx.reservation.venue.domain.service;
 
 import java.util.List;
 import java.util.UUID;
-import com.decoupledx.reservation.venue.api.OpeningHours;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueId;
-import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.domain.model.Venue;
 import com.decoupledx.reservation.venue.domain.port.VenueRepository;
 

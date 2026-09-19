@@ -8,8 +8,8 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 
 class CancellationPolicyTest {
 

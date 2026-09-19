@@ -6,9 +6,9 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 
 import lombok.RequiredArgsConstructor;
 

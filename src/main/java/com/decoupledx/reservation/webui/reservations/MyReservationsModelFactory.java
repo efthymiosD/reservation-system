@@ -4,21 +4,22 @@ import java.time.Clock;
 import java.util.UUID;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationPage;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,6 +32,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 class MyReservationsModelFactory {
+
+    private static final int PAGE_SIZE = 100;
 
     private final ReservationApi reservationApi;
     private final ResourceApi resourceService;
@@ -45,7 +48,7 @@ class MyReservationsModelFactory {
         var deadline = policyService.cancellationPolicyFor(venueId).deadlineBeforeStart();
         var zone = venueService.getVenue(venueId).timezone();
 
-        List<ReservationInfo> reservations = ownReservations(customer, 100);
+        List<ReservationInfo> reservations = ownReservations(customer);
         var now = clock.instant();
 
         List<MyReservationsModel.ReservationCard> upcoming = new ArrayList<>();
@@ -60,12 +63,12 @@ class MyReservationsModelFactory {
         return new MyReservationsModel(upcoming, past);
     }
 
-    private List<ReservationInfo> ownReservations(CustomerId customer, int pageSize) {
+    private List<ReservationInfo> ownReservations(CustomerId customer) {
         List<ReservationInfo> all = new ArrayList<>();
         int page = 0;
         ReservationPage result;
         do {
-            result = reservationApi.findMyReservationsPage(customer, null, page, pageSize);
+            result = reservationApi.findMyReservationsPage(customer, null, page, PAGE_SIZE);
             all.addAll(result.items());
             page++;
         } while (all.size() < result.total() && page < result.page() + 2 && page < 10);
@@ -92,10 +95,10 @@ class MyReservationsModelFactory {
                 reservation.isCancellable(now, deadline));
     }
 
-    private String fieldName(com.decoupledx.reservation.resource.api.ResourceId resourceId) {
+    private String fieldName(ResourceId resourceId) {
         try {
             return resourceService.getResource(resourceId.value()).name();
-        } catch (com.decoupledx.reservation.shared.domain.BusinessException gone) {
+        } catch (BusinessException gone) {
             return "the selected field";
         }
     }

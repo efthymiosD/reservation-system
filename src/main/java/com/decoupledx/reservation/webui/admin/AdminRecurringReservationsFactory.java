@@ -11,16 +11,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.administration.api.AdministrationApi;
-import com.decoupledx.reservation.administration.api.RecurringReservationInfo;
-import com.decoupledx.reservation.identity.api.CustomerDirectoryApi;
-import com.decoupledx.reservation.identity.api.CustomerEntry;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
+import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerEntry;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,9 +47,9 @@ class AdminRecurringReservationsFactory {
         List<ResourceInfo> resources = venueResources();
         List<CustomerEntry> customers = customerDirectory.findAll();
         Map<UUID, String> resourceNames = resources.stream()
-                .collect(Collectors.toMap(resource -> resource.id().value(), ResourceInfo::name, (a, b) -> a));
+                .collect(Collectors.toMap(resource -> resource.id().value(), ResourceInfo::name, (a, _) -> a));
         Map<UUID, String> customerNames = customers.stream()
-                .collect(Collectors.toMap(CustomerEntry::customerId, this::displayName, (a, b) -> a));
+                .collect(Collectors.toMap(CustomerEntry::customerId, this::displayName, (a, _) -> a));
         List<AdminRecurringReservationsModel.RecurringReservationRow> rows = administrationApi.findRecurringReservations().stream()
                 .map(recurringReservation -> toRow(recurringReservation, resourceNames, customerNames))
                 .toList();

@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.webui.admin;
 
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
@@ -13,10 +12,10 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
 
 import lombok.RequiredArgsConstructor;

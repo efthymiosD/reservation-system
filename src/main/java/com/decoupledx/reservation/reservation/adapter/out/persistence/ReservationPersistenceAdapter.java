@@ -1,15 +1,15 @@
 package com.decoupledx.reservation.reservation.adapter.out.persistence;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataAccessException;
@@ -91,7 +91,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     @Override
     public List<Reservation> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period) {
         return reservations
-                .findActiveOverlappingCustomer(customerId.value().toString(), period.start(), period.end())
+                .findActiveOverlappingCustomer(customerId.value(), period.start(), period.end())
                 .stream()
                 .map(this::toDomain)
                 .toList();

@@ -2,17 +2,17 @@ package com.decoupledx.reservation.reservation.domain.service;
 
 import java.time.Clock;
 import java.util.UUID;
-import com.decoupledx.reservation.reservation.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.TransactionRunner;
 
 
 import lombok.RequiredArgsConstructor;

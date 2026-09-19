@@ -1,15 +1,16 @@
 package com.decoupledx.reservation.reservation.domain;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationPage;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
 import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -30,9 +31,9 @@ public class ReservationApiFacade implements ReservationApi {
     }
 
     @Override
-    public ReservationInfo createForRecurringReservation(UUID resourceId, LocalDateTime startTime, int durationMinutes,
-                                                         CustomerId customer, UUID recurringReservationId) {
-        return createReservation.createForRecurringReservation(resourceId, startTime, durationMinutes, customer, recurringReservationId);
+    public void createForRecurringReservation(UUID resourceId, LocalDateTime startTime, int durationMinutes,
+                                              CustomerId customer, UUID recurringReservationId) {
+        createReservation.createForRecurringReservation(resourceId, startTime, durationMinutes, customer, recurringReservationId);
     }
 
     @Override
@@ -66,7 +67,7 @@ public class ReservationApiFacade implements ReservationApi {
     @Override
     public List<ReservationInfo> findActiveOverlappingResource(UUID resourceId, ReservationPeriod period) {
         return reservationQueries.findActiveOverlappingResource(
-                com.decoupledx.reservation.resource.api.ResourceId.of(resourceId), period);
+                ResourceId.of(resourceId), period);
     }
 
     @Override
@@ -84,6 +85,6 @@ public class ReservationApiFacade implements ReservationApi {
     @Override
     public boolean isSlotFree(UUID resourceId, ReservationPeriod period) {
         return reservationQueries.findActiveOverlappingResource(
-                com.decoupledx.reservation.resource.api.ResourceId.of(resourceId), period).isEmpty();
+                ResourceId.of(resourceId), period).isEmpty();
     }
 }

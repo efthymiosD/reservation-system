@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.decoupledx.reservation.identity.api.CustomerDirectoryApi;
-import com.decoupledx.reservation.identity.api.CustomerEntry;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerEntry;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
+import com.decoupledx.reservation.shared.TransactionRunner;
 
 import lombok.RequiredArgsConstructor;
 

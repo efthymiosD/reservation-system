@@ -6,7 +6,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 
 /**
  * View model of the admin reservations page. The customer is shown as the

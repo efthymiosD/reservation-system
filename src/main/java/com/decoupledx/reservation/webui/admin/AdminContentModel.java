@@ -3,7 +3,7 @@ package com.decoupledx.reservation.webui.admin;
 import java.util.List;
 import java.util.UUID;
 
-import com.decoupledx.reservation.venue.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 
 /** View model for the /admin/content page. */
 public record AdminContentModel(

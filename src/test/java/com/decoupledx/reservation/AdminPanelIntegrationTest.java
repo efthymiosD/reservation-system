@@ -1,15 +1,6 @@
 package com.decoupledx.reservation;
 
-import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
-import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-
-import java.util.UUID;
-
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -17,8 +8,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import tools.jackson.databind.ObjectMapper;
+import java.time.ZoneId;
+import java.util.UUID;
+
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Core-flow coverage only (testing convention): admin pages are gated to
@@ -38,9 +37,6 @@ class AdminPanelIntegrationTest extends PostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void adminPagesRedirectAnonymousVisitorsToLogin() throws Exception {
@@ -70,7 +66,7 @@ class AdminPanelIntegrationTest extends PostgresIntegrationTest {
         // (fixed clock 2026-09-01T10:00Z; deadline 120 min) — inserted via SQL
         // because no in-hours bookable slot is that close to "now".
         UUID reservationId = insertReservationAt(
-                FIELD_1, "deadline-user", 12, 30, 13, 30);  // 10:30Z — inside the deadline
+                "deadline-user", 12, 13);  // 10:30Z — inside the deadline
 
         MvcResult cancel = mockMvc.perform(post("/admin/reservations/{id}/cancel", reservationId)
                         .with(webAdmin("admin"))
@@ -93,7 +89,7 @@ class AdminPanelIntegrationTest extends PostgresIntegrationTest {
     void adminCannotCancelElapsedReservations() throws Exception {
         // End time has fully passed relative to the fixed clock (2026-09-01T10:00Z):
         // nothing left to cancel, even administratively.
-        UUID elapsedId = insertReservationAt(FIELD_1, "elapsed-user", 8, 30, 9, 30);  // 06:30Z, elapsed
+        UUID elapsedId = insertReservationAt("elapsed-user", 8, 9);  // 06:30Z, elapsed
 
         mockMvc.perform(post("/admin/reservations/{id}/cancel", elapsedId)
                         .with(webAdmin("admin"))
@@ -115,21 +111,20 @@ class AdminPanelIntegrationTest extends PostgresIntegrationTest {
         assertThat(cancel.getResponse().getRedirectedUrl()).isEqualTo("/admin/reservations");
     }
 
-    private UUID insertReservationAt(String resourceId, String customerId, int startHour,
-            int startMinute, int endHour, int endMinute) {
+    private UUID insertReservationAt(String customerId, int startHour, int endHour) {
         UUID reservationId = UUID.randomUUID();
         jdbc.update("""
-                INSERT INTO reservations
-                    (id, resource_id, customer_id, start_time, end_time, status,
-                     price_amount, price_currency, created_at, version)
-                VALUES (?, ?, ?, ?, ?, 'ACTIVE', 80.00, 'PLN', now(), 0)
-                """, reservationId, UUID.fromString(resourceId), customerId,
-                venueTime(startHour, startMinute), venueTime(endHour, endMinute));
+                        INSERT INTO reservations
+                            (id, resource_id, customer_id, start_time, end_time, status,
+                             price_amount, price_currency, created_at, version)
+                        VALUES (?, ?, ?, ?, ?, 'ACTIVE', 80.00, 'PLN', now(), 0)
+                        """, reservationId, UUID.fromString(FIELD_1), customerId,
+                venueTime(startHour), venueTime(endHour));
         return reservationId;
     }
 
-    private java.time.OffsetDateTime venueTime(int hour, int minute) {
-        return java.time.LocalDate.of(2026, 9, 1).atTime(hour, minute)
-                .atZone(java.time.ZoneId.of("Europe/Warsaw")).toOffsetDateTime();
+    private java.time.OffsetDateTime venueTime(int hour) {
+        return java.time.LocalDate.of(2026, 9, 1).atTime(hour, 30)
+                .atZone(ZoneId.of("Europe/Warsaw")).toOffsetDateTime();
     }
 }

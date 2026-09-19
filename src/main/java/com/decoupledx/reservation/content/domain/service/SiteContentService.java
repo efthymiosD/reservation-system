@@ -3,11 +3,11 @@ package com.decoupledx.reservation.content.domain.service;
 import java.time.Clock;
 import java.util.List;
 
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.content.api.SiteContentBlock;
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 import com.decoupledx.reservation.content.domain.model.SiteText;
 import com.decoupledx.reservation.content.domain.port.SiteContentRepository;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
+import com.decoupledx.reservation.shared.TransactionRunner;
 
 import lombok.RequiredArgsConstructor;
 

@@ -3,11 +3,11 @@ package com.decoupledx.reservation.resource.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.decoupledx.reservation.resource.api.ResourceGroupId;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceStatus;
-import com.decoupledx.reservation.resource.api.ResourceType;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceStatus;
+import com.decoupledx.reservation.resource.adapter.api.ResourceType;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import lombok.Getter;
 

@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
 
 import lombok.RequiredArgsConstructor;

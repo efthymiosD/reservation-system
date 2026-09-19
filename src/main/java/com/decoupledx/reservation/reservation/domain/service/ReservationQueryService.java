@@ -1,17 +1,17 @@
 package com.decoupledx.reservation.reservation.domain.service;
 
 import java.util.List;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,12 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class ReservationQueryService {
 
     private final ReservationRepository reservations;
-
-    public List<ReservationInfo> findMyReservations(CustomerId customerId) {
-        return reservations.findByCustomer(customerId).stream()
-                .map(CreateReservationService::toInfo)
-                .toList();
-    }
 
     public ReservationPage findMyReservationsPage(CustomerId customerId, ReservationStatus status, int page, int size) {
         List<ReservationInfo> items = reservations.findByCustomer(customerId, status, page, size).stream()

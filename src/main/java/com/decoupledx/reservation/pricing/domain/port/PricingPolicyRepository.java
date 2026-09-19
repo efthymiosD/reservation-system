@@ -2,8 +2,8 @@ package com.decoupledx.reservation.pricing.domain.port;
 
 import java.util.Optional;
 
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 public interface PricingPolicyRepository {
 

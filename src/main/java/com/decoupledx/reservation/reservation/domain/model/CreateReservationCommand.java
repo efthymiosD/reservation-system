@@ -3,7 +3,7 @@ package com.decoupledx.reservation.reservation.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.decoupledx.reservation.resource.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 
 public record CreateReservationCommand(
         ResourceId resourceId,

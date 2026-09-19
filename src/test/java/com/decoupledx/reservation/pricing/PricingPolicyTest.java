@@ -9,9 +9,9 @@ import java.util.Currency;
 
 import org.junit.jupiter.api.Test;
 
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
 
 class PricingPolicyTest {
 

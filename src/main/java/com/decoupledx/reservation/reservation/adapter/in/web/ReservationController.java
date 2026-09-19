@@ -12,13 +12,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.reservation.api.ReservationId;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.service.CancelReservationService;
 import com.decoupledx.reservation.reservation.domain.service.CreateReservationService;
 import com.decoupledx.reservation.reservation.domain.service.ReservationQueryService;
-import com.decoupledx.reservation.resource.api.ResourceId;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

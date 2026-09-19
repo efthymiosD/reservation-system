@@ -8,25 +8,25 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.UUID;
 import com.decoupledx.reservation.reservation.domain.model.CreateReservationCommand;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.pricing.api.PricingApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
 import com.decoupledx.reservation.reservation.domain.model.Reservation;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.api.OpeningHours;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.shared.TransactionRunner;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -119,7 +119,7 @@ public class CreateReservationService {
                 .opensAt(command.start().atZone(zone).getDayOfWeek())
                 .orElseThrow(() -> new BusinessException(ErrorCode.OUTSIDE_OPENING_HOURS));
         bookingPolicy.validateStartTime(command.start().atZone(zone), opensAt);
-        bookingPolicy.validateNotInPast(now, command.start(), zone);
+        bookingPolicy.validateNotInPast(now, command.start());
         if (!forRecurringReservation) {
             // Recurring-reservation-created bookings are governed by the recurring reservation's own
             // booking window (1/3/6 months), not the venue's public advance cap.

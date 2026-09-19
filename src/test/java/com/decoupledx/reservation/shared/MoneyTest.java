@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 import org.junit.jupiter.api.Test;
-import com.decoupledx.reservation.shared.domain.Money;
 
 class MoneyTest {
 

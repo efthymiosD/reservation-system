@@ -11,21 +11,21 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.availability.api.ResourceAvailability;
-import com.decoupledx.reservation.availability.api.ResourceAvailabilityStatus;
-import com.decoupledx.reservation.availability.api.AvailabilityApi;
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.availability.adapter.api.AvailabilityApi;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +69,7 @@ class ReservationPageModelFactory {
 
         return selection == null
                 ? unavailableModel(today, maxDate, durationOptions, layout)
-                : availabilityModel(selection, venue, zone, today, maxDate, durationOptions, layout);
+                : availabilityModel(selection, today, maxDate, durationOptions, layout);
     }
 
     private record SlotSelection(LocalDate date, LocalTime start, int duration,
@@ -80,11 +80,11 @@ class ReservationPageModelFactory {
             Integer requestedDuration, LocalDate today, LocalDate maxDate,
             List<Integer> durationOptions, Duration startStep, VenueInfo venue) {
 
-        LocalDate date = requestedDate == null || !validDate(requestedDate, today, maxDate).isPresent()
+        LocalDate date = requestedDate == null || validDate(requestedDate, today, maxDate).isEmpty()
                 ? today
                 : requestedDate;
-        int duration = requestedDuration == null || !validDuration(requestedDuration, durationOptions).isPresent()
-                ? durationOptions.get(0)
+        int duration = requestedDuration == null || validDuration(requestedDuration, durationOptions).isEmpty()
+                ? durationOptions.getFirst()
                 : requestedDuration;
 
         SlotSelection direct = forDate(date, requestedStart, duration, startStep, venue, zoneOf(venue));
@@ -119,12 +119,12 @@ class ReservationPageModelFactory {
         }
         LocalTime start = requestedStart != null && timeOptions.contains(requestedStart)
                 ? requestedStart
-                : timeOptions.get(0);
+                : timeOptions.getFirst();
         return new SlotSelection(date, start, duration, timeOptions);
     }
 
-    private ReservationPageModel availabilityModel(SlotSelection selection, VenueInfo venue, ZoneId zone,
-            LocalDate today, LocalDate maxDate, List<Integer> durationOptions, VenueLayout layout) {
+    private ReservationPageModel availabilityModel(SlotSelection selection,
+                                                   LocalDate today, LocalDate maxDate, List<Integer> durationOptions, VenueLayout layout) {
 
         try {
             List<ResourceAvailability> resources = availabilityService.resourceAvailability(
@@ -167,7 +167,7 @@ class ReservationPageModelFactory {
         return new ReservationPageModel(
                 today,
                 null,
-                durationOptions.get(0),
+                durationOptions.getFirst(),
                 today,
                 maxDate,
                 durationOptions,
@@ -270,7 +270,7 @@ class ReservationPageModelFactory {
     private ReservationPageModel.MoneyView priceOf(List<ResourceAvailability> resources) {
         return resources.isEmpty() ? null
                 : new ReservationPageModel.MoneyView(
-                        resources.get(0).priceAmount(), resources.get(0).priceCurrency());
+                        resources.getFirst().priceAmount(), resources.getFirst().priceCurrency());
     }
 
     private List<ReservationPageModel.MapField> mapFields(List<ResourceAvailability> resources, VenueLayout layout) {

@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import com.decoupledx.reservation.shared.BusinessException;
 
 import lombok.RequiredArgsConstructor;
 

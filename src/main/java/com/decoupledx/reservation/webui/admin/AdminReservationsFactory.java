@@ -7,16 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
 import org.springframework.stereotype.Component;
 
-import com.decoupledx.reservation.identity.api.CustomerDirectoryApi;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationPage;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 /**
  * Assembles the admin reservations listing from module APIs: page query, field
@@ -87,12 +89,12 @@ class AdminReservationsFactory {
         return reservation.status().name();
     }
 
-    private String fieldName(com.decoupledx.reservation.resource.api.ResourceId resourceId,
-            Map<UUID, String> fieldNames) {
+    private String fieldName(ResourceId resourceId,
+                             Map<UUID, String> fieldNames) {
         return fieldNames.computeIfAbsent(resourceId.value(), id -> {
             try {
                 return resourceService.getResource(id).name();
-            } catch (com.decoupledx.reservation.shared.domain.BusinessException gone) {
+            } catch (BusinessException gone) {
                 return "field " + id.toString().substring(0, 8);
             }
         });

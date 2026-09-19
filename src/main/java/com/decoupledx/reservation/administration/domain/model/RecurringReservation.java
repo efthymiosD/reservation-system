@@ -8,10 +8,10 @@ import java.time.LocalTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.decoupledx.reservation.administration.api.RecurringReservationStatus;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 
 import lombok.Getter;
 

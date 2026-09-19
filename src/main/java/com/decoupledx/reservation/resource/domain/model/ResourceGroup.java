@@ -3,9 +3,9 @@ package com.decoupledx.reservation.resource.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.decoupledx.reservation.resource.api.ResourceGroupId;
-import com.decoupledx.reservation.resource.api.ResourceType;
-import com.decoupledx.reservation.venue.api.VenueId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceGroupId;
+import com.decoupledx.reservation.resource.adapter.api.ResourceType;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 
 import lombok.Getter;
 
@@ -14,10 +14,10 @@ public class ResourceGroup {
 
     private final ResourceGroupId id;
     private final VenueId venueId;
-    private String name;
+    private final String name;
     private final ResourceType type;
     private final Instant createdAt;
-    private Instant updatedAt;
+    private final Instant updatedAt;
 
     private ResourceGroup(ResourceGroupId id, VenueId venueId, String name, ResourceType type,
                           Instant createdAt, Instant updatedAt) {

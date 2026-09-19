@@ -3,13 +3,11 @@ package com.decoupledx.reservation.administration.domain;
 import java.util.List;
 import java.util.UUID;
 
-import com.decoupledx.reservation.administration.api.AdministrationApi;
-import com.decoupledx.reservation.administration.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.administration.api.CreateRecurringReservationCommand;
-import com.decoupledx.reservation.administration.api.RecurringReservationInfo;
-import com.decoupledx.reservation.administration.domain.service.RecurringReservationMaterializationService;
-import com.decoupledx.reservation.administration.domain.service.RecurringReservationService;
-import com.decoupledx.reservation.identity.api.CustomerId;
+import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
+import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 
 import lombok.RequiredArgsConstructor;
 

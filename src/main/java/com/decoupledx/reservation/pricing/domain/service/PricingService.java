@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.pricing.domain.service;
 
 import com.decoupledx.reservation.pricing.domain.port.PricingPolicyRepository;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.api.VenueId;
-import com.decoupledx.reservation.pricing.api.PricingApi;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
+import com.decoupledx.reservation.shared.TransactionRunner;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;

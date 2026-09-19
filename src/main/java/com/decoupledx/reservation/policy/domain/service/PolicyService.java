@@ -2,12 +2,12 @@ package com.decoupledx.reservation.policy.domain.service;
 
 import com.decoupledx.reservation.policy.domain.port.BookingPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.CancellationPolicyRepository;
-import com.decoupledx.reservation.shared.domain.TransactionRunner;
-import com.decoupledx.reservation.venue.api.VenueId;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
+import com.decoupledx.reservation.shared.TransactionRunner;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import java.util.UUID;
-import com.decoupledx.reservation.policy.api.CancellationPolicy;
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 
 import lombok.RequiredArgsConstructor;
 
