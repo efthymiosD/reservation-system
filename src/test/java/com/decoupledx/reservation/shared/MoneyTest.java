@@ -45,4 +45,41 @@ class MoneyTest {
         assertThatThrownBy(() -> Money.of(null, PLN)).isInstanceOf(NullPointerException.class);
         assertThatThrownBy(() -> Money.of(BigDecimal.ONE, null)).isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    void convertsToExactMinorUnits() {
+        Money price = Money.of(new BigDecimal("80.00"), PLN);
+        assertThat(price.minorUnits()).isEqualTo(8000L);
+    }
+
+    @Test
+    void convertsWholeVenuePriceToMinorUnits() {
+        assertThat(Money.of(new BigDecimal("80"), PLN).minorUnits()).isEqualTo(8000L);
+    }
+
+    @Test
+    void convertsZeroToZeroMinorUnits() {
+        assertThat(Money.of(new BigDecimal("0.00"), PLN).minorUnits()).isZero();
+    }
+
+    @Test
+    void convertsCurrenciesWithNoFractionDigits() {
+        Currency JPY = Currency.getInstance("JPY");
+        assertThat(Money.of(new BigDecimal("100"), JPY).minorUnits()).isEqualTo(100L);
+    }
+
+    @Test
+    void roundTripsThroughMinorUnits() {
+        Money original = Money.of(new BigDecimal("47.35"), PLN);
+        Money roundTripped = Money.ofMinorUnits(original.minorUnits(), original.currency());
+        assertThat(roundTripped.amount()).isEqualByComparingTo("47.35");
+        assertThat(roundTripped.currency()).isEqualTo(PLN);
+    }
+
+    @Test
+    void constructsFromRawMinorUnits() {
+        Money fromStripe = Money.ofMinorUnits(8000L, PLN);
+        assertThat(fromStripe.amount()).isEqualByComparingTo("80.00");
+        assertThat(fromStripe.currency()).isEqualTo(PLN);
+    }
 }
