@@ -12,4 +12,5 @@ public interface TransactionRunner {
 
     void run(Runnable work);
 
+    <T> T runReadOnly(Supplier<T> work);
 }
