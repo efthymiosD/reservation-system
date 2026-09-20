@@ -9,7 +9,7 @@ import com.decoupledx.reservation.shared.TransactionRunner;
 
 /** Module-internal wiring; nothing here is visible to other modules. */
 @Configuration
-public class PricingModuleConfig {
+class PricingModuleConfig {
 
     @Bean
     PricingService pricingService(PricingPolicyRepository pricingPolicies, TransactionRunner tx) {

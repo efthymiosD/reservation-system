@@ -145,3 +145,18 @@ Pipeline: `feature/* → PR (CI) → main → Docker image → GHCR → (QNAP de
 - **Dockerfile**: multi-stage (`maven:3.9-eclipse-temurin-26` → `eclipse-temurin:26-jre`), non-root `app` user, healthcheck via installed `curl`, `/usr/bin/pebble` removed (Canonical init daemon baked into the Ubuntu base; its bundled Go stdlib fails the Trivy gate). Dev *public* key is intentionally in the image (dev fallback only; prod profile forbids it).
 - **Integration-test isolation**: `PostgresIntegrationTest` truncates `recurring_reservations, reservations` in `@BeforeEach` — every test class shares one container and must start clean regardless of execution order.
 - **Exclusion-constraint races**: both persistence adapters translate `ConcurrencyFailureException` (deadlock/lock-timeout victims of the `btree_gist` race, SQLState 40P01) into the same 409 business conflicts as `DataIntegrityViolationException` (23P01) — lock-race losers must not surface as 500s.
+
+## ADRs (architecture decision records)
+
+**The 10 module-structure rules live in `docs/adr/0001-module-structure.adoc`** — every module must obey them. Condensed in-memory copy (authoritative text + per-module evidence is in the ADR):
+
+1. `domain` is **flat**; its only sub-package is `domain/port`.
+2. All domain classes are **package-private** (no `public` anywhere in `domain` except the `port` interfaces).
+3. The domain package owns **its own Config** (one `…DomainConfig`, e.g. `AdministrationDomainConfig`); no framework annotations anywhere else in `domain`.
+4. Inbound (driving) ports in `domain/port` are **`public interface`**.
+5. Each module exports **exactly one** named interface: `adapter.api` (`@NamedInterface("api")` in `adapter/api/package-info.java`); nothing else is cross-module visible.
+6. Adapter sub-packages each own their **Config** (`…SchedulingConfig`, `…WebConfig`, `…PersistenceConfig`); framework annotations live only in adapter configs — never in domain (this is rule 3's enforcement on the adapter side).
+7. **Adapters never depend on other adapters** — they depend only on domain inbound ports.
+8. Domain returns **immutable snapshots** (`…Info`/`…DataValue` records); mapping domain↔DTO happens in the adapter layer, never in domain.
+9. Web controllers use **the domain inbound ports directly**, never `adapter.api` as a service provider (api package is for cross-module DTO types, not the module's own `adapter.in.web`).
+10. Adapter classes are **package-private by default** except: `adapter.api` types and immutable `…DataValue` snapshots.

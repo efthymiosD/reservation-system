@@ -1,14 +1,7 @@
 package com.decoupledx.reservation.administration.domain;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.UUID;
-
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationRepository;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.shared.BusinessException;
@@ -17,11 +10,14 @@ import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static java.time.Duration.*;
+import java.time.*;
+import java.util.List;
+import java.util.UUID;
+
+import static java.time.Duration.ofMinutes;
 
 /**
  * Turns each active recurring reservation's upcoming occurrences (inside its
@@ -32,7 +28,7 @@ import static java.time.Duration.*;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class RecurringReservationMaterializationService {
+class RecurringReservationMaterializationServiceImpl implements RecurringReservationMaterializationService {
 
     private final RecurringReservationRepository recurringReservations;
     private final ReservationApi reservationApi;
@@ -40,14 +36,14 @@ public class RecurringReservationMaterializationService {
     private final Clock clock;
     private final TransactionRunner tx;
 
-    /**
-     * Materializes every active recurring reservation up to its booking window.
-     */
+    @Override
     public RecurringReservationMaterializationSummary materializeDue() {
         return tx.run(() -> {
             int created = 0;
             int skipped = 0;
-            for (RecurringReservation recurringReservation : recurringReservations.findAllActive()) {
+            List<RecurringReservation> reservations =
+                    recurringReservations.findAllActive().stream().map(RecurringReservation::reconstitute).toList();
+            for (var recurringReservation : reservations) {
                 RecurringReservationMaterializationSummary result = materialize(recurringReservation);
                 created += result.created();
                 skipped += result.skipped();
@@ -56,14 +52,11 @@ public class RecurringReservationMaterializationService {
         });
     }
 
-    /**
-     * Materializes a single recurringReservation (called right after creation so the
-     * customer sees upcoming reservations immediately). Runs inside the current
-     * transaction when invoked from another service.
-     */
+    @Override
     public void materializeFor(UUID recurringReservationId) {
         tx.run(() -> {
             RecurringReservation recurringReservation = recurringReservations.findById(recurringReservationId)
+                    .map(RecurringReservation::reconstitute)
                     .orElseThrow(() -> new BusinessException(ErrorCode.RECURRING_RESERVATION_NOT_FOUND));
             return materialize(recurringReservation);
         });
@@ -110,7 +103,7 @@ public class RecurringReservationMaterializationService {
             cursor = cursor.plusDays(1);
         }
         recurringReservation.advanceCursor(latestDate.plusDays(1));
-        recurringReservations.save(recurringReservation);
+        recurringReservations.save(recurringReservation.toDataValue());
         if (created > 0 || skipped > 0) {
             log.info("Materialization recurringReservationId={} created={} skipped={}",
                     recurringReservation.getId(), created, skipped);
@@ -119,7 +112,7 @@ public class RecurringReservationMaterializationService {
     }
 
     private boolean conflictsWithExistingBooking(UUID resourceId, RecurringReservation recurringReservation,
-            LocalDateTime occurrence, ZoneId zone) {
+                                                 LocalDateTime occurrence, ZoneId zone) {
         Instant start = occurrence.atZone(zone).toInstant();
         Instant end = start.plus(ofMinutes(recurringReservation.durationMinutes()));
         ReservationPeriod period = ReservationPeriod.of(start, end);

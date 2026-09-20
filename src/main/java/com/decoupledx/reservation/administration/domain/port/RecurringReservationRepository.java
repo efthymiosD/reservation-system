@@ -1,18 +1,18 @@
 package com.decoupledx.reservation.administration.domain.port;
 
+import com.decoupledx.reservation.administration.adapter.persistence.RecurringReservationDataValue;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
-
 public interface RecurringReservationRepository {
 
-    RecurringReservation save(RecurringReservation recurringReservation);
+    RecurringReservationDataValue save(RecurringReservationDataValue recurringReservation);
 
-    Optional<RecurringReservation> findById(UUID id);
+    Optional<RecurringReservationDataValue> findById(UUID id);
 
-    List<RecurringReservation> findAll();
+    List<RecurringReservationDataValue> findAll();
 
-    List<RecurringReservation> findAllActive();
+    List<RecurringReservationDataValue> findAllActive();
 }

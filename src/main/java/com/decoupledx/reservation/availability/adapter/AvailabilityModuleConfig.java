@@ -14,7 +14,7 @@ import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 
 /** Module-internal wiring; nothing here is visible to other modules. */
 @Configuration
-public class AvailabilityModuleConfig {
+class AvailabilityModuleConfig {
 
     @Bean
     AvailabilityService availabilityService(VenueApi venueService, ResourceApi resourceService,

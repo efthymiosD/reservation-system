@@ -1,6 +1,6 @@
-package com.decoupledx.reservation.administration.adapter.in.scheduling;
+package com.decoupledx.reservation.administration.adapter.scheduling;
 
-import com.decoupledx.reservation.administration.domain.RecurringReservationMaterializationService;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
-public class RecurringReservationSchedulingConfig {
+class RecurringReservationSchedulingConfig {
 
     @Bean
     RecurringReservationScheduler recurringReservationScheduler(

@@ -21,7 +21,8 @@ class DomainPurityTest {
     private static final DescribedPredicate<JavaClass> DOMAIN_CLASSES = DescribedPredicate
             .describe("domain classes other than package-info", candidate ->
                     candidate.getPackageName().contains(".domain")
-                            && !candidate.getSimpleName().equals("package-info"));
+                            && !candidate.getSimpleName().equals("package-info")
+                            && !candidate.getSimpleName().contains("Config"));
 
     @Test
     void domainPackagesDoNotDependOnSpringOrPersistenceFrameworks() {

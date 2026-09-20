@@ -1,6 +1,6 @@
-package com.decoupledx.reservation.administration.adapter.in.scheduling;
+package com.decoupledx.reservation.administration.adapter.scheduling;
 
-import com.decoupledx.reservation.administration.domain.RecurringReservationMaterializationService;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class RecurringReservationScheduler {
+class RecurringReservationScheduler {
 
     private final RecurringReservationMaterializationService materializer;
     private final boolean enabled;

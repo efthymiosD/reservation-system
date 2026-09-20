@@ -1,5 +1,7 @@
 package com.decoupledx.reservation.administration.adapter.api;
 
+import lombok.Builder;
+
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -11,6 +13,7 @@ import java.util.UUID;
  * a customer on a weekly weekday at venue-local times, plus the materializer
  * cursor ({@code nextOccurrence}) and lifecycle audit fields.
  */
+@Builder
 public record RecurringReservationInfo(
         UUID id,
         UUID resourceId,

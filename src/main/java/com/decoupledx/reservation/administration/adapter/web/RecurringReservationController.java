@@ -1,4 +1,17 @@
-package com.decoupledx.reservation.administration.adapter.in.web;
+package com.decoupledx.reservation.administration.adapter.web;
+
+import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -7,48 +20,25 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
-import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
-import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
-import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
-import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/admin/recurring-reservations")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-class RecurringReservationAdminController {
+class RecurringReservationController {
 
-    private final AdministrationApi administrationApi;
-    private final CurrentCustomerApi currentCustomer;
+    private final RecurringReservationService recurringReservationService;
+    private final RecurringReservationMaterializationService materializationService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     RecurringReservationResponse create(@Valid @RequestBody CreateRecurringReservationRequest request) {
-        return toResponse(administrationApi.createRecurringReservation(toCommand(request)));
+        return toResponse(recurringReservationService.create(toCommand(request)));
     }
 
     @GetMapping
     List<RecurringReservationResponse> findRecurringReservations(
             @RequestParam(required = false) RecurringReservationStatus status) {
-        return administrationApi.findRecurringReservations().stream()
-                .filter(recurringReservation -> status == null || recurringReservation.status() == status)
+        return recurringReservationService.findByStatus(status).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -56,12 +46,12 @@ class RecurringReservationAdminController {
     @PostMapping("/{recurringReservationId}/cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void cancel(@PathVariable UUID recurringReservationId) {
-        administrationApi.cancelRecurringReservation(recurringReservationId, currentCustomer.currentCustomerId());
+        recurringReservationService.cancel(recurringReservationId);
     }
 
     @PostMapping("/materialize")
     MaterializationSummaryResponse materialize() {
-        RecurringReservationMaterializationSummary summary = administrationApi.materializeDue();
+        RecurringReservationMaterializationSummary summary = materializationService.materializeDue();
         return new MaterializationSummaryResponse(summary.created(), summary.skipped());
     }
 

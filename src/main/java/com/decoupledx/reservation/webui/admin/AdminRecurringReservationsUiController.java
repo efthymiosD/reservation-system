@@ -15,7 +15,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
 import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.shared.BusinessException;
 
 import lombok.RequiredArgsConstructor;
@@ -31,11 +30,10 @@ import lombok.RequiredArgsConstructor;
  */
 @Controller
 @RequiredArgsConstructor
-class AdminRecurringReservationsController {
+class AdminRecurringReservationsUiController {
 
     private final AdminRecurringReservationsFactory recurringReservationsFactory;
     private final AdministrationApi administrationApi;
-    private final CurrentCustomerApi currentCustomer;
 
     @GetMapping("/admin/recurring-reservations")
     String recurringReservations(Model model) {
@@ -67,7 +65,7 @@ class AdminRecurringReservationsController {
     @PostMapping("/admin/recurring-reservations/{recurringReservationId}/cancel")
     String cancelRecurringReservation(@PathVariable UUID recurringReservationId, RedirectAttributes redirect) {
         try {
-            administrationApi.cancelRecurringReservation(recurringReservationId, currentCustomer.currentCustomerId());
+            administrationApi.cancelRecurringReservation(recurringReservationId);
             redirect.addFlashAttribute("message",
                     "Recurring reservation " + shortRef(recurringReservationId) + " cancelled (future bookings released).");
         } catch (BusinessException exception) {

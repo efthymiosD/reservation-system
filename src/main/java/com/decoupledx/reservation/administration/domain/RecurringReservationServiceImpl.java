@@ -1,18 +1,12 @@
 package com.decoupledx.reservation.administration.domain;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.UUID;
-
 import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
-import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationRepository;
+import com.decoupledx.reservation.administration.domain.port.RecurringReservationService;
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
@@ -25,8 +19,11 @@ import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-
 import lombok.RequiredArgsConstructor;
+
+import java.time.*;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Create/cancel/query use cases for recurring reservations. Creation validates
@@ -35,17 +32,19 @@ import lombok.RequiredArgsConstructor;
  * batch of occurrences in the same transaction.
  */
 @RequiredArgsConstructor
-public class RecurringReservationService {
+class RecurringReservationServiceImpl implements RecurringReservationService {
 
     private final RecurringReservationRepository recurringReservations;
+    private final RecurringReservationMaterializationService materializer;
     private final ResourceApi resourceService;
     private final VenueApi venueService;
     private final PolicyApi policyService;
     private final ReservationApi reservationApi;
-    private final RecurringReservationMaterializationService materializer;
+    private final CurrentCustomerApi customerApi;
     private final Clock clock;
     private final TransactionRunner tx;
 
+    @Override
     public RecurringReservationInfo create(CreateRecurringReservationCommand command) {
         return tx.run(() -> {
             ResourceInfo resource = resourceService.lockResource(command.resourceId());
@@ -65,33 +64,45 @@ public class RecurringReservationService {
                     command.windowMonths(),
                     today,
                     clock.instant());
-            RecurringReservationInfo saved = toInfo(recurringReservations.save(recurringReservation));
+            recurringReservations.save(recurringReservation.toDataValue());
+            RecurringReservationInfo saved = recurringReservation.toInfo();
             materializer.materializeFor(saved.id());
             return saved;
         });
     }
 
-    /**
-     * Cancels the whole recurring reservation and every not-yet-started reservation it has
-     * produced, all in one transaction.
-     */
-    public void cancel(UUID recurringReservationId, CustomerId actor) {
+    @Override
+    public void cancel(UUID recurringReservationId) {
         tx.run(() -> {
+            CustomerId actor = customerApi.currentCustomerId();
             RecurringReservation recurringReservation = loadActive(recurringReservationId);
             Instant now = clock.instant();
             reservationApi.findActiveByRecurringReservation(recurringReservationId).stream()
                     .filter(reservation -> reservation.end().isAfter(now))
                     .forEach(reservation -> reservationApi.cancelAdministratively(reservation.id().value(), actor));
             recurringReservation.cancel(now, actor);
-            recurringReservations.save(recurringReservation);
+            recurringReservations.save(recurringReservation.toDataValue());
         });
     }
 
+    @Override
     public List<RecurringReservationInfo> findAll() {
-        return recurringReservations.findAll().stream().map(this::toInfo).toList();
+        return recurringReservations.findAll().stream()
+                .map(RecurringReservation::reconstitute)
+                .map(RecurringReservation::toInfo)
+                .toList();
     }
 
-    void validateDefinition(CreateRecurringReservationCommand command, VenueInfo venue) {
+    @Override
+    public List<RecurringReservationInfo> findByStatus(RecurringReservationStatus status) {
+        return recurringReservations.findAll().stream()
+                .filter(recurringReservation -> status == null || recurringReservation.status() == status)
+                .map(RecurringReservation::reconstitute)
+                .map(RecurringReservation::toInfo)
+                .toList();
+    }
+
+    private void validateDefinition(CreateRecurringReservationCommand command, VenueInfo venue) {
         if (command.endTime().isBefore(command.startTime()) || command.endTime().equals(command.startTime())) {
             throw new BusinessException(ErrorCode.INVALID_RECURRING_RESERVATION_PERIOD);
         }
@@ -123,26 +134,11 @@ public class RecurringReservationService {
 
     private RecurringReservation loadActive(UUID recurringReservationId) {
         RecurringReservation recurringReservation = recurringReservations.findById(recurringReservationId)
+                .map(RecurringReservation::reconstitute)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RECURRING_RESERVATION_NOT_FOUND));
         if (!recurringReservation.isActive()) {
             throw new BusinessException(ErrorCode.RECURRING_RESERVATION_ALREADY_CANCELLED);
         }
         return recurringReservation;
-    }
-
-    private RecurringReservationInfo toInfo(RecurringReservation recurringReservation) {
-        return new RecurringReservationInfo(
-                recurringReservation.getId(),
-                recurringReservation.getResourceId(),
-                UUID.fromString(recurringReservation.getCustomerId().value()),
-                recurringReservation.getWeekday(),
-                recurringReservation.getStartTime(),
-                recurringReservation.getEndTime(),
-                recurringReservation.getWindowMonths(),
-                recurringReservation.getStatus(),
-                recurringReservation.getNextOccurrence(),
-                recurringReservation.getCreatedAt(),
-                recurringReservation.getCancelledAt(),
-                recurringReservation.getCancelledBy() == null ? null : UUID.fromString(recurringReservation.getCancelledBy().value()));
     }
 }

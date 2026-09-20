@@ -11,7 +11,7 @@ import com.decoupledx.reservation.shared.TransactionRunner;
 
 /** Module-internal wiring; nothing here is visible to other modules. */
 @Configuration
-public class ContentModuleConfig {
+class ContentModuleConfig {
 
     @Bean
     SiteContentService siteContentService(SiteContentRepository siteContentRepository,

@@ -1,19 +1,16 @@
-package com.decoupledx.reservation.administration.domain.model;
+package com.decoupledx.reservation.administration.domain;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Objects;
-import java.util.UUID;
-
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.adapter.persistence.RecurringReservationDataValue;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
-
 import lombok.Getter;
+
+import java.time.*;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Aggregate root for a recurring per-customer reservation: a resource assigned
@@ -22,7 +19,7 @@ import lombok.Getter;
  * into a real reservation, so each week's slot is created exactly once.
  */
 @Getter
-public class RecurringReservation {
+class RecurringReservation {
 
     private final UUID id;
     private final UUID resourceId;
@@ -38,10 +35,10 @@ public class RecurringReservation {
     private CustomerId cancelledBy;
 
     private RecurringReservation(UUID id, UUID resourceId, CustomerId customerId, DayOfWeek weekday,
-                                LocalTime startTime, LocalTime endTime, int windowMonths,
-                                RecurringReservationStatus status,
-                                LocalDate nextOccurrence, Instant createdAt, Instant cancelledAt,
-                                CustomerId cancelledBy) {
+                                 LocalTime startTime, LocalTime endTime, int windowMonths,
+                                 RecurringReservationStatus status,
+                                 LocalDate nextOccurrence, Instant createdAt, Instant cancelledAt,
+                                 CustomerId cancelledBy) {
         this.id = id;
         this.resourceId = resourceId;
         this.customerId = customerId;
@@ -57,8 +54,8 @@ public class RecurringReservation {
     }
 
     public static RecurringReservation create(UUID resourceId, CustomerId customerId, DayOfWeek weekday,
-                                             LocalTime startTime, LocalTime endTime, int windowMonths,
-                                             LocalDate nextOccurrence, Instant now) {
+                                              LocalTime startTime, LocalTime endTime, int windowMonths,
+                                              LocalDate nextOccurrence, Instant now) {
         Objects.requireNonNull(resourceId, "resourceId must not be null");
         Objects.requireNonNull(customerId, "customerId must not be null");
         Objects.requireNonNull(weekday, "weekday must not be null");
@@ -70,16 +67,6 @@ public class RecurringReservation {
         return new RecurringReservation(
                 UUID.randomUUID(), resourceId, customerId, weekday, startTime, endTime, windowMonths,
                 RecurringReservationStatus.ACTIVE, nextOccurrence, now, null, null);
-    }
-
-    public static RecurringReservation reconstitute(UUID id, UUID resourceId, CustomerId customerId,
-                                                   DayOfWeek weekday, LocalTime startTime, LocalTime endTime,
-                                                   int windowMonths,
-                                                   RecurringReservationStatus status, LocalDate nextOccurrence,
-                                                   Instant createdAt, Instant cancelledAt, CustomerId cancelledBy) {
-        return new RecurringReservation(
-                id, resourceId, customerId, weekday, startTime, endTime, windowMonths,
-                status, nextOccurrence, createdAt, cancelledAt, cancelledBy);
     }
 
     /**
@@ -121,5 +108,45 @@ public class RecurringReservation {
         if (windowMonths != 1 && windowMonths != 3 && windowMonths != 6) {
             throw new BusinessException(ErrorCode.INVALID_RECURRING_RESERVATION_WINDOW);
         }
+    }
+
+    public static RecurringReservation reconstitute(RecurringReservationDataValue data) {
+        return new RecurringReservation(
+                data.id(), data.resourceId(), data.customerId(), data.weekday(), data.startTime(), data.endTime(),
+                data.windowMonths(), data.status(), data.nextOccurrence(), data.createdAt(), data.cancelledAt(), data.cancelledBy());
+    }
+
+    public RecurringReservationDataValue toDataValue() {
+        return RecurringReservationDataValue.builder()
+                .id(id)
+                .resourceId(resourceId)
+                .customerId(customerId)
+                .weekday(weekday)
+                .startTime(startTime)
+                .endTime(endTime)
+                .windowMonths(windowMonths)
+                .status(status)
+                .nextOccurrence(nextOccurrence)
+                .createdAt(createdAt)
+                .cancelledAt(cancelledAt)
+                .cancelledBy(cancelledBy)
+                .build();
+    }
+
+    public RecurringReservationInfo toInfo() {
+        return RecurringReservationInfo.builder()
+                .id(id)
+                .resourceId(resourceId)
+                .customerId(UUID.fromString(customerId.value()))
+                .weekday(weekday)
+                .startTime(startTime)
+                .endTime(endTime)
+                .windowMonths(windowMonths)
+                .status(status)
+                .nextOccurrence(nextOccurrence)
+                .createdAt(createdAt)
+                .cancelledAt(cancelledAt)
+                .cancelledBy(cancelledBy == null ? null : UUID.fromString(cancelledBy.value()))
+                .build();
     }
 }

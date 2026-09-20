@@ -9,10 +9,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
 
+import com.decoupledx.reservation.administration.adapter.persistence.RecurringReservationDataValue;
 import org.junit.jupiter.api.Test;
 
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
-import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
@@ -94,11 +94,11 @@ class RecurringReservationTest {
         RecurringReservation original = newRecurringReservation();
         original.cancel(NOW, admin);
 
-        RecurringReservation restored = RecurringReservation.reconstitute(
+        RecurringReservation restored = RecurringReservation.reconstitute(new RecurringReservationDataValue(
                 original.getId(), original.getResourceId(), original.getCustomerId(),
                 original.getWeekday(), original.getStartTime(), original.getEndTime(),
                 original.getWindowMonths(), original.getStatus(), original.getNextOccurrence(),
-                original.getCreatedAt(), original.getCancelledAt(), original.getCancelledBy());
+                original.getCreatedAt(), original.getCancelledAt(), original.getCancelledBy()));
 
         assertThat(restored.getId()).isEqualTo(original.getId());
         assertThat(restored.getWindowMonths()).isEqualTo(3);

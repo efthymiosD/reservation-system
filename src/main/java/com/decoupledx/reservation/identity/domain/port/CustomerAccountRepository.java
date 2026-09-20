@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.decoupledx.reservation.identity.adapter.api.CustomerAccountInfo;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 
 public interface CustomerAccountRepository {
@@ -31,6 +32,4 @@ public interface CustomerAccountRepository {
      */
     void updateDisplayName(CustomerId customerId, String displayName);
 
-    record CustomerAccountInfo(CustomerId customerId, String displayName) {
-    }
 }

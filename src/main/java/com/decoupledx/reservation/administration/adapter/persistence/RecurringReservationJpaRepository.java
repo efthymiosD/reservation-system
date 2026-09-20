@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.administration.adapter.out.persistence;
+package com.decoupledx.reservation.administration.adapter.persistence;
 
 import java.util.List;
 import java.util.UUID;

@@ -3,8 +3,6 @@ package com.decoupledx.reservation.administration.adapter.api;
 import java.util.List;
 import java.util.UUID;
 
-import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-
 /**
  * Module API of the administration module: recurring per-customer reservations
  * (create with validation, cancel-whole-recurring-reservation) plus the materializer that
@@ -13,9 +11,9 @@ import com.decoupledx.reservation.identity.adapter.api.CustomerId;
  */
 public interface AdministrationApi {
 
-    RecurringReservationInfo createRecurringReservation(CreateRecurringReservationCommand command);
+    void createRecurringReservation(CreateRecurringReservationCommand command);
 
-    void cancelRecurringReservation(UUID recurringReservationId, CustomerId actor);
+    void cancelRecurringReservation(UUID recurringReservationId);
 
     List<RecurringReservationInfo> findRecurringReservations();
 
