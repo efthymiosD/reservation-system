@@ -1,11 +1,9 @@
 package com.decoupledx.reservation.venue.domain.port;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+
+import java.util.UUID;
 
 /**
  * Inbound port for the venue module: venue profile and opening-hours access.
