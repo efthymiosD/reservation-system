@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.venue.adapter.in.web;
+package com.decoupledx.reservation.venue.adapter.web;
 
 import java.time.LocalTime;
 import java.util.Map;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.domain.port.VenueService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,7 +22,7 @@ class PublicVenueController {
 
     @GetMapping("/venue")
     PublicVenueResponse getVenue() {
-        return toResponse(venueService.getPublicVenueInfo());
+        return toResponse(venueService.getVenue(venueService.singleVenueId()));
     }
 
     private PublicVenueResponse toResponse(VenueInfo venue) {

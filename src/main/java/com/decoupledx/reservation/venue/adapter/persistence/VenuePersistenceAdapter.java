@@ -1,8 +1,7 @@
-package com.decoupledx.reservation.venue.adapter.out.persistence;
+package com.decoupledx.reservation.venue.adapter.persistence;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
-import com.decoupledx.reservation.venue.domain.model.Venue;
 import com.decoupledx.reservation.venue.domain.port.VenueRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,42 +24,42 @@ class VenuePersistenceAdapter implements VenueRepository {
     private final OpeningHoursJpaRepository openingHours;
 
     @Override
-    public Optional<Venue> findById(VenueId id) {
-        return venues.findById(id.value()).map(this::toDomain);
+    public Optional<VenueDataValue> findById(VenueId id) {
+        return venues.findById(id.value()).map(this::toDataValue);
     }
 
     @Override
-    public List<Venue> findAll() {
-        return venues.findAll().stream().map(this::toDomain).toList();
+    public List<VenueDataValue> findAll() {
+        return venues.findAll().stream().map(this::toDataValue).toList();
     }
 
     @Override
-    public Venue save(Venue venue) {
-        venues.findById(venue.getId().value())
+    public VenueDataValue save(VenueDataValue data) {
+        venues.findById(data.id())
                 .ifPresentOrElse(
-                        entity -> entity.updateFrom(venue.getName(), venue.getDescription(), venue.getAddress(),
-                                venue.getTimezone().getId(), Instant.now()),
-                        () -> venues.save(newVenueEntity(venue)));
-        replaceOpeningHours(venue);
-        return venue;
+                        entity -> entity.updateFrom(data.name(), data.description(), data.address(),
+                                data.timezone(), Instant.now()),
+                        () -> venues.save(newVenueEntity(data)));
+        replaceOpeningHours(data);
+        return data;
     }
 
-    private VenueEntity newVenueEntity(Venue venue) {
+    private VenueEntity newVenueEntity(VenueDataValue data) {
         Instant now = Instant.now();
-        return new VenueEntity(venue.getId().value(), venue.getName(), venue.getDescription(), venue.getAddress(),
-                venue.getTimezone().getId(), now, now);
+        return new VenueEntity(data.id(), data.name(), data.description(), data.address(),
+                data.timezone(), now, now);
     }
 
-    private void replaceOpeningHours(Venue venue) {
-        Map<DayOfWeek, OpeningHoursEntity> existingByDay = openingHours.findByVenueId(venue.getId().value()).stream()
+    private void replaceOpeningHours(VenueDataValue data) {
+        Map<DayOfWeek, OpeningHoursEntity> existingByDay = openingHours.findByVenueId(data.id()).stream()
                 .collect(Collectors.toMap(OpeningHoursEntity::getDayOfWeek, entity -> entity));
-        for (Map.Entry<DayOfWeek, DailyOpeningHours> entry : venue.getOpeningHours().perDay().entrySet()) {
+        for (Map.Entry<DayOfWeek, DailyOpeningHours> entry : data.openingHours().perDay().entrySet()) {
             OpeningHoursEntity entity = existingByDay.remove(entry.getKey());
             if (entity != null) {
                 entity.update(entry.getValue().opensAt(), entry.getValue().closesAt());
             } else {
                 openingHours.save(new OpeningHoursEntity(
-                        venue.getId().value(),
+                        data.id(),
                         entry.getKey(),
                         entry.getValue().opensAt(),
                         entry.getValue().closesAt()));
@@ -71,17 +69,17 @@ class VenuePersistenceAdapter implements VenueRepository {
         openingHours.flush();
     }
 
-    private Venue toDomain(VenueEntity entity) {
+    private VenueDataValue toDataValue(VenueEntity entity) {
         Map<DayOfWeek, DailyOpeningHours> perDay = openingHours.findByVenueId(entity.getId()).stream()
                 .collect(Collectors.toMap(
                         OpeningHoursEntity::getDayOfWeek,
                         row -> new DailyOpeningHours(row.getOpensAt(), row.getClosesAt())));
-        return new Venue(
-                VenueId.of(entity.getId()),
+        return new VenueDataValue(
+                entity.getId(),
                 entity.getName(),
                 entity.getDescription(),
                 entity.getAddress(),
-                ZoneId.of(entity.getTimezone()),
+                entity.getTimezone(),
                 new OpeningHours(perDay));
     }
 }

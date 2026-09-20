@@ -1,15 +1,17 @@
-package com.decoupledx.reservation.venue.domain.model;
+package com.decoupledx.reservation.venue.domain;
 
 import java.time.ZoneId;
 import java.util.Objects;
 
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.adapter.persistence.VenueDataValue;
 
 import lombok.Getter;
 
 @Getter
-public class Venue {
+class Venue {
 
     private final VenueId id;
     private String name;
@@ -36,5 +38,14 @@ public class Venue {
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.description = description;
         this.address = address;
+    }
+
+    VenueDataValue toDataValue() {
+        return new VenueDataValue(id.value(), name, description, address,
+                timezone.getId(), openingHours);
+    }
+
+    VenueInfo toInfo() {
+        return new VenueInfo(id, name, description, address, timezone, openingHours);
     }
 }

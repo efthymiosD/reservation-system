@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
-import com.decoupledx.reservation.venue.domain.model.Venue;
+import com.decoupledx.reservation.venue.adapter.persistence.VenueDataValue;
 
 public interface VenueRepository {
 
-    Optional<Venue> findById(VenueId id);
+    Optional<VenueDataValue> findById(VenueId id);
 
-    List<Venue> findAll();
+    List<VenueDataValue> findAll();
 
-    Venue save(Venue venue);
+    VenueDataValue save(VenueDataValue venue);
 }

@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.venue.adapter.out.persistence;
+package com.decoupledx.reservation.venue.adapter.persistence;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

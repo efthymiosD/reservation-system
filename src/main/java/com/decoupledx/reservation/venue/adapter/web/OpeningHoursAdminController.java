@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.venue.adapter.in.web;
+package com.decoupledx.reservation.venue.adapter.web;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
-import com.decoupledx.reservation.venue.domain.service.VenueService;
+import com.decoupledx.reservation.venue.domain.port.VenueService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
