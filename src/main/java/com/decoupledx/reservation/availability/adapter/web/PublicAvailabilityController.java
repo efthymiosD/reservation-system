@@ -1,21 +1,17 @@
-package com.decoupledx.reservation.availability.adapter.in.web;
+package com.decoupledx.reservation.availability.adapter.web;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
-
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.domain.port.AvailabilityService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
-import com.decoupledx.reservation.availability.domain.service.AvailabilityService;
-
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Public, read-only availability map for the venue: every active resource with its
@@ -54,20 +50,4 @@ class PublicAvailabilityController {
                 resource.priceCurrency());
     }
 
-    record AvailabilityMapResponse(
-            LocalDate date,
-            LocalTime startTime,
-            int durationMinutes,
-            List<ResourceStatusResponse> resources) {
-    }
-
-    record ResourceStatusResponse(
-            UUID resourceId,
-            String name,
-            String code,
-            String type,
-            String status,
-            BigDecimal priceAmount,
-            String priceCurrency) {
-    }
 }

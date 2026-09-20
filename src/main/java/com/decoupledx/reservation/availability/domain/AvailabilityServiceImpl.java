@@ -1,4 +1,6 @@
-package com.decoupledx.reservation.availability.domain.service;
+package com.decoupledx.reservation.availability.domain;
+
+import com.decoupledx.reservation.availability.domain.port.AvailabilityService;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -8,7 +10,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
 
-import com.decoupledx.reservation.availability.adapter.api.AvailabilityApi;
 import com.decoupledx.reservation.availability.adapter.api.AvailableResource;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
@@ -31,7 +32,7 @@ import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class AvailabilityService implements AvailabilityApi {
+class AvailabilityServiceImpl implements AvailabilityService {
 
     private final VenueApi venueService;
     private final ResourceApi resourceService;
@@ -40,7 +41,6 @@ public class AvailabilityService implements AvailabilityApi {
     private final PricingApi pricingService;
     private final Clock clock;
 
-    @Override
     public List<AvailableResource> findAvailable(LocalDate date, LocalTime startTime, int durationMinutes) {
         Slot slot = validatedSlot(date, startTime, durationMinutes);
         List<ResourceInfo> activeResources = activeResources(slot.venue());
@@ -53,13 +53,6 @@ public class AvailabilityService implements AvailabilityApi {
                 .toList();
     }
 
-    /**
-     * View-oriented availability of every active resource for one requested slot:
-     * each resource is AVAILABLE or RESERVED (overlapping active reservation).
-     * Includes the backend-computed slot price so clients never calculate prices
-     * themselves.
-     */
-    @Override
     public List<ResourceAvailability> resourceAvailability(LocalDate date, LocalTime startTime, int durationMinutes) {
         Slot slot = validatedSlot(date, startTime, durationMinutes);
         List<ResourceInfo> activeResources = activeResources(slot.venue());
