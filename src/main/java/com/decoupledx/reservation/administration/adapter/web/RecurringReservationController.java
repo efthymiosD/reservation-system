@@ -7,16 +7,12 @@ import com.decoupledx.reservation.administration.adapter.api.RecurringReservatio
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,30 +77,4 @@ class RecurringReservationController {
                 recurringReservation.cancelledBy());
     }
 
-    record CreateRecurringReservationRequest(
-            @NotNull UUID resourceId,
-            @NotNull UUID customerId,
-            @NotNull String weekday,
-            @NotNull LocalTime startTime,
-            @NotNull LocalTime endTime,
-            @NotNull Integer windowMonths) {
-    }
-
-    record RecurringReservationResponse(
-            UUID id,
-            UUID resourceId,
-            UUID customerId,
-            String weekday,
-            LocalTime startTime,
-            LocalTime endTime,
-            int windowMonths,
-            String status,
-            LocalDate nextOccurrence,
-            Instant createdAt,
-            Instant cancelledAt,
-            UUID cancelledBy) {
-    }
-
-    record MaterializationSummaryResponse(int created, int skipped) {
-    }
 }
