@@ -25,7 +25,9 @@ RUN apt-get update \
  && rm -f /usr/bin/pebble
 
 # Non-root user
-RUN groupadd -r app && useradd -r -g app app
+RUN groupadd -r app && useradd -r -g app app \
+ && mkdir -p /app/logs \
+ && chown -R app:app /app/logs
 
 WORKDIR /app
 COPY --from=build /workspace/target/reservation-system-*.jar app.jar
