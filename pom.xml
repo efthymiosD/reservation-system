@@ -28,6 +28,9 @@
         <testcontainers.version>2.0.5</testcontainers.version>
         <lombok.version>1.18.48</lombok.version>
         <jackson2.version>2.22.3</jackson2.version>
+        <!-- Trivy gate: Boot BOM pins Jackson 3 (tools.jackson) at 3.1.5, which
+             Trivy flags with HIGH CVEs; 3.2.2 is the patched line. -->
+        <jackson-bom.version>3.2.2</jackson-bom.version>
         <surefire.excludedGroups>keycloak</surefire.excludedGroups>
     </properties>
 
