@@ -176,6 +176,24 @@
       "realmRoles": [
         "CUSTOMER"
       ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "bob@reservation.local",
+      "firstName": "Bob",
+      "lastName": "Customer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CUSTOMER"
+      ]
     }
   ]
 }
