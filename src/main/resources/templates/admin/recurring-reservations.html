@@ -79,38 +79,40 @@
         </form>
       </div>
 
-      <table class="table table-hover align-middle">
-        <thead>
-        <tr>
-          <th scope="col">Resource</th>
-          <th scope="col">Customer</th>
-          <th scope="col">Weekday</th>
-          <th scope="col">Slot (venue time)</th>
-          <th scope="col">Window</th>
-          <th scope="col">Status</th>
-          <th scope="col">Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="row : ${page.reservations}">
-          <td th:text="${row.fieldName}">Field 1</td>
-          <td th:text="${row.customerName}">alice</td>
-          <td th:text="${row.weekday}">Monday</td>
-          <td th:text="${row.startTime} + '–' + ${row.endTime}">18:00–19:00</td>
-          <td th:text="${row.windowLabel}">3 months</td>
-          <td th:text="${row.status}">ACTIVE</td>
-          <td>
-            <form th:if="${row.active}"
-                  th:action="@{/admin/recurring-reservations/{id}/cancel(id=${row.reference})}" method="post">
-              <button type="submit" class="btn btn-outline-danger btn-sm">Cancel recurring reservation</button>
-            </form>
-          </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(page.reservations)}">
-          <td colspan="7" class="text-muted text-center">No recurring reservations.</td>
-        </tr>
-        </tbody>
-      </table>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+              <th scope="col">Resource</th>
+              <th scope="col">Customer</th>
+              <th scope="col">Weekday</th>
+              <th scope="col">Slot (venue time)</th>
+              <th scope="col">Window</th>
+              <th scope="col">Status</th>
+              <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${page.reservations}">
+              <td th:text="${row.fieldName}">Field 1</td>
+              <td th:text="${row.customerName}">alice</td>
+              <td th:text="${row.weekday}">Monday</td>
+              <td class="text-nowrap" th:text="${row.startTime} + '–' + ${row.endTime}">18:00–19:00</td>
+              <td class="text-nowrap" th:text="${row.windowLabel}">3 months</td>
+              <td th:text="${row.status}">ACTIVE</td>
+              <td>
+                <form th:if="${row.active}"
+                      th:action="@{/admin/recurring-reservations/{id}/cancel(id=${row.reference})}" method="post">
+                  <button type="submit" class="btn btn-outline-danger btn-sm">Cancel recurring reservation</button>
+                </form>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(page.reservations)}">
+              <td colspan="7" class="text-muted text-center">No recurring reservations.</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
     </div>
   </div>
 </section>

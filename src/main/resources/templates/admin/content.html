@@ -80,7 +80,7 @@
           <p class="text-muted small">Weekday opening hours used for availability and bookings.</p>
           <form th:action="@{/admin/content/opening-hours}" method="post" class="d-grid gap-2">
             <div th:each="day : ${page.weekly}" class="row g-2 align-items-center">
-              <div class="col-4">
+              <div class="col-6 col-md-4">
                 <div class="form-check">
                   <input type="checkbox" class="form-check-input"
                          th:id="'enabled-' + ${day.dayOfWeek}" th:name="'enabled-' + ${day.dayOfWeek}"
@@ -89,14 +89,14 @@
                          th:text="${day.label}">Monday</label>
                 </div>
               </div>
-              <div class="col-3">
-                <input type="time" class="form-control form-control-sm"
+              <div class="col-6 col-md-3">
+                <input type="time" class="form-control"
                        th:id="'opens-' + ${day.dayOfWeek}" th:name="'opens-' + ${day.dayOfWeek}"
                        th:value="${day.opensAt}">
               </div>
-              <div class="col-2 text-center text-muted">–</div>
-              <div class="col-3">
-                <input type="time" class="form-control form-control-sm"
+              <div class="col-md-2 d-none d-md-block text-center text-muted">–</div>
+              <div class="col-6 col-md-3">
+                <input type="time" class="form-control"
                        th:id="'closes-' + ${day.dayOfWeek}" th:name="'closes-' + ${day.dayOfWeek}"
                        th:value="${day.closesAt}">
               </div>

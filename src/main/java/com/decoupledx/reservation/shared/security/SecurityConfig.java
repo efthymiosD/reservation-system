@@ -111,7 +111,12 @@ class SecurityConfig {
                                 "/images/**",
                                 "/uploads/**",
                                 "/vendor/**",
-                                "/webjars/**")
+                                "/webjars/**",
+                                // Chrome DevTools probes /.well-known/appspecific/
+                                // com.chrome.devtools.json on every page load while
+                                // devtools is open; letting it reach the auth flow
+                                // hijacks the post-login redirect onto a 404.
+                                "/.well-known/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2

@@ -2,8 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<div th:fragment="venue-map(fields, canvasWidth, canvasHeight)" class="venue-map scroll-x my-3" role="group"
+<div th:fragment="venue-map(fields, canvasWidth, canvasHeight)" class="venue-map my-3" role="group"
      aria-label="Venue map — one clickable field per pitch, availability is colour-coded and labelled">
+  <div class="venue-map__viewport scroll-x">
   <svg th:attr="viewBox='0 0 ' + (${canvasWidth} ?: 1200) + ' ' + (${canvasHeight} ?: 400)"
        class="venue-map__svg" role="img" aria-label="Venue layout with fields side by side">
     <!-- soft venue background -->
@@ -24,6 +25,7 @@
       </text>
     </g>
   </svg>
+  </div>
 </div>
 
 <div th:fragment="legend" class="venue-legend d-flex flex-wrap gap-3 small my-2">

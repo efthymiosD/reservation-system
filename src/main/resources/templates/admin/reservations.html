@@ -21,37 +21,39 @@
     </div>
   </form>
 
-  <table class="table table-hover align-middle">
-    <thead>
-    <tr>
-      <th scope="col">Reservation id</th>
-      <th scope="col">Customer</th>
-      <th scope="col">Customer id</th>
-      <th scope="col">Field</th>
-      <th scope="col">When (venue time)</th>
-      <th scope="col">Price</th>
-      <th scope="col">Status</th>
-      <th scope="col">Action</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="row : ${page.items}">
-      <td><code th:text="${row.reference}">456af8d1…</code></td>
-      <td th:text="${row.customerName != null ? row.customerName : '—'}">alice</td>
-      <td><code th:text="${row.customerId}">c4e3a411-…</code></td>
-      <td th:text="${row.fieldName}">Field 1</td>
-      <td th:text="${row.date} + ' ' + ${row.startTime} + '–' + ${row.endTime}">2026-09-03 18:00–19:00</td>
-      <td th:text="${row.priceAmount} + ' ' + ${row.priceCurrency}">120.00 PLN</td>
-      <td th:text="${row.displayStatus}">ACTIVE</td>
-      <td>
-        <form th:if="${row.cancellable}"
-              th:action="@{/admin/reservations/{id}/cancel(id=${row.reference})}" method="post">
-          <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
-        </form>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+      <tr>
+        <th scope="col">Reservation id</th>
+        <th scope="col">Customer</th>
+        <th scope="col">Customer id</th>
+        <th scope="col">Field</th>
+        <th scope="col">When (venue time)</th>
+        <th scope="col">Price</th>
+        <th scope="col">Status</th>
+        <th scope="col">Action</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="row : ${page.items}">
+        <td class="text-nowrap"><code th:text="${row.reference}">456af8d1…</code></td>
+        <td th:text="${row.customerName != null ? row.customerName : '—'}">alice</td>
+        <td><small class="font-monospace text-break" th:text="${row.customerId}">c4e3a411-…</small></td>
+        <td th:text="${row.fieldName}">Field 1</td>
+        <td class="text-nowrap" th:text="${row.date} + ' ' + ${row.startTime} + '–' + ${row.endTime}">2026-09-03 18:00–19:00</td>
+        <td class="text-nowrap" th:text="${row.priceAmount} + ' ' + ${row.priceCurrency}">120.00 PLN</td>
+        <td th:text="${row.displayStatus}">ACTIVE</td>
+        <td>
+          <form th:if="${row.cancellable}"
+                th:action="@{/admin/reservations/{id}/cancel(id=${row.reference})}" method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+          </form>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
 
   <nav class="d-flex align-items-center gap-2">
     <span class="text-muted" th:text="'Total: ' + ${page.total} + ' · page ' + ${page.page}">Total: 0 · page 0</span>
