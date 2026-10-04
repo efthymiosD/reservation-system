@@ -1,5 +1,8 @@
 /* Web UI overrides on top of vendored Bootstrap 5. Keep minimal; Bootstrap
-   classes do the heavy lifting so the CSS stays small and cacheable. */
+   classes do the heavy lifting so the CSS stays small and cacheable.
+   Mobile-first: the venue map keeps its geometry via horizontal swipe on
+   phones (no scale-to-fit squashing); phone-only tuning lives in the media
+   block at the bottom. */
 
 :root {
   --brand-accent: #0d6efd;
@@ -10,8 +13,8 @@ main.flex-grow-1 {
   overflow-x: hidden;
 }
 
-/* Venue map container (T5) will rely on this: horizontal scrolling inside the
-   container preserves the venue geometry instead of squashing it. */
+/* Horizontal scrolling inside the container preserves the venue geometry
+   instead of squashing it (-webkit runtime keeps the momentum feel on iOS). */
 .scroll-x {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -136,3 +139,65 @@ main.flex-grow-1 {
   cursor: nwse-resize;
 }
 .map-field__handle:hover { fill: #084298; }
+
+/* Invisible enlarged drag target for the corner handle (touch-friendly;
+   transparent fill still counts as painted for SVG pointer events). */
+.map-field__handle-hit {
+  fill: transparent;
+  cursor: nwse-resize;
+}
+
+/* Phone tuning (Bootstrap's md breakpoint = 768px). Mobile is a first-class
+   requirement: comfortable touch targets, a hint for the swipeable map and a
+   wider drag target for the layout editor. Desktop rendering is unchanged. */
+@media (max-width: 767.98px) {
+  /* Own controls: comfortable tapping. Vendored Bootstrap defaults (~38px)
+     are under the 44px touch-target guideline. */
+  .form-control,
+  .form-select,
+  .btn,
+  .navbar-toggler {
+    min-height: 44px;
+  }
+
+  /* Long venue names must not squeeze the navbar toggler off-screen. */
+  .navbar-brand {
+    max-width: 65vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Swipe-to-explore: keep geometry, tighten the overflow a bit and hint
+     that the map continues to the right. The container always overflows on
+     a phone (min-width 640px), so the fade never lies on this breakpoint.
+     The fade lives on the NON-scrolling wrapper - a pseudo-element inside
+     the scroller would scroll away with the content. */
+  .venue-map__svg {
+    min-width: 640px;
+  }
+  .venue-map {
+    position: relative;
+  }
+  .venue-map::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 36px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), #ffffff);
+    pointer-events: none;
+  }
+
+  /* Press feedback substitutes hover on touch. */
+  .resource--available:active rect {
+    fill: #cfe2ff;
+    stroke: #0d6efd;
+  }
+
+  /* Layout editor: same swipe-to-explore contract as the reservation map. */
+  .map-editor__svg {
+    min-width: 720px;
+  }
+}

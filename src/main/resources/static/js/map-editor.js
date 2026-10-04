@@ -64,6 +64,11 @@
 
     field.querySelector('.map-field__handle').setAttribute('x', x + w - GRID);
     field.querySelector('.map-field__handle').setAttribute('y', y + h - GRID);
+    const hit = field.querySelector('.map-field__handle-hit');
+    if (hit) {
+      hit.setAttribute('x', x + w - 2 * GRID);
+      hit.setAttribute('y', y + h - 2 * GRID);
+    }
 
     for (const name of ['x', 'y', 'width', 'height']) {
       const input = document.getElementById(`${name}-${id}`);
@@ -125,9 +130,11 @@
   fields.forEach(field => {
     const body = field.querySelector('.map-field__body');
     const handle = field.querySelector('.map-field__handle');
+    const hit = field.querySelector('.map-field__handle-hit');
 
     body.addEventListener('pointerdown', event => startDrag(event, field, 'move'));
     handle.addEventListener('pointerdown', event => startDrag(event, field, 'resize'));
+    hit.addEventListener('pointerdown', event => startDrag(event, field, 'resize'));
 
     // Typed positions keep the SVG in sync (accessibility / touch fallback).
     field.dataset.x = body.getAttribute('x') || 0;
