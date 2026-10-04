@@ -1,5 +1,14 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.resource.adapter.api.CreateResourceCommand;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.webui.reserve.Placement;
+import com.decoupledx.reservation.webui.reserve.VenueLayout;
+import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -7,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,19 +26,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.resource.api.CreateResourceCommand;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.resource.api.ResourceInfo;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueId;
-import com.decoupledx.reservation.webui.reserve.VenueLayout;
-import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -57,10 +54,10 @@ class AdminMapController {
     String map(Model model) {
         UUID venueId = venueApi.singleVenueId();
         VenueLayout layout = layoutLoader.get();
-        Map<UUID, VenueLayout.Placement> placements = layout.placements().stream()
-                .collect(Collectors.toMap(VenueLayout.Placement::resourceId, placement -> placement));
+        Map<UUID, Placement> placements = layout.placements().stream()
+                .collect(Collectors.toMap(Placement::resourceId, placement -> placement));
 
-        List<AdminMapModel.MapFieldView> fields = resourceApi.findResources(venueId).stream()
+        List<MapFieldView> fields = resourceApi.findResources(venueId).stream()
                 .map(resource -> fieldView(resource, placements))
                 .toList();
 
@@ -88,10 +85,10 @@ class AdminMapController {
                 }
                 if (params.containsKey("x-" + id) && params.containsKey("y-" + id)
                         && params.containsKey("width-" + id) && params.containsKey("height-" + id)) {
-                    int x = parseInt(params.get("x-" + id), id, "position");
-                    int y = parseInt(params.get("y-" + id), id, "position");
-                    int width = parseInt(params.get("width-" + id), id, "size");
-                    int height = parseInt(params.get("height-" + id), id, "size");
+                    int x = parseInt(params.get("x-" + id), "position");
+                    int y = parseInt(params.get("y-" + id), "position");
+                    int width = parseInt(params.get("width-" + id), "size");
+                    int height = parseInt(params.get("height-" + id), "size");
                     if (x < 0 || y < 0 || width < 1 || height < 1) {
                         throw new IllegalArgumentException(
                                 "Every field needs a valid position (size at least 1, "
@@ -121,7 +118,7 @@ class AdminMapController {
             if (resources.isEmpty()) {
                 throw new IllegalArgumentException("Cannot add a field before a field group exists.");
             }
-            ResourceInfo template = resources.get(0);
+            ResourceInfo template = resources.getFirst();
             String code = nextFieldCode(resources);
             resourceApi.createResource(new CreateResourceCommand(
                     VenueId.of(venueId), template.groupId(), name.trim(), code, template.type()));
@@ -157,10 +154,10 @@ class AdminMapController {
         return "redirect:/admin/map";
     }
 
-    private AdminMapModel.MapFieldView fieldView(ResourceInfo resource,
-            Map<UUID, VenueLayout.Placement> placements) {
-        VenueLayout.Placement placement = placements.get(resource.id().value());
-        return new AdminMapModel.MapFieldView(
+    private MapFieldView fieldView(ResourceInfo resource,
+                                   Map<UUID, Placement> placements) {
+        Placement placement = placements.get(resource.id().value());
+        return new MapFieldView(
                 resource.id().value(),
                 resource.name(),
                 resource.code(),
@@ -171,7 +168,7 @@ class AdminMapController {
                 placement == null ? 400 : placement.height());
     }
 
-    private int parseInt(String value, String resourceId, String kind) {
+    private int parseInt(String value, String kind) {
         try {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException exception) {
@@ -190,11 +187,11 @@ class AdminMapController {
         return String.format("FIELD-%02d", max + 1);
     }
 
-    private ObjectNode upsertPlacement(ObjectNode layout, UUID resourceId,
-            int x, int y, int width, int height) {
+    private void upsertPlacement(ObjectNode layout, UUID resourceId,
+                                 int x, int y, int width, int height) {
         ArrayNode placements = objectMapper.createArrayNode();
         for (JsonNode placement : layout.path("placements")) {
-            if (!placement.path("resourceId").asText().equals(resourceId.toString())) {
+            if (!placement.path("resourceId").asString().equals(resourceId.toString())) {
                 placements.add(placement);
             }
         }
@@ -205,7 +202,6 @@ class AdminMapController {
                 .put("width", width)
                 .put("height", height));
         layout.set("placements", placements);
-        return layout;
     }
 
     private ObjectNode currentLayout() {

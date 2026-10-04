@@ -1,15 +1,14 @@
 package com.decoupledx.reservation.content.domain.port;
 
+import com.decoupledx.reservation.content.adapter.persistence.SiteTextDataValue;
 import java.util.List;
 import java.util.Optional;
 
-import com.decoupledx.reservation.content.domain.model.SiteText;
-
 public interface SiteContentRepository {
 
-    Optional<SiteText> findByKey(String key);
+    Optional<SiteTextDataValue> findByKey(String key);
 
-    List<SiteText> findAll();
+    List<SiteTextDataValue> findAll();
 
-    SiteText save(SiteText text);
+    SiteTextDataValue save(SiteTextDataValue text);
 }

@@ -1,18 +1,15 @@
 package com.decoupledx.reservation.webui;
 
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import java.time.DayOfWeek;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes the venue and its weekly opening hours to every web UI view, keeping
@@ -29,7 +26,9 @@ class VenueAdvice {
         return venueService.getVenue(venueService.singleVenueId());
     }
 
-    /** Monday-first map of each weekday to its hours; empty Optional when closed. */
+    /**
+     * Monday-first map of each weekday to its hours; empty Optional when closed.
+     */
     @ModelAttribute("weeklyHours")
     Map<DayOfWeek, Optional<DailyOpeningHours>> weeklyHours() {
         VenueInfo venue = venue();

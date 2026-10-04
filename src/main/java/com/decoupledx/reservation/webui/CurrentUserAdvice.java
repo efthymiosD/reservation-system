@@ -1,5 +1,7 @@
 package com.decoupledx.reservation.webui;
 
+import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -7,10 +9,6 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes the signed-in user (display name, email and internal customer id) to

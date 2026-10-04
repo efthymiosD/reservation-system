@@ -1,13 +1,12 @@
 package com.decoupledx.reservation.pricing.domain.port;
 
+import com.decoupledx.reservation.pricing.adapter.persistence.PricingPolicyDataValue;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import java.util.Optional;
-
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
-import com.decoupledx.reservation.venue.api.VenueId;
 
 public interface PricingPolicyRepository {
 
-    Optional<PricingPolicy> findByVenueId(VenueId venueId);
+    Optional<PricingPolicyDataValue> findByVenueId(VenueId venueId);
 
-    void save(VenueId venueId, PricingPolicy policy);
+    void save(VenueId venueId, PricingPolicyDataValue policy);
 }

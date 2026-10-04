@@ -1,34 +1,25 @@
 package com.decoupledx.reservation.webui.reserve;
 
-import java.time.Clock;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import com.decoupledx.reservation.availability.adapter.api.AvailabilityApi;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.availability.api.ResourceAvailability;
-import com.decoupledx.reservation.availability.api.ResourceAvailabilityStatus;
-import com.decoupledx.reservation.availability.api.AvailabilityApi;
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.policy.api.BookingPolicy;
-import com.decoupledx.reservation.policy.api.PolicyApi;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.resource.api.ResourceId;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.venue.api.VenueApi;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the reservation page view model from backend state: duration and
@@ -50,7 +41,6 @@ class ReservationPageModelFactory {
     private final VenueLayoutLoader venueLayout;
     private final ReservationApi reservationQueries;
     private final ResourceApi resourceService;
-    private final CurrentCustomerApi currentCustomer;
     private final Clock clock;
 
     ReservationPageModel build(LocalDate requestedDate, LocalTime requestedStart, Integer requestedDuration) {
@@ -69,22 +59,18 @@ class ReservationPageModelFactory {
 
         return selection == null
                 ? unavailableModel(today, maxDate, durationOptions, layout)
-                : availabilityModel(selection, venue, zone, today, maxDate, durationOptions, layout);
-    }
-
-    private record SlotSelection(LocalDate date, LocalTime start, int duration,
-            List<LocalTime> timeOptions) {
+                : availabilityModel(selection, today, maxDate, durationOptions, layout);
     }
 
     private SlotSelection resolveSelection(LocalDate requestedDate, LocalTime requestedStart,
-            Integer requestedDuration, LocalDate today, LocalDate maxDate,
-            List<Integer> durationOptions, Duration startStep, VenueInfo venue) {
+                                           Integer requestedDuration, LocalDate today, LocalDate maxDate,
+                                           List<Integer> durationOptions, Duration startStep, VenueInfo venue) {
 
-        LocalDate date = requestedDate == null || !validDate(requestedDate, today, maxDate).isPresent()
+        LocalDate date = requestedDate == null || validDate(requestedDate, today, maxDate).isEmpty()
                 ? today
                 : requestedDate;
-        int duration = requestedDuration == null || !validDuration(requestedDuration, durationOptions).isPresent()
-                ? durationOptions.get(0)
+        int duration = requestedDuration == null || validDuration(requestedDuration, durationOptions).isEmpty()
+                ? durationOptions.getFirst()
                 : requestedDuration;
 
         SlotSelection direct = forDate(date, requestedStart, duration, startStep, venue, zoneOf(venue));
@@ -106,9 +92,11 @@ class ReservationPageModelFactory {
         return venue.timezone();
     }
 
-    /** Fits one concrete day; null when closed or when no start time fits. */
+    /**
+     * Fits one concrete day; null when closed or when no start time fits.
+     */
     private SlotSelection forDate(LocalDate date, LocalTime requestedStart, int duration,
-            Duration startStep, VenueInfo venue, ZoneId zone) {
+                                  Duration startStep, VenueInfo venue, ZoneId zone) {
         DailyOpeningHours hours = venue.openingHours().on(date.getDayOfWeek()).orElse(null);
         if (hours == null) {
             return null;
@@ -119,12 +107,12 @@ class ReservationPageModelFactory {
         }
         LocalTime start = requestedStart != null && timeOptions.contains(requestedStart)
                 ? requestedStart
-                : timeOptions.get(0);
+                : timeOptions.getFirst();
         return new SlotSelection(date, start, duration, timeOptions);
     }
 
-    private ReservationPageModel availabilityModel(SlotSelection selection, VenueInfo venue, ZoneId zone,
-            LocalDate today, LocalDate maxDate, List<Integer> durationOptions, VenueLayout layout) {
+    private ReservationPageModel availabilityModel(SlotSelection selection,
+                                                   LocalDate today, LocalDate maxDate, List<Integer> durationOptions, VenueLayout layout) {
 
         try {
             List<ResourceAvailability> resources = availabilityService.resourceAvailability(
@@ -163,11 +151,11 @@ class ReservationPageModelFactory {
     }
 
     private ReservationPageModel unavailableModel(LocalDate today, LocalDate maxDate,
-            List<Integer> durationOptions, VenueLayout layout) {
+                                                  List<Integer> durationOptions, VenueLayout layout) {
         return new ReservationPageModel(
                 today,
                 null,
-                durationOptions.get(0),
+                durationOptions.getFirst(),
                 today,
                 maxDate,
                 durationOptions,
@@ -186,18 +174,17 @@ class ReservationPageModelFactory {
      * the page says so before they try to reserve. Anonymous visitors skip the
      * check entirely.
      */
-    private ReservationPageModel.HeldReservation heldReservation(SlotSelection selection,
-            List<ResourceAvailability> resources) {
-        CustomerId customer = currentCustomer.currentCustomerId();
+    private HeldReservation heldReservation(SlotSelection selection,
+                                            List<ResourceAvailability> resources) {
         if (resources.isEmpty()) {
             return null;
         }
         ReservationPeriod period = ReservationPeriod.ofStartAndDuration(
                 selection.date().atTime(selection.start()).atZone(zone()).toInstant(),
                 Duration.ofMinutes(selection.duration()));
-        return reservationQueries.findActiveOverlappingCustomer(customer, period).stream()
+        return reservationQueries.findMyActiveOverlapping(period).stream()
                 .findFirst()
-                .map(held -> new ReservationPageModel.HeldReservation(
+                .map(held -> new HeldReservation(
                         held.id().value(),
                         fieldName(held.resourceId()),
                         held.start().atZone(zone()).toLocalTime(),
@@ -220,14 +207,14 @@ class ReservationPageModelFactory {
     private List<Integer> durationOptions(BookingPolicy policy) {
         List<Integer> options = new ArrayList<>();
         for (Duration d = policy.minDuration(); d.compareTo(policy.maxDuration()) <= 0;
-                d = d.plus(policy.durationStep())) {
+             d = d.plus(policy.durationStep())) {
             options.add((int) d.toMinutes());
         }
         return options;
     }
 
     private List<LocalTime> timeOptions(DailyOpeningHours hours, int durationMinutes, LocalDate date,
-            ZoneId zone, Duration startStep) {
+                                        ZoneId zone, Duration startStep) {
         List<LocalTime> options = new ArrayList<>();
         int step = (int) startStep.toMinutes();
         int dayMinutes = 24 * 60;
@@ -267,33 +254,33 @@ class ReservationPageModelFactory {
                 .anyMatch(resource -> resource.status() == ResourceAvailabilityStatus.AVAILABLE);
     }
 
-    private ReservationPageModel.MoneyView priceOf(List<ResourceAvailability> resources) {
+    private MoneyView priceOf(List<ResourceAvailability> resources) {
         return resources.isEmpty() ? null
-                : new ReservationPageModel.MoneyView(
-                        resources.get(0).priceAmount(), resources.get(0).priceCurrency());
+                : new MoneyView(
+                resources.getFirst().priceAmount(), resources.getFirst().priceCurrency());
     }
 
-    private List<ReservationPageModel.MapField> mapFields(List<ResourceAvailability> resources, VenueLayout layout) {
+    private List<MapField> mapFields(List<ResourceAvailability> resources, VenueLayout layout) {
         return resources.stream()
                 .flatMap(resource -> placementOf(layout, resource).stream()
                         .map(placement -> mapField(resource, placement)))
                 .toList();
     }
 
-    private java.util.Optional<VenueLayout.Placement> placementOf(VenueLayout layout, ResourceAvailability resource) {
+    private java.util.Optional<Placement> placementOf(VenueLayout layout, ResourceAvailability resource) {
         return layout.placements().stream()
                 .filter(placement -> placement.resourceId().equals(resource.resourceId()))
                 .findFirst();
     }
 
-    private ReservationPageModel.MapField mapField(ResourceAvailability resource, VenueLayout.Placement placement) {
+    private MapField mapField(ResourceAvailability resource, Placement placement) {
         ResourceAvailabilityStatus status = resource.status();
         String statusClass = status.name().toLowerCase();
         String aria = switch (status) {
             case AVAILABLE -> resource.name() + " — available — select field";
             case RESERVED -> resource.name() + " — reserved — unavailable";
         };
-        return new ReservationPageModel.MapField(
+        return new MapField(
                 resource.resourceId(),
                 resource.name(),
                 placement.x(),

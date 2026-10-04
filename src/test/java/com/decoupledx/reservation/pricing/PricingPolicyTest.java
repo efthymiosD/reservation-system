@@ -2,16 +2,14 @@ package com.decoupledx.reservation.pricing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Currency;
-
 import org.junit.jupiter.api.Test;
-
-import com.decoupledx.reservation.shared.domain.Money;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.pricing.api.PricingPolicy;
 
 class PricingPolicyTest {
 

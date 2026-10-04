@@ -1,7 +1,10 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
+import com.decoupledx.reservation.shared.BusinessException;
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,13 +12,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.decoupledx.reservation.identity.api.CurrentCustomerApi;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.reservation.api.ReservationStatus;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Admin panel pages (ROLE_ADMIN gated at the security chain): dashboard and the
@@ -30,7 +26,6 @@ class AdminPagesController {
     private final AdminDashboardFactory dashboardFactory;
     private final AdminReservationsFactory reservationsFactory;
     private final ReservationApi reservationApi;
-    private final CurrentCustomerApi currentCustomer;
 
     @GetMapping("/admin")
     String dashboard(Model model) {
@@ -51,8 +46,7 @@ class AdminPagesController {
     @PostMapping("/admin/reservations/{reservationId}/cancel")
     String cancel(@PathVariable UUID reservationId, RedirectAttributes redirect) {
         try {
-            reservationApi.cancelAdministratively(
-                    reservationId, currentCustomer.currentCustomerId());
+            reservationApi.cancelAdministratively(reservationId);
             redirect.addFlashAttribute("message", "Reservation " + shortRef(reservationId) + " cancelled (admin override).");
         } catch (BusinessException exception) {
             redirect.addFlashAttribute("error", userMessage(exception));

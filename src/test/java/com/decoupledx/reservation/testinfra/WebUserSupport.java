@@ -3,7 +3,6 @@ package com.decoupledx.reservation.testinfra;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;

@@ -3,19 +3,17 @@ package com.decoupledx.reservation.administration.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
+import com.decoupledx.reservation.administration.adapter.persistence.RecurringReservationDataValue;
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
-
-import com.decoupledx.reservation.administration.api.RecurringReservationStatus;
-import com.decoupledx.reservation.administration.domain.model.RecurringReservation;
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ErrorCode;
 
 class RecurringReservationTest {
 
@@ -94,11 +92,11 @@ class RecurringReservationTest {
         RecurringReservation original = newRecurringReservation();
         original.cancel(NOW, admin);
 
-        RecurringReservation restored = RecurringReservation.reconstitute(
+        RecurringReservation restored = RecurringReservation.reconstitute(new RecurringReservationDataValue(
                 original.getId(), original.getResourceId(), original.getCustomerId(),
                 original.getWeekday(), original.getStartTime(), original.getEndTime(),
                 original.getWindowMonths(), original.getStatus(), original.getNextOccurrence(),
-                original.getCreatedAt(), original.getCancelledAt(), original.getCancelledBy());
+                original.getCreatedAt(), original.getCancelledAt(), original.getCancelledBy()));
 
         assertThat(restored.getId()).isEqualTo(original.getId());
         assertThat(restored.getWindowMonths()).isEqualTo(3);

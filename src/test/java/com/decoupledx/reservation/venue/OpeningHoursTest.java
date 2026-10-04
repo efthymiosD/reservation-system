@@ -3,19 +3,17 @@ package com.decoupledx.reservation.venue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
-
-import com.decoupledx.reservation.shared.domain.BusinessException;
-import com.decoupledx.reservation.shared.domain.ReservationPeriod;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.OpeningHours;
 
 class OpeningHoursTest {
 

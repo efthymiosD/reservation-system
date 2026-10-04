@@ -9,15 +9,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-
-import java.util.UUID;
 
 /**
  * Core-flow /admin/map field-layout editor tests (testing convention): role

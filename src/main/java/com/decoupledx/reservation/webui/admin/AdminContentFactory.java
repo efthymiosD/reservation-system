@@ -1,25 +1,16 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
 import java.time.DayOfWeek;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.content.api.ContentApi;
-import com.decoupledx.reservation.venue.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.api.VenueApi;
-import com.decoupledx.reservation.venue.api.VenueInfo;
-import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
-
+import java.util.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the site-content admin page: the editable venue profile, the hero
@@ -56,9 +47,9 @@ class AdminContentFactory {
 
     AdminContentModel build() {
         VenueInfo venue = venueApi.getVenue(venueApi.singleVenueId());
-        List<AdminContentModel.ContentBlockView> blocks = contentApi.all().stream()
+        List<ContentBlockView> blocks = contentApi.all().stream()
                 .filter(block -> !NON_TEXT_KEYS.contains(block.key()))
-                .map(block -> new AdminContentModel.ContentBlockView(
+                .map(block -> new ContentBlockView(
                         block.key(), LABELS.getOrDefault(block.key(), block.key()), block.body()))
                 .toList();
 
@@ -71,11 +62,11 @@ class AdminContentFactory {
                 venue.id().value());
     }
 
-    private List<AdminContentModel.DayHoursView> weeklyHours(VenueInfo venue) {
-        List<AdminContentModel.DayHoursView> weekly = new ArrayList<>();
+    private List<DayHoursView> weeklyHours(VenueInfo venue) {
+        List<DayHoursView> weekly = new ArrayList<>();
         for (DayOfWeek day : DayOfWeek.values()) {
             Optional<DailyOpeningHours> hours = venue.openingHours().on(day);
-            weekly.add(new AdminContentModel.DayHoursView(
+            weekly.add(new DayHoursView(
                     day.name(),
                     day.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
                     hours.isPresent(),

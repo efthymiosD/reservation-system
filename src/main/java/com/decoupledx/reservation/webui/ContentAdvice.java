@@ -1,14 +1,12 @@
 package com.decoupledx.reservation.webui;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-
-import com.decoupledx.reservation.content.api.ContentApi;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes every editable site-content block (key -> body) to all views so the
@@ -24,6 +22,6 @@ class ContentAdvice {
     @ModelAttribute("siteContent")
     Map<String, String> content() {
         return contentApi.all().stream()
-                .collect(Collectors.toMap(block -> block.key(), block -> block.body()));
+                .collect(Collectors.toMap(SiteContentBlock::key, SiteContentBlock::body));
     }
 }

@@ -1,20 +1,16 @@
 package com.decoupledx.reservation.webui.confirmation;
 
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.UUID;
-
-import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.identity.api.CustomerId;
-import com.decoupledx.reservation.reservation.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.api.ReservationApi;
-import com.decoupledx.reservation.resource.api.ResourceApi;
-import com.decoupledx.reservation.venue.api.VenueApi;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the confirmation view model for one of the current customer's
@@ -29,8 +25,8 @@ class ConfirmationModelFactory {
     private final ResourceApi resourceService;
     private final VenueApi venueService;
 
-    ConfirmationModel build(UUID reservationId, CustomerId customer) {
-        ReservationInfo reservation = reservationQueries.getReservation(reservationId, customer);
+    ConfirmationModel build(UUID reservationId) {
+        ReservationInfo reservation = reservationQueries.getReservation(reservationId);
         String fieldName = resourceService.getResource(reservation.resourceId().value()).name();
         ZoneId zone = venueService.getVenue(venueService.singleVenueId()).timezone();
 

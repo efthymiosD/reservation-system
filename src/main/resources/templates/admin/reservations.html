@@ -12,7 +12,7 @@
       <label for="status" class="form-label">Status</label>
       <select id="status" name="status" class="form-select">
         <option value="" th:selected="${page.selectedStatus == null}">All</option>
-        <option th:each="s : ${T(com.decoupledx.reservation.reservation.api.ReservationStatus).values()}"
+        <option th:each="s : ${T(com.decoupledx.reservation.reservation.adapter.api.ReservationStatus).values()}"
                 th:value="${s}" th:text="${s}" th:selected="${s == page.selectedStatus}">ACTIVE</option>
       </select>
     </div>
