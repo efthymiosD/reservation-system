@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.administration.adapter.web;
 
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalTime;
 import java.util.UUID;
 

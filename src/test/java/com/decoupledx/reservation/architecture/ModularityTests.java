@@ -1,8 +1,8 @@
 package com.decoupledx.reservation.architecture;
 
+import com.decoupledx.reservation.ReservationApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
-import com.decoupledx.reservation.ReservationApplication;
 
 class ModularityTests {
 

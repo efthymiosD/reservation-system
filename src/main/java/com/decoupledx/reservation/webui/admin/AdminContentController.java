@@ -1,18 +1,24 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
+import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.time.DayOfWeek;
 import java.time.DateTimeException;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import com.decoupledx.reservation.shared.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,15 +28,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.decoupledx.reservation.content.adapter.api.ContentApi;
-import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
-import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
-import com.decoupledx.reservation.venue.adapter.api.VenueApi;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Admin site-content page (ROLE_ADMIN gated at the security chain): edits the
@@ -76,8 +73,8 @@ class AdminContentController {
 
     @PostMapping("/admin/content/photo")
     String uploadPhoto(@RequestParam("photo") MultipartFile photo,
-            @RequestParam(value = "photoKey", defaultValue = "home.hero.photo") String photoKey,
-            RedirectAttributes redirect) {
+                       @RequestParam(value = "photoKey", defaultValue = "home.hero.photo") String photoKey,
+                       RedirectAttributes redirect) {
         try {
             if (!photoKey.equals(AdminContentFactory.PHOTO_KEY)
                     && !photoKey.equals(AdminContentFactory.ABOUT_PHOTO_KEY)) {

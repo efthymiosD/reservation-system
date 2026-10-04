@@ -1,11 +1,10 @@
 package com.decoupledx.reservation.pricing.adapter.api;
 
+import com.decoupledx.reservation.shared.Money;
+import com.decoupledx.reservation.shared.ReservationPeriod;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
-
-import com.decoupledx.reservation.shared.Money;
-import com.decoupledx.reservation.shared.ReservationPeriod;
 
 public record PricingPolicy(Money hourlyPrice) {
 

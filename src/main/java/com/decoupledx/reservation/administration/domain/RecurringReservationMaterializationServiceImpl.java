@@ -1,5 +1,7 @@
 package com.decoupledx.reservation.administration.domain;
 
+import static java.time.Duration.ofMinutes;
+
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationRepository;
@@ -10,14 +12,11 @@ import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.*;
 import java.util.List;
 import java.util.UUID;
-
-import static java.time.Duration.ofMinutes;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Turns each active recurring reservation's upcoming occurrences (inside its

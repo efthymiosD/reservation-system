@@ -2,7 +2,6 @@ package com.decoupledx.reservation.shared.security;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 import lombok.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.core.GrantedAuthority;

@@ -2,13 +2,12 @@ package com.decoupledx.reservation.administration.adapter.persistence;
 
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import lombok.Builder;
-
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+import lombok.Builder;
 
 @Builder
 public record RecurringReservationDataValue(
@@ -26,4 +25,3 @@ public record RecurringReservationDataValue(
         CustomerId cancelledBy) {
 
 }
-

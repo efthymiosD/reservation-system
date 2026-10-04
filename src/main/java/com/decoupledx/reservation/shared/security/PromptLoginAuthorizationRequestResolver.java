@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.shared.security;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import lombok.NonNull;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;

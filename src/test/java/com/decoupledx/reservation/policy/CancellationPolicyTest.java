@@ -3,13 +3,11 @@ package com.decoupledx.reservation.policy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
+import com.decoupledx.reservation.shared.BusinessException;
 import java.time.Duration;
 import java.time.Instant;
-
 import org.junit.jupiter.api.Test;
-
-import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 
 class CancellationPolicyTest {
 

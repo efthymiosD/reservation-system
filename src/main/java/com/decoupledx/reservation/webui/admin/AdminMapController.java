@@ -1,5 +1,14 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.resource.adapter.api.CreateResourceCommand;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.webui.reserve.Placement;
+import com.decoupledx.reservation.webui.reserve.VenueLayout;
+import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -7,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,18 +26,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.decoupledx.reservation.content.adapter.api.ContentApi;
-import com.decoupledx.reservation.resource.adapter.api.CreateResourceCommand;
-import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
-import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
-import com.decoupledx.reservation.venue.adapter.api.VenueApi;
-import com.decoupledx.reservation.venue.adapter.api.VenueId;
-import com.decoupledx.reservation.webui.reserve.VenueLayout;
-import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -56,10 +54,10 @@ class AdminMapController {
     String map(Model model) {
         UUID venueId = venueApi.singleVenueId();
         VenueLayout layout = layoutLoader.get();
-        Map<UUID, VenueLayout.Placement> placements = layout.placements().stream()
-                .collect(Collectors.toMap(VenueLayout.Placement::resourceId, placement -> placement));
+        Map<UUID, Placement> placements = layout.placements().stream()
+                .collect(Collectors.toMap(Placement::resourceId, placement -> placement));
 
-        List<AdminMapModel.MapFieldView> fields = resourceApi.findResources(venueId).stream()
+        List<MapFieldView> fields = resourceApi.findResources(venueId).stream()
                 .map(resource -> fieldView(resource, placements))
                 .toList();
 
@@ -156,10 +154,10 @@ class AdminMapController {
         return "redirect:/admin/map";
     }
 
-    private AdminMapModel.MapFieldView fieldView(ResourceInfo resource,
-            Map<UUID, VenueLayout.Placement> placements) {
-        VenueLayout.Placement placement = placements.get(resource.id().value());
-        return new AdminMapModel.MapFieldView(
+    private MapFieldView fieldView(ResourceInfo resource,
+                                   Map<UUID, Placement> placements) {
+        Placement placement = placements.get(resource.id().value());
+        return new MapFieldView(
                 resource.id().value(),
                 resource.name(),
                 resource.code(),

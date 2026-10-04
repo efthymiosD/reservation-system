@@ -3,17 +3,15 @@ package com.decoupledx.reservation;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
 class DatabaseConstraintsIntegrationTest extends PostgresIntegrationTest {
 

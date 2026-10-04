@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.resource.adapter.api;
 
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
-
 import java.util.Objects;
 
 public record CreateResourceCommand(

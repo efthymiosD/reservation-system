@@ -2,7 +2,6 @@ package com.decoupledx.reservation.venue.domain.port;
 
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-
 import java.util.UUID;
 
 /**

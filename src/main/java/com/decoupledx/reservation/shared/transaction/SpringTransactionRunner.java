@@ -1,16 +1,14 @@
 package com.decoupledx.reservation.shared.transaction;
 
+import com.decoupledx.reservation.shared.TransactionRunner;
 import java.util.List;
 import java.util.function.Supplier;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.interceptor.NoRollbackRuleAttribute;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import com.decoupledx.reservation.shared.TransactionRunner;
 
 /**
  * Spring-backed transaction boundary. Read operations run in a read-only

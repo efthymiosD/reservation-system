@@ -7,14 +7,13 @@ import com.decoupledx.reservation.administration.adapter.api.RecurringReservatio
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationService;
 import jakarta.validation.Valid;
+import java.time.DayOfWeek;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.DayOfWeek;
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin/recurring-reservations")

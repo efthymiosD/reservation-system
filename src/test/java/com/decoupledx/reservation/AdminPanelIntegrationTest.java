@@ -1,16 +1,5 @@
 package com.decoupledx.reservation;
 
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-
-import java.time.ZoneId;
-import java.util.UUID;
-
 import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
 import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,6 +7,16 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import java.time.ZoneId;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * Core-flow coverage only (testing convention): admin pages are gated to

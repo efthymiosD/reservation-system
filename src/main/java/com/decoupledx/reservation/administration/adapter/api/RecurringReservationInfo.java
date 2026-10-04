@@ -1,12 +1,11 @@
 package com.decoupledx.reservation.administration.adapter.api;
 
-import lombok.Builder;
-
 import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
+import lombok.Builder;
 
 /**
  * A recurring reservation as seen by admin-facing views: a resource assigned to

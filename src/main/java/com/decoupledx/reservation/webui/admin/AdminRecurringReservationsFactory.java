@@ -1,16 +1,5 @@
 package com.decoupledx.reservation.webui.admin;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-
 import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
 import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
@@ -21,8 +10,16 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the admin recurring-reservations page from module APIs: the
@@ -50,19 +47,19 @@ class AdminRecurringReservationsFactory {
                 .collect(Collectors.toMap(resource -> resource.id().value(), ResourceInfo::name, (a, _) -> a));
         Map<UUID, String> customerNames = customers.stream()
                 .collect(Collectors.toMap(CustomerEntry::customerId, this::displayName, (a, _) -> a));
-        List<AdminRecurringReservationsModel.RecurringReservationRow> rows = administrationApi.findRecurringReservations().stream()
+        List<RecurringReservationRow> rows = administrationApi.findRecurringReservations().stream()
                 .map(recurringReservation -> toRow(recurringReservation, resourceNames, customerNames))
                 .toList();
-        List<AdminRecurringReservationsModel.ResourceOption> resourceOptions = resources.stream()
-                .map(resource -> new AdminRecurringReservationsModel.ResourceOption(
+        List<ResourceOption> resourceOptions = resources.stream()
+                .map(resource -> new ResourceOption(
                         resource.id().value(), resource.name()))
                 .toList();
-        List<AdminRecurringReservationsModel.CustomerOption> customerOptions = customers.stream()
-                .map(customer -> new AdminRecurringReservationsModel.CustomerOption(
+        List<CustomerOption> customerOptions = customers.stream()
+                .map(customer -> new CustomerOption(
                         customer.customerId(), displayName(customer)))
                 .toList();
-        List<AdminRecurringReservationsModel.WindowOption> windowOptions = WINDOW_MONTHS.stream()
-                .map(months -> new AdminRecurringReservationsModel.WindowOption(months, windowLabel(months)))
+        List<WindowOption> windowOptions = WINDOW_MONTHS.stream()
+                .map(months -> new WindowOption(months, windowLabel(months)))
                 .toList();
         VenueInfo venue = venueService.getVenue(venueService.singleVenueId());
         BookingPolicy policy = policyService.bookingPolicyFor(venue.id().value());
@@ -72,9 +69,9 @@ class AdminRecurringReservationsFactory {
                 startTimeOptions, durationOptions, rows);
     }
 
-    private AdminRecurringReservationsModel.RecurringReservationRow toRow(RecurringReservationInfo recurringReservation,
-            Map<UUID, String> resourceNames, Map<UUID, String> customerNames) {
-        return new AdminRecurringReservationsModel.RecurringReservationRow(
+    private RecurringReservationRow toRow(RecurringReservationInfo recurringReservation,
+                                          Map<UUID, String> resourceNames, Map<UUID, String> customerNames) {
+        return new RecurringReservationRow(
                 recurringReservation.id(),
                 resourceNames.getOrDefault(recurringReservation.resourceId(), "field " + shortId(recurringReservation.resourceId())),
                 customerNames.getOrDefault(recurringReservation.customerId(), "customer " + shortId(recurringReservation.customerId())),
@@ -86,14 +83,16 @@ class AdminRecurringReservationsFactory {
                 recurringReservation.isActive());
     }
 
-    /** Same start-time grid as the customer reserve page: opens→closes−minDuration, unioned across weekdays. */
+    /**
+     * Same start-time grid as the customer reserve page: opens→closes−minDuration, unioned across weekdays.
+     */
     private List<LocalTime> startTimeOptions(VenueInfo venue, Duration minDuration, Duration startStep) {
         var options = new java.util.TreeSet<LocalTime>();
         for (DayOfWeek day : DayOfWeek.values()) {
             venue.openingHours().on(day).ifPresent(hours -> {
                 for (LocalTime candidate = hours.opensAt();
-                        !candidate.plus(minDuration).isAfter(hours.closesAt());
-                        candidate = candidate.plus(startStep)) {
+                     !candidate.plus(minDuration).isAfter(hours.closesAt());
+                     candidate = candidate.plus(startStep)) {
                     options.add(candidate);
                 }
             });
@@ -104,7 +103,7 @@ class AdminRecurringReservationsFactory {
     private List<Integer> durationOptions(BookingPolicy policy) {
         List<Integer> options = new ArrayList<>();
         for (Duration d = policy.minDuration(); d.compareTo(policy.maxDuration()) <= 0;
-                d = d.plus(policy.durationStep())) {
+             d = d.plus(policy.durationStep())) {
             options.add((int) d.toMinutes());
         }
         return options;

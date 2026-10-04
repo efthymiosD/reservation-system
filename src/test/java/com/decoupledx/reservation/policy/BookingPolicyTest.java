@@ -3,6 +3,9 @@ package com.decoupledx.reservation.policy;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -11,12 +14,7 @@ import java.time.Period;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-
 import org.junit.jupiter.api.Test;
-
-import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.shared.ErrorCode;
-import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 
 class BookingPolicyTest {
 

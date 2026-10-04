@@ -1,16 +1,5 @@
 package com.decoupledx.reservation.webui.admin;
 
-import java.time.Clock;
-import java.time.ZoneId;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
-import org.springframework.stereotype.Component;
-
 import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
@@ -18,7 +7,16 @@ import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceId;
+import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import java.time.Clock;
+import java.time.ZoneId;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the admin reservations listing from module APIs: page query, field
@@ -35,7 +33,7 @@ class AdminReservationsFactory {
     private final Clock clock;
 
     AdminReservationsFactory(ReservationApi reservationApi, ResourceApi resourceService,
-            VenueApi venueService, CustomerDirectoryApi customerDirectory, Clock clock) {
+                             VenueApi venueService, CustomerDirectoryApi customerDirectory, Clock clock) {
         this.reservationApi = reservationApi;
         this.resourceService = resourceService;
         this.venueService = venueService;
@@ -50,7 +48,7 @@ class AdminReservationsFactory {
         Map<UUID, String> fieldNames = new LinkedHashMap<>();
         Map<UUID, String> customerNames =
                 customerDirectory.displayNames(customerIds(result));
-        List<AdminReservationsModel.Row> rows = result.items().stream()
+        List<Row> rows = result.items().stream()
                 .map(reservation -> toRow(reservation, zone, fieldNames, customerNames, now))
                 .toList();
         return new AdminReservationsModel(status, rows, result.total(), result.page(), result.size());
@@ -63,9 +61,9 @@ class AdminReservationsFactory {
                 .toList();
     }
 
-    private AdminReservationsModel.Row toRow(ReservationInfo reservation, ZoneId zone,
-            Map<UUID, String> fieldNames, Map<UUID, String> customerNames, java.time.Instant now) {
-        return new AdminReservationsModel.Row(
+    private Row toRow(ReservationInfo reservation, ZoneId zone,
+                      Map<UUID, String> fieldNames, Map<UUID, String> customerNames, java.time.Instant now) {
+        return new Row(
                 reservation.id().value(),
                 customerName(reservation, customerNames),
                 reservation.customerId().value(),

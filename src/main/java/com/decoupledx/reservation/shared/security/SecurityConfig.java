@@ -2,7 +2,6 @@ package com.decoupledx.reservation.shared.security;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,8 +34,8 @@ class SecurityConfig {
             response.sendRedirect("/?loginFailed");
 
     SecurityConfig(@Value("${app.security.cors.allowed-origins:}") String allowedOrigins,
-            ClientRegistrationRepository clientRegistrationRepository,
-            KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler) {
+                   ClientRegistrationRepository clientRegistrationRepository,
+                   KeycloakLogoutSuccessHandler keycloakLogoutSuccessHandler) {
         this.allowedOrigins = allowedOrigins == null || allowedOrigins.isBlank()
                 ? List.of()
                 : Arrays.stream(allowedOrigins.split(",")).map(String::trim).filter(s -> !s.isBlank()).toList();

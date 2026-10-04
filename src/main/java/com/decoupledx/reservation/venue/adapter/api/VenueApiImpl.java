@@ -1,9 +1,8 @@
 package com.decoupledx.reservation.venue.adapter.api;
 
 import com.decoupledx.reservation.venue.domain.port.VenueService;
-import lombok.RequiredArgsConstructor;
-
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Module external-facing facade implementing {@link VenueApi} on top of the

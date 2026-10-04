@@ -1,15 +1,12 @@
 package com.decoupledx.reservation.webui;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
+import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
-
-import com.decoupledx.reservation.content.adapter.api.ContentApi;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * Exposes every editable site-content block (key -> body) to all views so the

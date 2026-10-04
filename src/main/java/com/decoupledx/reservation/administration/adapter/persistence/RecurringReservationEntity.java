@@ -1,15 +1,10 @@
 package com.decoupledx.reservation.administration.adapter.persistence;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -60,8 +55,8 @@ class RecurringReservationEntity {
     private long version;
 
     RecurringReservationEntity(UUID id, UUID resourceId, UUID customerId, String weekday,
-                              LocalTime startTime, LocalTime endTime, int windowMonths, String status,
-                              LocalDate nextOccurrence, Instant createdAt, Instant cancelledAt, String cancelledBy) {
+                               LocalTime startTime, LocalTime endTime, int windowMonths, String status,
+                               LocalDate nextOccurrence, Instant createdAt, Instant cancelledAt, String cancelledBy) {
         this.id = id;
         this.resourceId = resourceId;
         this.customerId = customerId;

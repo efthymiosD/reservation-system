@@ -1,11 +1,9 @@
 package com.decoupledx.reservation.administration.adapter.scheduling;
 
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
-
-import org.springframework.scheduling.annotation.Scheduled;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * Periodic materialization of upcoming recurring-reservation occurrences. Runs only when

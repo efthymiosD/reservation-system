@@ -1,15 +1,10 @@
 package com.decoupledx.reservation.venue.adapter.api;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import com.decoupledx.reservation.shared.ReservationPeriod;
+import java.time.*;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import com.decoupledx.reservation.shared.ReservationPeriod;
 
 public record OpeningHours(Map<DayOfWeek, DailyOpeningHours> perDay) {
 

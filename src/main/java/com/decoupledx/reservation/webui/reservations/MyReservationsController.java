@@ -1,19 +1,15 @@
 package com.decoupledx.reservation.webui.reservations;
 
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.shared.BusinessException;
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
-import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
-import com.decoupledx.reservation.shared.BusinessException;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * The customer's reservation list and cancellation. Only the owning customer
@@ -27,7 +23,6 @@ class MyReservationsController {
 
     private final MyReservationsModelFactory modelFactory;
     private final ReservationApi reservationApi;
-    private final CurrentCustomerApi currentCustomer;
 
     @GetMapping("/my-reservations")
     String myReservations(Model model) {
@@ -38,7 +33,7 @@ class MyReservationsController {
     @PostMapping("/my-reservations/{reservationId}/cancel")
     String cancel(@PathVariable UUID reservationId, RedirectAttributes redirect) {
         try {
-            reservationApi.cancel(reservationId, currentCustomer.currentCustomerId());
+            reservationApi.cancel(reservationId);
             redirect.addFlashAttribute("message", "Your reservation has been cancelled.");
         } catch (BusinessException exception) {
             redirect.addFlashAttribute("error", userMessage(exception));

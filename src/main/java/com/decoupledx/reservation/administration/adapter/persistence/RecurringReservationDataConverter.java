@@ -2,10 +2,9 @@ package com.decoupledx.reservation.administration.adapter.persistence;
 
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import org.springframework.stereotype.Component;
-
 import java.time.DayOfWeek;
 import java.util.UUID;
+import org.springframework.stereotype.Component;
 
 @Component
 class RecurringReservationDataConverter {

@@ -1,26 +1,15 @@
 package com.decoupledx.reservation.venue.adapter.web;
 
-import java.time.DayOfWeek;
-import java.time.LocalTime;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.domain.port.VenueService;
-
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/opening-hours")
@@ -42,12 +31,4 @@ class OpeningHoursAdminController {
         venueService.updateOpeningHours(venueService.singleVenueId(), openingHours);
     }
 
-    record OpeningHoursUpdateRequest(
-            @NotEmpty Map<DayOfWeek, @NotNull DailyOpeningHoursRequest> days) {
-    }
-
-    record DailyOpeningHoursRequest(
-            @NotNull LocalTime opensAt,
-            @NotNull LocalTime closesAt) {
-    }
 }

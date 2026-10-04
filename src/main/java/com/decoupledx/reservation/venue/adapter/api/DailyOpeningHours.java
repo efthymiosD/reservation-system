@@ -1,12 +1,11 @@
 package com.decoupledx.reservation.venue.adapter.api;
 
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
-
-import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.shared.ErrorCode;
 
 /**
  * One venue day's opening window. When {@code closesAt} is before {@code opensAt}
@@ -24,7 +23,9 @@ public record DailyOpeningHours(LocalTime opensAt, LocalTime closesAt) {
         }
     }
 
-    /** True when the window crosses midnight (close time before open time). */
+    /**
+     * True when the window crosses midnight (close time before open time).
+     */
     public boolean overnight() {
         return closesAt.isBefore(opensAt);
     }
@@ -37,12 +38,16 @@ public record DailyOpeningHours(LocalTime opensAt, LocalTime closesAt) {
         return overnight() ? day.plusDays(1).atTime(closesAt) : day.atTime(closesAt);
     }
 
-    /** Where the window anchored on {@code day} starts. */
+    /**
+     * Where the window anchored on {@code day} starts.
+     */
     public LocalDateTime windowStart(LocalDate day) {
         return day.atTime(opensAt);
     }
 
-    /** True when the period is fully inside this window anchored on {@code day}. */
+    /**
+     * True when the period is fully inside this window anchored on {@code day}.
+     */
     public boolean contains(LocalDate day, LocalDateTime start, LocalDateTime end) {
         return !start.isBefore(windowStart(day)) && !end.isAfter(windowEnd(day));
     }

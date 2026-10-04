@@ -10,7 +10,7 @@ import jakarta.annotation.Nullable;
  * use); administrator comes from the session authorities (ROLE_ADMIN), never
  * from client-side input.
  */
-public record CurrentUser(
+record CurrentUser(
         boolean authenticated,
         String displayName,
         @Nullable String email,

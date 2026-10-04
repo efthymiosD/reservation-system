@@ -1,13 +1,11 @@
 package com.decoupledx.reservation.venue.domain;
 
-import java.time.ZoneId;
-import java.util.Objects;
-
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import com.decoupledx.reservation.venue.adapter.persistence.VenueDataValue;
-
+import java.time.ZoneId;
+import java.util.Objects;
 import lombok.Getter;
 
 @Getter

@@ -1,34 +1,26 @@
 package com.decoupledx.reservation.availability.domain;
 
-import com.decoupledx.reservation.availability.domain.port.AvailabilityService;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.List;
-
 import com.decoupledx.reservation.availability.adapter.api.AvailableResource;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
+import com.decoupledx.reservation.availability.domain.port.AvailabilityService;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
-import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
 import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
-import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.Money;
 import com.decoupledx.reservation.shared.ReservationPeriod;
+import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import com.decoupledx.reservation.venue.adapter.api.VenueApi;
-
+import java.time.*;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -131,6 +123,4 @@ class AvailabilityServiceImpl implements AvailabilityService {
         return reservationQueries.isSlotFree(resourceId.value(), period);
     }
 
-    private record Slot(VenueInfo venue, ReservationPeriod period, Money price) {
-    }
 }

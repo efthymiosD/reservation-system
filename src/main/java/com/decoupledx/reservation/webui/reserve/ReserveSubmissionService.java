@@ -1,16 +1,12 @@
 package com.decoupledx.reservation.webui.reserve;
 
+import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.UUID;
-
-import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
-import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Web submission use case: hands the browser-submitted slot to the reservation
@@ -23,8 +19,7 @@ class ReserveSubmissionService {
 
     private final ReservationApi createReservation;
 
-    ReservationInfo submit(UUID resourceId, LocalDate date, LocalTime start, int durationMinutes,
-            CustomerId customer) {
-        return createReservation.create(resourceId, date.atTime(start), durationMinutes, customer);
+    ReservationInfo submit(UUID resourceId, LocalDate date, LocalTime start, int durationMinutes) {
+        return createReservation.create(resourceId, date.atTime(start), durationMinutes);
     }
 }

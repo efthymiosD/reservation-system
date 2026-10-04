@@ -1,14 +1,12 @@
 package com.decoupledx.reservation.shared.web;
 
+import com.decoupledx.reservation.shared.BusinessException;
 import java.net.URI;
-
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import com.decoupledx.reservation.shared.BusinessException;
 
 /**
  * REST-only error handling (JSON ProblemDetail). Scoped to @RestController beans so

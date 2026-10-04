@@ -4,13 +4,12 @@ import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 
 /**
  * Core-flow smoke (testing convention): with a late-evening clock (23:30

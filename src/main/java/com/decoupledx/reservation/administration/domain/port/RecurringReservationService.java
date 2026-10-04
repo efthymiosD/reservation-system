@@ -3,7 +3,6 @@ package com.decoupledx.reservation.administration.domain.port;
 import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
-
 import java.util.List;
 import java.util.UUID;
 

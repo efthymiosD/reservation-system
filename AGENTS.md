@@ -148,6 +148,12 @@ Pipeline: `feature/* → PR (CI) → main → Docker image → GHCR → (QNAP de
 
 ## ADRs (architecture decision records)
 
+**ADR 0002 — current-player context** (`docs/adr/0002-current-player-context.adoc`): only feature-domain code may call other modules' `adapter.api` surfaces; adapters (incl. webui controllers) never call `CurrentCustomerApi` or thread the logged-in `CustomerId` — ports/api expose implicit "me" variants resolved inside the domain, plus explicit variants for scheduler/audit-actor drivers. Single sanctioned presentation consumer: webui `CurrentUserAdvice`. Identity exports two APIs (`CurrentCustomerApi` session seam, `CustomerDirectoryApi` admin directory) — one `@NamedInterface` package.
+
+**ADR 0003 — record boundaries** (`docs/adr/0003-record-boundaries.adoc`): every Java record is declared in its own top-level file in the using class's package (request/response DTOs, view-model records, private helper records — 35 hoisted project-wide). Enabled ArchUnit rule: `RecordPlacementTest` (no hand-written nested types; Lombok `$Builder` and anonymous `$1..$n` exempt). Test-sourceset fixture records are exempt from the rule. Records are **package-private by default**; `public` is reserved for records crossing the module boundary (`adapter.api` views, `adapter/persistence` `…DataValue` snapshots per ADR-0001 rule 10) or genuinely shared webui config types (e.g. `webui.reserve.Placement`/`VenueLayout` used by the admin map controller).
+
+**Spotless** (3.0.0, `removeUnusedImports` + `importOrder` + `formatAnnotations`, main + test sources) is in `pom.xml`; run `./mvnw spotless:apply` after editing Java sources — agents must always optimize imports and reformat code.
+
 **The 10 module-structure rules live in `docs/adr/0001-module-structure.adoc`** — every module must obey them. Condensed in-memory copy (authoritative text + per-module evidence is in the ADR):
 
 1. `domain` is **flat**; its only sub-package is `domain/port`.

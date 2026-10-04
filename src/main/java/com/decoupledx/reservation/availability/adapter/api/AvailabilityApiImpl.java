@@ -1,8 +1,7 @@
 package com.decoupledx.reservation.availability.adapter.api;
 
-import java.util.List;
-
 import com.decoupledx.reservation.availability.domain.port.AvailabilityService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -16,13 +15,13 @@ class AvailabilityApiImpl implements AvailabilityApi {
 
     @Override
     public List<ResourceAvailability> resourceAvailability(java.time.LocalDate date,
-            java.time.LocalTime startTime, int durationMinutes) {
+                                                           java.time.LocalTime startTime, int durationMinutes) {
         return availabilityService.resourceAvailability(date, startTime, durationMinutes);
     }
 
     @Override
     public List<AvailableResource> findAvailable(java.time.LocalDate date,
-            java.time.LocalTime startTime, int durationMinutes) {
+                                                 java.time.LocalTime startTime, int durationMinutes) {
         return availabilityService.findAvailable(date, startTime, durationMinutes);
     }
 }

@@ -1,11 +1,10 @@
 package com.decoupledx.reservation.availability.domain.port;
 
+import com.decoupledx.reservation.availability.adapter.api.AvailableResource;
+import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-
-import com.decoupledx.reservation.availability.adapter.api.AvailableResource;
-import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
 
 /**
  * Inbound port for the availability module: per-slot availability of every

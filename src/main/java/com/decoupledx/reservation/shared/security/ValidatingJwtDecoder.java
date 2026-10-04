@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.shared.security;
 
 import java.util.List;
-
 import lombok.NonNull;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;

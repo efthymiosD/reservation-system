@@ -1,15 +1,12 @@
 package com.decoupledx.reservation.webui.reserve;
 
+import com.decoupledx.reservation.content.adapter.api.ContentApi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-
-import com.decoupledx.reservation.content.adapter.api.ContentApi;
-
-import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 
 /**

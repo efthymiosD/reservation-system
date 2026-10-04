@@ -1,15 +1,9 @@
 package com.decoupledx.reservation;
 
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.RepetitionInfo;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import static com.decoupledx.reservation.testinfra.JwtSupport.admin;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,9 +16,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import static com.decoupledx.reservation.testinfra.JwtSupport.admin;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * Black-box concurrency tests: every racer goes through the HTTP API

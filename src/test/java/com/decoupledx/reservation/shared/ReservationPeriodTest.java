@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import java.time.Instant;
-
 import org.junit.jupiter.api.Test;
 
 class ReservationPeriodTest {

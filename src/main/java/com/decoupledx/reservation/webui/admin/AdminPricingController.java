@@ -6,6 +6,10 @@ import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.Money;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,11 +17,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.math.BigDecimal;
-import java.util.Currency;
-import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Admin pricing page (ROLE_ADMIN gated at the security chain): shows and edits

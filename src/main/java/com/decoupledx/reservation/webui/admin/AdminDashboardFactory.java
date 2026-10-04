@@ -1,7 +1,5 @@
 package com.decoupledx.reservation.webui.admin;
 
-import org.springframework.stereotype.Component;
-
 import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
@@ -9,8 +7,8 @@ import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the admin dashboard counts from module APIs only.

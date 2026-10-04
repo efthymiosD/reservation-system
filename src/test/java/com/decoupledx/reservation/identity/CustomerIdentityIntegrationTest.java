@@ -5,6 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
+import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +16,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
-
-import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 @AutoConfigureMockMvc
 class CustomerIdentityIntegrationTest extends PostgresIntegrationTest {
@@ -58,7 +57,7 @@ class CustomerIdentityIntegrationTest extends PostgresIntegrationTest {
 
         assertThat(reservations.findByCustomer(internal))
                 .hasSize(1)
-                .allMatch(r -> r.getCustomerId().equals(internal));
+                .allMatch(r -> CustomerId.of(r.customerId()).equals(internal));
     }
 
     @Test

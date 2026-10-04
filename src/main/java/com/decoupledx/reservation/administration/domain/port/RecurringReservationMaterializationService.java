@@ -1,7 +1,6 @@
 package com.decoupledx.reservation.administration.domain.port;
 
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
-
 import java.util.UUID;
 
 public interface RecurringReservationMaterializationService {

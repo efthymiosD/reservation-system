@@ -3,11 +3,12 @@ package com.decoupledx.reservation.reservation.adapter.api;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.shared.Money;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import lombok.Builder;
 
+@Builder
 public record ReservationInfo(
         ReservationId id,
         ResourceId resourceId,

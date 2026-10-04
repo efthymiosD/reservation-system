@@ -2,20 +2,19 @@ package com.decoupledx.reservation.identity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
-
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.identity.domain.service.CustomerAccountService;
 
 /**
  * Realm contract: any access token issued by Keycloak must carry a {@code sub}

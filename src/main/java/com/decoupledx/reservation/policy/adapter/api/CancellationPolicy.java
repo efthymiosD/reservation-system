@@ -1,11 +1,10 @@
 package com.decoupledx.reservation.policy.adapter.api;
 
+import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
-
-import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.shared.ErrorCode;
 
 public record CancellationPolicy(Duration deadlineBeforeStart) {
 

@@ -1,17 +1,13 @@
 package com.decoupledx.reservation.venue.adapter.web;
 
-import java.time.LocalTime;
+import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.venue.domain.port.VenueService;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import com.decoupledx.reservation.venue.domain.port.VenueService;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/public")
@@ -40,14 +36,4 @@ class PublicVenueController {
                 openingHours);
     }
 
-    record PublicVenueResponse(
-            String name,
-            String description,
-            String address,
-            String timezone,
-            Map<String, OpeningHoursResponse> openingHours) {
-    }
-
-    record OpeningHoursResponse(LocalTime opensAt, LocalTime closesAt) {
-    }
 }
