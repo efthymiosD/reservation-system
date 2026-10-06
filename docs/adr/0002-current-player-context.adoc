@@ -1,0 +1,70 @@
+= ADR 0002: Feature domains own the current-player lookup
+
+Date: 2026-09-28
+Status: Accepted
+Supersedes: nothing; extends link:0001-module-structure.adoc[ADR 0001]
+
+== Context
+
+Adapters were threading the resolved current customer through every call:
+controllers called `identity`'s `CurrentCustomerApi.currentCustomerId()` and
+passed the `CustomerId` down as a parameter (web controller -> domain port).
+That duplicated boilerplate and pushed an adapter-level concern (session
+identity resolution) into every use-case signature.
+
+The `administration` module already demonstrates the cleaner shape: its
+domain service (`RecurringReservationServiceImpl`) injects
+`CurrentCustomerApi` directly and resolves the acting customer itself.
+
+== Decision
+
+1. **Only feature-domain code may call other modules' APIs.** A module's
+   `domain` (and its internal facade only) consumes other modules'
+   `adapter.api` surfaces. Adapter-in code (REST controllers, web UI, schedulers)
+   never depends on other modules' APIs - it drives the module's own domain ports.
+2. **Adapters trust the domain to know the currently logged-in player.**
+   Controllers must not call `CurrentCustomerApi` or pass `CustomerId`s that
+   represent the authenticated principal. The use case resolves the player
+   itself ("me" variants on the inbound port); the customer-facing web entry
+   points take just the business arguments (which field, which time, how long).
+3. **Explicit-identity variants stay for non-session drivers.**
+   Cross-module callers (e.g. the recurring-reservation materializer in
+   `administration`) and administrative flows (audit actor for overrides)
+   go through the module's `adapter.api` with explicit `CustomerId`/actor.
+   The domain ports then expose both families:
+   - implicit "me"/"current player" methods, for adapter-in drivers
+   - explicit customer/actor methods, wired through `adapter.api`
+
+== Identity's two APIs (why)
+
+`identity` exports two APIs because it serves two different use-case
+families with two different consumers:
+
+- `CurrentCustomerApi` - the session/identity seam: who is calling *right
+  now*. Since ADR 0002, its consumers are feature domains (reservation),
+  not controllers.
+- `CustomerDirectoryApi` - an admin directory listing: enumerate provisioned
+  customers plus their IdP display names, for admin pickers (e.g. creating a
+  recurring reservation for a chosen player).
+
+Both are exported via the single `@NamedInterface("api")` package
+(`identity.adapter.api`); rule 5 of ADR 0001 (exactly one named interface
+per module) is unaffected.
+
+== Consequences
+
+- Web controllers shrink to pure delegation: request DTO -> port call.
+- A minor stream of first-request provisioning still happens deep inside
+  `resolveOrProvision` - unchanged, now triggered by domain use cases.
+- `webui` follows the same rule: its controllers call the feature modules'
+  exposed inbound ports through the implicit "me" variants (e.g.
+  `CreateReservationService.create(...)` without customer,
+  `CancelReservationService.cancel(reservationId)`,
+  `ReservationQueryService.findMyReservationsPage(...)`). The single sanctioned
+  `CurrentCustomerApi` consumer outside feature domains is the webui
+  `CurrentUserAdvice` - a presentation-only view-model of the signed-in user
+  for the navigation bar, which is display of the session itself, not a
+  business use case.
+- Opt-in/out-of-session drivers have no SecurityContext - scheduler-driven
+  materialization always uses the explicit variants; unit tests for domain
+  ports can inject a fake `CurrentCustomerApi`.

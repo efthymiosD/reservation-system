@@ -1,0 +1,85 @@
+# ADR-0001 — Hexagonal module layout, visibility, and framework isolation
+
+Status: Accepted · Deciders: EfthymiosD · Date: 2026-09-19
+
+## Context
+Following the `administration` module structure, we codify the 10 rules every
+module must follow. They nail down package layout, Java access modifiers, the
+single cross-module hook (`adapter.api`), and framework/domain separation.
+
+## Decision
+
+### 1. Flat domain, single `port` sub-package
+`<module>.domain` holds domain types flat. The only allowed sub-package is
+`<module>.domain.port`, which contains inbound (driving) and outbound (driven) **public
+interfaces**.
+- Administration: `…/administration/domain` is flat; `…/domain/port` holds only
+  3 public interfaces ✓ (verified).
+
+### 2. Domain types are package-private
+No `public` on domain classes. Do not expose concrete domain model classes across
+module boundaries.
+- Administration: zero `public class/record/interface/enum` in `domain` ✓
+  (the 3 `port` interfaces are the sole public decls — rule 4).
+
+### 3. Domain owns its own Config; no framework annotations in domain
+`<module>.domain` has one `…DomainConfig` (`@Configuration`) that wires the
+domain-only beans (`@Bean`, no `@Service`). No Spring/Jackson/JPA annotations
+anywhere else in the domain package.
+- Administration: `AdministrationDomainConfig` is the **only** framework
+  annotation in `domain` ✓.
+
+### 4. Inbound ports are `public interface`
+Driving ports in `domain/port` are public so adapters can implement/inject them.
+- Administration: `RecurringReservationService`, `RecurringReservationRepository`,
+  `RecurringReservationMaterializationService` are all `public interface` ✓.
+
+### 5. `adapter.api` is the module's only exported package
+One named interface `@NamedInterface("api")` on `adapter/api`. Nothing else is
+importable cross-module.
+- Administration: `adapter/api/package-info.java` declares
+  `@NamedInterface("api")` ✓.
+
+### 6. Adapter gets its own (sub-package) Configs
+Each adapter sub-package wires its own config (`…SchedulingConfig`, `…WebConfig`,
+`…PersistenceConfig`) so Spring annotations live only in configs, never in
+adapter code (this is rule 3's enforcement at the adapter side).
+- Administration: `adapter/scheduling/RecurringReservationSchedulingConfig`, … ✓.
+
+### 7. Adapters never depend on adapters
+An adapter may depend only on domain (ports) and its own module's `adapter.api`.
+No adapter may import another adapter's package (sibling or in/out).
+- Administration: ✓ — verified; all non-external imports mention either
+  `domain.*` or `adapter.api.*`.
+
+### 8. Domain returns immutable snapshots; mapping lives in adapters
+Domain ports/methods take/return **immutable snapshot value types** — flat
+`…Info`/`…Command`/…D» records — never mutable entities, and never the adapter's
+DTOs. Adapters convert / map between DTOs and these snapshots; domain NEVER sees
+adapter/web DTOs.
+- Administration: `adapter/api/*` are immutable records
+  (`CreateRecurringReservationCommand`, `RecurringReservationInfo`, …) ✓.
+
+### 9. Adapters depends only on domain inbound ports
+The web controller (and any other `adapter` impl) use `domain/port` interfaces
+directly for behaviour; they never call `adapter.api` as a service provider.
+`adapter.api` is for *response marshalling/types used by other modules' adapters*,
+not for the module's own controllers.
+- Administration: controller injects `domain/port` services; it imports
+  `adapter.api` only for DTO/record types, not to call through them ✓.
+
+### 10. Adapter classes are package-private by default
+Everything in `adapter/` (incl. any private sub-packages) is package-private
+except: the `adapter.api` exported types, `…DataValue` (immutable domain-value
+snapshots inside persistence, e.g. `RecurringReservationDataValue`), and the web
+controllers. Adapter impl/configs are package-private.
+- Administration: ✓ — persistence impls & configs are package-private; only
+  `api` + `DataValue` records are public.
+
+### 11. All records should be defined in separate files always
+Controllers specific response types should be defined as package-private classes ins separate files.
+
+## Consequences
+- Modules are decoupled at the compiler level; Modulith named interfaces +
+  `ModularityTests` enforce the boundaries mechanically.
+- Domain stays framework-free, testable in plain JVM.
