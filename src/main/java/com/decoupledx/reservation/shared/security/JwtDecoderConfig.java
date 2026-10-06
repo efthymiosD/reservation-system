@@ -26,12 +26,15 @@ class JwtDecoderConfig {
     @Bean
     JwtDecoder jwtDecoder(
             @Value("${app.security.issuer-uri:}") String issuerUri,
+            @Value("${app.security.jwk-set-uri:}") String jwkSetUri,
             @Value("${app.security.audience:}") String audience,
             @Value("${app.security.dev-public-key:}") Resource devPublicKey,
             @Value("${app.security.allow-dev-key:true}") boolean allowDevKey) throws IOException {
 
         if (issuerUri != null && !issuerUri.isBlank()) {
-            JwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
+            JwtDecoder decoder = (jwkSetUri != null && !jwkSetUri.isBlank())
+                    ? NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build()
+                    : NimbusJwtDecoder.withIssuerLocation(issuerUri).build();
             List<OAuth2TokenValidator<Jwt>> validators = new ArrayList<>();
             validators.add(JwtValidators.createDefaultWithIssuer(issuerUri));
             if (audience != null && !audience.isBlank()) {

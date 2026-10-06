@@ -1,0 +1,40 @@
+= ADR 0003: Records live in their own top-level files
+
+Date: 2026-09-28
+Status: Accepted
+Extends link:0001-module-structure.adoc[ADR 0001]
+
+== Context
+
+Controllers and view-model classes previously declared their request/response
+records inline (e.g. `PolicyAdminController` holding
+`BookingPolicyUpdateRequest`, `CancellationPolicyUpdateRequest`,
+`BookingPolicyGetResponse`, …). Nested declarations hurt discoverability and
+reviewability: the type grows unbounded over time and diffs nest inside
+unrelated classes.
+
+== Decision
+
+**Every Java record is declared in its own top-level source file** in the
+package of the class that uses it (same package = no import churn between the
+controller/factory and its request/response records).
+
+- Visibility carries over: public view-model records stay public;
+  request/response DTO records become package-private in the adapter package.
+- Access changes from `Outer.Record` to the bare record name.
+
+== Enforcement
+
+*Optional (enabled) arch-unit rule:* `RecordPlacementTest` -
+`no classes that hand-written nested types should be nested classes`, matching
+nested bytecode names (`Outer$Inner`) project-wide. Compiler-generated
+artifacts are exempt by name: Lombok `@Builder` fakes (`Outer..Builder`) and
+anonymous artifacts (`Outer$1..$n`).
+
+== Consequences
+
+- 35 nested records were hoisted project-wide (controllers, view models,
+  `AvailabilityServiceImpl`/`SlotSelection`-style private records became
+  package-private).
+- Test fixtures may keep local records only when scoped to test
+  parentheses/lambdas; the arch rule applies to main sources only.

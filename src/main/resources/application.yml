@@ -68,6 +68,10 @@ management:
 app:
   security:
     issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/reservation}
+    # Optional explicit JWKS for the resource server, so JWT decoder startup does
+    # not fetch OIDC metadata from the issuer. Set whenever the issuer hostname is
+    # not resolvable from the app (e.g. containerized app, host-published Keycloak).
+    jwk-set-uri: ${JWT_JWK_SET_URI:}
     audience: ${APP_AUDIENCE:reservation-api}
     cors.allowed-origins: ${CORS_ALLOWED_ORIGINS:}
     dev-public-key: classpath:dev/jwt-public.pem

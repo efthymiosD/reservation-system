@@ -2,8 +2,6 @@ target/
 # .mvn/wrapper/maven-wrapper.properties MUST be committed: mvnw reads it to resolve Maven
 # (distributionType=only-script, so there is no wrapper jar).
 
-docs/
-
 ### IntelliJ ###
 .idea/
 *.iml
