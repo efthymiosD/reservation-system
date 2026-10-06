@@ -35,9 +35,9 @@ def _no_horizontal_scroll(page) -> None:
     )
 
 
-def book_first_field(page: Page, device: str | None = None) -> None:
+def book_first_field(page: Page, device: str | None = None, browser: str = "chromium") -> None:
     """Happy path: reserve Field 1 for the deterministic slot and confirm."""
-    date = constants.booking_date(device)
+    date = constants.booking_date(device, browser)
     page.goto(f"{constants.BASE_URL}/reserve")
     page.wait_for_selector("#slot-form")
 
@@ -75,7 +75,7 @@ def test_booking_journey_fits_and_works_on_devices(browser_name, browser, device
     page = context.new_page()
     try:
         login(page, constants.CUSTOMER_USERNAME, constants.CUSTOMER_PASSWORD)
-        book_first_field(page, device)
+        book_first_field(page, device, browser_name)
         _no_horizontal_scroll(page)
     finally:
         context.close()

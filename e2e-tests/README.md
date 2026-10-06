@@ -115,13 +115,25 @@ Conventions below).
 ## Run the suite
 
 ```bash
-# from e2e-tests/
-./.venv/bin/pytest tests/test_responsive.py --browser chromium        # macOS
-.venv\Scripts\pytest tests\test_responsive.py --browser chromium      # Windows
+# from e2e-tests/ — ALWAYS do the down -v reset above first
+./.venv/bin/pytest tests/test_responsive.py --browser chromium        # macOS, faster
+./.venv/bin/pytest tests/test_responsive.py --browser chromium --browser webkit   # full matrix
+# Windows:
+.venv\Scripts\pytest tests\test_responsive.py --browser chromium
+.venv\Scripts\pytest tests\test_responsive.py --browser chromium --browser webkit
 ```
 
-CI runs `--browser chromium --browser webkit`; locally choose any of the
-playwright browsers: `--browser chromium` / `--browser webkit` / `--browser firefox`.
+Locally choose any of the playwright browsers: `--browser chromium` /
+`--browser webkit` / `--browser firefox`.
+
+### CI: manual only
+
+The e2e suite is **deliberately not part of the PR pipeline** (too slow:
+backend build + image build + browser matrix). A manual workflow exists —
+run it from the **Actions tab → "E2E (Playwright, manual)" → Run workflow**
+(optionally choosing the browsers). It boots the deterministic stack, waits
+for health, runs the suite with `-` artifacts on failure, then tears the
+stack down.
 
 The suite fails fast when the stack is not reachable (`_stack_ready` fixture)
 with a hint pointing to the bring-up commands above.
@@ -138,7 +150,7 @@ with a hint pointing to the bring-up commands above.
 ## Conventions for new specs (important)
 
 - **Booking data must never collide.** Every journey reserve test picks a
-  deterministic date from `constants.booking_date(device)` — add new offsets
+  deterministic date from `constants.booking_date(device, browser)` — add new offsets
   there instead of hardcoding dates. Cancellation deadline is 120 min, so
   same-slot cleanup from inside a test is impossible; the only real reset is
   `docker compose -f ... down -v`.

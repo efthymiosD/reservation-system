@@ -25,12 +25,23 @@ DEVICE_DATE_OFFSETS = {
     "Desktop 1280": 4,
 }
 
-def booking_date(device: str | None = None) -> str:
-    """Deterministic slot date; device-specific when given."""
+# Per-browser offsets STRIDE on top of the device offsets, so the same device
+# running under two browsers never collides (cc CI runs chromium AND webkit).
+# Max effective offset: 4 (device) + 7 (webkit) = 11 days; firefox +14 keeps
+# every date within the P1M advance window (max date 2026-11-09 < 2026-11-12).
+BROWSER_DATE_OFFSETS = {
+    "chromium": 0,
+    "webkit": 7,
+    "firefox": 14,
+}
+
+def booking_date(device: str | None = None, browser: str = "chromium") -> str:
+    """Deterministic slot date; device- AND browser-specific when given."""
     from datetime import date, timedelta
     base = date.fromisoformat(BOOKING_DATE)
-    offset = DEVICE_DATE_OFFSETS.get(device, 0) if device else 0
-    return (base + timedelta(days=offset)).isoformat()
+    device_offset = DEVICE_DATE_OFFSETS.get(device, 0) if device else 0
+    browser_offset = BROWSER_DATE_OFFSETS.get(browser, 0)
+    return (base + timedelta(days=device_offset + browser_offset)).isoformat()
 
 # Slot pick (inside the seeded 14:00-23:00 opening hours, on the 30-min grid)
 START_HOUR = "18:00"

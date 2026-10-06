@@ -40,7 +40,7 @@ already-taken-slot guardrail.
 
 **Part 1 (alice books):**
 1. `login(page, alice, alice)`; `goto /reserve`
-2. date = `constants.booking_date()`; start = `18:00`; duration = `1 h`
+2. date = `constants.booking_date(device, browser)`; start = `18:00`; duration = `1 h`
 3. Click `.resource[data-label='Field 1']` → `#hidden-resource-id` =
    `a0000000-…0101`, `#reserve-button` becomes enabled and is clicked
 4. Expect URL match `/reservations/[0-9a-f-]+/confirmation`; the page
@@ -67,8 +67,9 @@ alice books it once, bob only *observes*. Do not add reruns.
 **Purpose:** the availability render path without a booking.
 
 1. login alice → `/reserve`; no booking needed
-2. For a far-future slot (`booking_date("iPhone 14") + 7` days): all six
-   tiles render with class `resource--available` incl. `Field 1`; assert
+2. For a far-future slot (`booking_date("Desktop 1280", browser)` + 7 days, still
+   inside the P1M window): all six tiles render with class `resource--available`
+   incl. `Field 1`; assert
    `len(page.locator(".resource--available")) == 6`
 3. Start select (`#start`) has 30-min-step options (14:00, 14:30, …);
    durations are exactly `1 h`, `1 h 30 min`, `2 h`
