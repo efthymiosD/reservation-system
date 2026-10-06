@@ -74,7 +74,10 @@ jobs:
         run: |
           for i in $(seq 1 60); do
             APP=$(docker inspect --format '{{.State.Health.Status}}' reservation-system-e2e-app-1 2>/dev/null || echo starting)
-            KC=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/realms/reservation/.well-known/openid-configuration)
+            # curl exits non-zero while Keycloak is still connection-resetting
+            # (56); under bash -e that would kill the whole script immediately,
+            # so tolerate the failure and only read the status code.
+            KC=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/realms/reservation/.well-known/openid-configuration || true)
             [ "$APP" = "healthy" ] && [ "$KC" = "200" ] && echo "stack ready after ${i} polls" && exit 0
             sleep 5
           done
