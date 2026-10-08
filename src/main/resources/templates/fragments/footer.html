@@ -3,12 +3,12 @@
 <body>
 <footer th:fragment="footer" class="border-top mt-auto py-3 bg-light">
   <div class="container d-flex flex-wrap justify-content-between">
-    <span class="text-muted" th:text="${venue != null ? venue.name : 'Five-a-Side Football Centre'}">Five-a-Side Football Centre</span>
+    <span class="text-muted" th:text="${venue != null ? venue.name : '#{footer.venueName}'}">Five-a-Side Football Centre</span>
     <span class="text-muted">
-      <a class="text-muted" th:href="@{/}">Home</a> ·
-      <a class="text-muted" th:href="@{/about}">About</a> ·
-      <a class="text-muted" th:href="@{/contact}">Contact us</a> ·
-      <a class="text-muted" th:href="@{/reserve}">Reserve</a>
+      <a class="text-muted" th:href="@{/}" th:text="#{nav.home}">Home</a> ·
+      <a class="text-muted" th:href="@{/about}" th:text="#{nav.about}">About</a> ·
+      <a class="text-muted" th:href="@{/contact}" th:text="#{nav.contact}">Contact us</a> ·
+      <a class="text-muted" th:href="@{/reserve}" th:text="#{nav.reserve}">Reserve</a>
     </span>
   </div>
 </footer>

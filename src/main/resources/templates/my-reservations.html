@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('My reservations', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.myreservations', ~{::section})}">
 <head>
   <title>My reservations</title>
 </head>
 <body>
 <section class="container py-4">
-  <h1 class="mb-4">My reservations</h1>
+  <h1 class="mb-4" th:text="#{myres.title}">My reservations</h1>
 
-  <h2 class="h4">Upcoming</h2>
+  <h2 class="h4" th:text="#{myres.upcoming}">Upcoming</h2>
   <div th:if="${#lists.isEmpty(page.upcoming)}" class="alert alert-info" role="status">
-    You have no upcoming reservations.
-    <a th:href="@{/reserve}">Make a reservation</a>
+    <th:block th:text="#{myres.noUpcoming}">You have no upcoming reservations.</th:block>
+    <a th:href="@{/reserve}" th:text="#{nav.makeReservation}">Make a reservation</a>
   </div>
   <div class="mb-4">
     <div class="card mb-2" th:each="card : ${page.upcoming}">
@@ -25,18 +25,18 @@
                th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.displayStatus}">150 PLN · Completed</div>
         </div>
         <div class="d-flex gap-2">
-          <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}">View</a>
+          <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}" th:text="#{myres.view}">View</a>
           <form th:if="${card.cancellable}" th:action="@{/my-reservations/{id}/cancel(id=${card.reference})}"
                 method="post">
-            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+            <button type="submit" class="btn btn-outline-danger btn-sm" th:text="#{myres.cancel}">Cancel</button>
           </form>
         </div>
       </div>
     </div>
   </div>
 
-  <h2 class="h4">Earlier</h2>
-  <div th:if="${#lists.isEmpty(page.past)}" class="alert alert-secondary" role="status">
+  <h2 class="h4" th:text="#{myres.earlier}">Earlier</h2>
+  <div th:if="${#lists.isEmpty(page.past)}" class="alert alert-secondary" role="status" th:text="#{myres.nothingYet}">
     Nothing here yet.
   </div>
   <div>
@@ -51,7 +51,7 @@
           <div class="small text-muted"
                th:text="${card.priceAmount} + ' ' + ${card.priceCurrency} + ' · ' + ${card.displayStatus}">150 PLN · Completed · CANCELLED</div>
         </div>
-        <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}">View</a>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/reservations/{id}/confirmation(id=${card.reference})}" th:text="#{myres.view}">View</a>
       </div>
     </div>
   </div>

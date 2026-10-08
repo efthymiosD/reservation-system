@@ -2,6 +2,7 @@ package com.decoupledx.reservation.webui.reservations;
 
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -23,6 +24,7 @@ class MyReservationsController {
 
     private final MyReservationsModelFactory modelFactory;
     private final ReservationApi reservationApi;
+    private final WebMessages messages;
 
     @GetMapping("/my-reservations")
     String myReservations(Model model) {
@@ -34,19 +36,10 @@ class MyReservationsController {
     String cancel(@PathVariable UUID reservationId, RedirectAttributes redirect) {
         try {
             reservationApi.cancel(reservationId);
-            redirect.addFlashAttribute("message", "Your reservation has been cancelled.");
+            redirect.addFlashAttribute("message", messages.get("myres.cancelled"));
         } catch (BusinessException exception) {
-            redirect.addFlashAttribute("error", userMessage(exception));
+            redirect.addFlashAttribute("error", messages.errorMessage(exception));
         }
         return "redirect:/my-reservations";
-    }
-
-    private String userMessage(BusinessException exception) {
-        return switch (exception.errorCode()) {
-            case CANCELLATION_DEADLINE_PASSED -> "The cancellation deadline has passed — the booking can no "
-                    + "longer be cancelled.";
-            case RESERVATION_ALREADY_CANCELLED -> "This reservation is already cancelled.";
-            default -> exception.getMessage();
-        };
     }
 }

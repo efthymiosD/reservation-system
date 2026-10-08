@@ -112,6 +112,14 @@ Useful URLs once the app is up:
 
  - `http://localhost:8080/swagger-ui.html` — OpenAPI
  - `http://localhost:8080/actuator/health` — health endpoint
+ - `http://localhost:8080/?lang=pl&lang=pl` trick not needed — use the flag selector (EN/PL/EL) in the navbar; the choice persists in the `locale` cookie for a year.
+
+## Languages & site content (how i18n works)
+
+- **System copy** (buttons, labels, errors) ships translated in code — `src/main/resources/messages/messages{,_en,_pl,_el}.properties`. Adding a language = new bundle file + entry in `webui/SupportedLocales` + flag fragment in `templates/fragments/flags.html`.
+- **Site-content defaults** are bundle-backed too: until an admin authors a block, every language shows the built-in translated default.
+- **Admin-authored content** is never translated by the system. On `Admin → Site content → Page text` pick the editor language (English/Polski/Ελληνικά dropdown); fields saved for one language render verbatim to that language's visitors only; leave a field empty to fall back to the built-in default.
+- `Admin → Site content → Languages` enables/disables visitor languages (the default language is permanently on). Disabled languages vanish from the selector; stale visitors resolve to the next enabled language.
 
 ## Run the tests
 

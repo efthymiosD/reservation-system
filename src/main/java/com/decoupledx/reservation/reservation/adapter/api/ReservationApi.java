@@ -20,7 +20,16 @@ public interface ReservationApi {
      */
     ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes);
 
-    ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes, CustomerId customer);
+    /**
+     * Administrative entry point: a booking an administrator places on a
+     * specific customer's behalf (ADR 0002 explicit actor variant). The
+     * same-customer overlap invariant is relaxed for such bookings — the
+     * venue staff may place several bookings for the same hour (e.g. the same
+     * hour booked on several pitches for one group). Resource-level overlap
+     * (one pitch cannot host two bookings) still applies.
+     */
+    ReservationInfo createOnBehalfOfCustomer(UUID resourceId, LocalDateTime startTime,
+                                             int durationMinutes, CustomerId customer);
 
     /**
      * Creates a reservation on behalf of a recurring reservation (used by the

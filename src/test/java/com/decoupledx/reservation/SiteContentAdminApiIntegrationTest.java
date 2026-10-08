@@ -39,7 +39,7 @@ class SiteContentAdminApiIntegrationTest extends PostgresIntegrationTest {
     void adminCanListSiteContent() throws Exception {
         mockMvc.perform(get("/api/admin/content").with(admin("admin")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.key == 'home.feature.1.title')]").isNotEmpty());
+                .andExpect(jsonPath("$[?(@.key == 'about.photo')]").isNotEmpty());
     }
 
     @Test

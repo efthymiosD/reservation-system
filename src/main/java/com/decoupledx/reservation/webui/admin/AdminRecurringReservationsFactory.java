@@ -10,6 +10,7 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -37,6 +38,7 @@ class AdminRecurringReservationsFactory {
     private final ResourceApi resourceService;
     private final VenueApi venueService;
     private final PolicyApi policyService;
+    private final WebMessages messages;
 
     private static final java.util.List<Integer> WINDOW_MONTHS = java.util.List.of(1, 3, 6);
 
@@ -110,24 +112,16 @@ class AdminRecurringReservationsFactory {
     }
 
     private String windowLabel(int months) {
-        return months == 1 ? "1 month" : months + " months";
+        return messages.get(months == 1 ? "admin.recurring.windowOne" : "admin.recurring.windowMany", months);
     }
 
     private String weekdayLabel(DayOfWeek weekday) {
-        return switch (weekday) {
-            case MONDAY -> "Monday";
-            case TUESDAY -> "Tuesday";
-            case WEDNESDAY -> "Wednesday";
-            case THURSDAY -> "Thursday";
-            case FRIDAY -> "Friday";
-            case SATURDAY -> "Saturday";
-            case SUNDAY -> "Sunday";
-        };
+        return messages.weekday(weekday);
     }
 
     private String displayName(CustomerEntry customer) {
         return customer.displayName() == null || customer.displayName().isBlank()
-                ? "customer " + shortId(customer.customerId())
+                ? messages.get("admin.recurring.anonymousCustomer", shortId(customer.customerId()))
                 : customer.displayName();
     }
 

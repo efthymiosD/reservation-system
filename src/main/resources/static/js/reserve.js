@@ -29,9 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // State labels come from the server-rendered, localized data attributes on
+  // the map container — same strings as the static render, no client i18n.
+  const mapContainer = document.querySelector('.venue-map');
+  const labels = mapContainer ? {
+    free: mapContainer.dataset.textFree || '',
+    reserved: mapContainer.dataset.textReserved || '',
+    selected: mapContainer.dataset.textSelected || ''
+  } : {free: '', reserved: '', selected: ''};
   const STATE_LABELS = {
-    'resource--available': '✓ free',
-    'resource--reserved': '✕ reserved'
+    'resource--available': labels.free,
+    'resource--reserved': labels.reserved
   };
 
   let selected = null;
@@ -62,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     field.classList.add('resource--selected');
     const stateText = field.querySelector('.resource__state');
     if (stateText) {
-      stateText.textContent = '✓ selected';
+      stateText.textContent = labels.selected;
     }
     if (hiddenResourceId) {
       hiddenResourceId.value = field.dataset.resourceId;

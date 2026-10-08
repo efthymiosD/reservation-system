@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="page(title, content)" th:attr="lang=${#locale.toLanguageTag()}">
 <head th:replace="~{fragments/head :: head(${title})}"></head>
 <body class="d-flex flex-column min-vh-100">
   <nav th:replace="~{fragments/navigation :: navigation}"></nav>

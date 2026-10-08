@@ -3,45 +3,64 @@
 <body>
 <nav th:fragment="navigation" class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
   <div class="container">
-    <a class="navbar-brand fw-bold" th:href="@{/}">⚽ <span th:text="${venue != null ? venue.name : 'Five-a-Side Centre'}">Five-a-Side Centre</span></a>
+    <a class="navbar-brand fw-bold" th:href="@{/}">⚽ <span th:text="${venue != null ? venue.name : '#{nav.venueName}'}">Five-a-Side Centre</span></a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
             data-bs-target="#mainNav" aria-controls="mainNav"
-            aria-expanded="false" aria-label="Toggle navigation">
+            aria-expanded="false" aria-label="Toggle navigation"
+            th:aria-label="#{nav.toggle}">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="mainNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" th:href="@{/about}">About</a>
+          <a class="nav-link" th:href="@{/about}" th:text="#{nav.about}">About</a>
         </li>
         <li class="nav-item" th:if="${currentUser.administrator}">
-          <a class="nav-link" th:href="@{/admin}">Admin panel</a>
+          <a class="nav-link" th:href="@{/admin}" th:text="#{nav.admin}">Admin panel</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" th:href="@{/reserve}">Make a reservation</a>
+          <a class="nav-link" th:href="@{/reserve}" th:text="#{nav.makeReservation}">Make a reservation</a>
         </li>
         <li class="nav-item" th:if="${currentUser.authenticated}">
-          <a class="nav-link" th:href="@{/my-reservations}">My reservations</a>
+          <a class="nav-link" th:href="@{/my-reservations}" th:text="#{nav.myReservations}">My reservations</a>
         </li>
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item" th:if="${currentUser.authenticated}">
-          <span class="navbar-text me-3">Signed in as
-            <a href="#" class="fw-bold text-info text-decoration-none" tabindex="0" role="button"
+          <span class="navbar-text me-3"><span th:text="#{nav.signedInAs} + ' '">Signed in as </span><a
+               href="#" class="fw-bold text-info text-decoration-none" tabindex="0" role="button"
                data-bs-toggle="popover" data-bs-trigger="hover focus"
                data-bs-placement="bottom" data-bs-html="true"
-               th:title="'Signed in as ' + ${currentUser.displayName}"
+               th:title="#{nav.signedInAs} + ' ' + ${currentUser.displayName}"
                th:attr="data-bs-content=${'<div>' + 'Id: ' + (currentUser.customerId != null ? currentUser.customerId : '&mdash;') + '</div><div>Username: ' + currentUser.displayName + '</div><div>Email: ' + (currentUser.email != null ? currentUser.email : '&mdash;') + '</div>'}">
               <span th:text="${currentUser.displayName}">alice</span></a>
           </span>
         </li>
+        <li class="nav-item dropdown">
+          <button class="nav-link btn btn-link dropdown-toggle bg-dark text-light border-0 d-flex align-items-center gap-1"
+                  type="button" id="languageSelector" data-bs-toggle="dropdown"
+                  aria-expanded="false" th:aria-label="#{nav.language}">
+            <span th:replace="~{fragments/flags :: flag(${#locale.language})}">EN</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageSelector">
+            <li th:each="locale : ${enabledLocales}">
+              <a class="dropdown-item d-flex align-items-center gap-2"
+                 th:href="@{${currentPath}(lang=${locale.toLanguageTag()})}"
+                 th:attr="hreflang=${locale.toLanguageTag()}"
+                 th:classappend="${#locale.language == locale.language} ? 'active'">
+                <span th:replace="~{fragments/flags :: flag(${locale.language})}"></span>
+                <span th:text="${locale.getDisplayLanguage(locale)}">English</span>
+              </a>
+            </li>
+          </ul>
+        </li>
         <li class="nav-item" th:if="${currentUser.authenticated}">
           <form th:action="@{/logout}" method="post" class="d-inline">
-            <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
+            <button type="submit" class="btn btn-outline-light btn-sm" th:text="#{nav.logout}">Log out</button>
           </form>
         </li>
         <li class="nav-item" th:unless="${currentUser.authenticated}">
-          <a class="btn btn-outline-light btn-sm" th:href="@{/oauth2/authorization/keycloak}">Log in</a>
+          <a class="btn btn-outline-light btn-sm" th:href="@{/oauth2/authorization/keycloak}" th:text="#{nav.login}">Log in</a>
         </li>
       </ul>
     </div>

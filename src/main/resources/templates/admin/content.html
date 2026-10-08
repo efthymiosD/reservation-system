@@ -1,43 +1,43 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Site content — Admin', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.adminContent', ~{::section})}">
 <head>
   <title>Site content — Admin</title>
 </head>
 <body>
 <section class="container py-4">
-  <h1 class="mb-4">Site content</h1>
+  <h1 class="mb-4" th:text="#{admin.content.title}">Site content</h1>
 
   <div class="row g-4">
     <div class="col-md-6">
       <div class="card mb-4">
         <div class="card-body">
-          <h2 class="h5 card-title">Venue profile</h2>
-          <p class="text-muted small">Shown on the home, about and contact pages.</p>
+          <h2 class="h5 card-title" th:text="#{admin.content.venueProfile}">Venue profile</h2>
+          <p class="text-muted small" th:text="#{admin.content.venueProfileHint}">Shown on the home, about and contact pages.</p>
           <form th:action="@{/admin/content/venue}" method="post" class="d-grid gap-3">
             <div>
-              <label for="name" class="form-label">Name</label>
+              <label for="name" class="form-label" th:text="#{admin.map.name}">Name</label>
               <input type="text" id="name" name="name" class="form-control" required
                      th:value="${page.venue.name}">
             </div>
             <div>
-              <label for="description" class="form-label">Description</label>
+              <label for="description" class="form-label" th:text="#{admin.content.description}">Description</label>
               <textarea id="description" name="description" class="form-control" rows="3"
                         th:text="${page.venue.description}">Description</textarea>
             </div>
             <div>
-              <label for="address" class="form-label">Address</label>
+              <label for="address" class="form-label" th:text="#{about.address}">Address</label>
               <input type="text" id="address" name="address" class="form-control"
                      th:value="${page.venue.address}">
             </div>
-            <button type="submit" class="btn btn-primary">Save venue profile</button>
+            <button type="submit" class="btn btn-primary" th:text="#{admin.content.saveVenueProfile}">Save venue profile</button>
           </form>
         </div>
       </div>
 
       <div class="card mb-4">
         <div class="card-body">
-          <h2 class="h5 card-title">Hero photo</h2>
-          <p class="text-muted small">The main image on the home page.
+          <h2 class="h5 card-title" th:text="#{admin.content.heroPhoto}">Hero photo</h2>
+          <p class="text-muted small" th:text="#{admin.content.photoHint}">The main image on the home page.
             PNG, JPEG or WebP, up to 5 MB.</p>
           <form th:action="@{/admin/content/photo}" method="post" enctype="multipart/form-data"
                 class="d-grid gap-3">
@@ -48,14 +48,14 @@
                    style="max-height: 12rem; object-fit: cover;">
               <input type="file" id="photo" name="photo" class="form-control" accept="image/*" required>
             </div>
-            <button type="submit" class="btn btn-primary">Upload hero photo</button>
+            <button type="submit" class="btn btn-primary" th:text="#{admin.content.uploadHeroPhoto}">Upload hero photo</button>
           </form>
         </div>
       </div>
 
       <div class="card mb-4">
         <div class="card-body">
-          <h2 class="h5 card-title">About page photo</h2>
+          <h2 class="h5 card-title" th:text="#{admin.content.aboutPhoto}">About page photo</h2>
           <p class="text-muted small">The image on the about page.
             PNG, JPEG or WebP, up to 5 MB.</p>
           <form th:action="@{/admin/content/photo}" method="post" enctype="multipart/form-data"
@@ -67,7 +67,7 @@
                    style="max-height: 12rem; object-fit: cover;">
               <input type="file" id="about-photo" name="photo" class="form-control" accept="image/*" required>
             </div>
-            <button type="submit" class="btn btn-primary">Upload about page photo</button>
+            <button type="submit" class="btn btn-primary" th:text="#{admin.content.uploadAboutPhoto}">Upload about page photo</button>
           </form>
         </div>
       </div>
@@ -76,8 +76,8 @@
     <div class="col-md-6">
       <div class="card mb-4">
         <div class="card-body">
-          <h2 class="h5 card-title">Opening hours</h2>
-          <p class="text-muted small">Weekday opening hours used for availability and bookings.</p>
+          <h2 class="h5 card-title" th:text="#{contact.openingHours}">Opening hours</h2>
+          <p class="text-muted small" th:text="#{admin.content.hoursHint}">Weekday opening hours used for availability and bookings.</p>
           <form th:action="@{/admin/content/opening-hours}" method="post" class="d-grid gap-2">
             <div th:each="day : ${page.weekly}" class="row g-2 align-items-center">
               <div class="col-6 col-md-4">
@@ -101,23 +101,58 @@
                        th:value="${day.closesAt}">
               </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save opening hours</button>
+            <button type="submit" class="btn btn-primary" th:text="#{admin.content.saveOpeningHours}">Save opening hours</button>
           </form>
         </div>
       </div>
 
       <div class="card mb-4">
         <div class="card-body">
-          <h2 class="h5 card-title">Page text</h2>
-          <p class="text-muted small">The marketing text blocks rendered on the public pages.</p>
+          <h2 class="h5 card-title" th:text="#{admin.content.languages}">Languages</h2>
+          <p class="text-muted small" th:text="#{admin.content.languagesHint}">Disabled languages disappear from the visitor language selector; their cookies resolve to the next enabled language. The default language is always on.</p>
+          <form th:action="@{/admin/content/languages}" method="post" class="d-grid gap-2">
+            <div class="form-check" th:each="enabled : ${page.enabledLanguages}">
+              <input type="checkbox" class="form-check-input"
+                     th:id="'lang-' + ${enabled.key}" name="enabled" th:value="${enabled.key}"
+                     th:checked="${enabled.value}" th:disabled="${enabled.key == 'en'}">
+              <label class="form-check-label" th:for="'lang-' + ${enabled.key}"
+                     th:text="${T(com.decoupledx.reservation.webui.SupportedLocales).of(enabled.key).getDisplayLanguage(#locale)}"
+                     >Language</label>
+            </div>
+            <input type="hidden" name="contentLang" th:value="${contentLang}">
+            <button type="submit" class="btn btn-primary" th:text="#{admin.content.saveLanguages}">Save languages</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h5 card-title" th:text="#{admin.content.pageText}">Page text</h2>
+          <form method="get" th:action="@{/admin/content}" class="row g-2 align-items-end mb-3">
+            <div class="col-6 col-md-4">
+              <label for="contentLang" class="form-label" th:text="#{admin.content.editorLanguage}">Editor language</label>
+              <select id="contentLang" name="contentLang" class="form-select"
+                      th:aria-label="#{nav.language}">
+                <option th:each="lang : ${page.languages}"
+                        th:value="${lang.language}"
+                        th:text="${lang.label}"
+                        th:selected="${lang.selected}">English</option>
+              </select>
+            </div>
+            <div class="col-6 col-md-auto">
+              <button type="submit" class="btn btn-outline-primary" th:text="#{admin.content.switchLanguage}">Show</button>
+            </div>
+          </form>
+          <p class="text-muted small" th:text="#{admin.content.pageTextHint}">The marketing text blocks rendered on the public pages.</p>
           <form th:each="block : ${page.blocks}" class="mb-3"
-                th:action="@{/admin/content/{key}(key=${block.key})}" method="post">
-            <label th:for="'body-' + ${block.key}" class="form-label small fw-semibold"
+                th:action="@{/admin/content/{key}(key=${block.storageKey})}" method="post">
+            <label th:for="'body-' + ${block.storageKey}" class="form-label small fw-semibold"
                    th:text="${block.label}">Home — feature 1 title</label>
-            <input type="hidden" name="key" th:value="${block.key}">
-            <textarea th:id="'body-' + ${block.key}" name="body" class="form-control mb-2" rows="2"
+            <input type="hidden" name="key" th:value="${block.storageKey}">
+            <textarea th:id="'body-' + ${block.storageKey}" name="body" class="form-control mb-2" rows="2"
+                      th:placeholder="${block.defaultBody}"
                       th:text="${block.body}">Body</textarea>
-            <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+            <button type="submit" class="btn btn-outline-primary btn-sm" th:text="#{admin.content.save}">Save</button>
           </form>
         </div>
       </div>
@@ -125,7 +160,7 @@
   </div>
 
   <div class="mt-3">
-    <a class="btn btn-secondary btn-sm" th:href="@{/admin}">Back to dashboard</a>
+    <a class="btn btn-secondary btn-sm" th:href="@{/admin}" th:text="#{admin.backToDashboard}">Back to dashboard</a>
   </div>
 </section>
 </body>

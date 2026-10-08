@@ -27,9 +27,9 @@ class ReservationApiImpl implements ReservationApi {
     }
 
     @Override
-    public ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes,
-                                  CustomerId customer) {
-        return createReservation.create(resourceId, startTime, durationMinutes, customer);
+    public ReservationInfo createOnBehalfOfCustomer(UUID resourceId, LocalDateTime startTime,
+                                                    int durationMinutes, CustomerId customer) {
+        return createReservation.createOnBehalfOfCustomer(resourceId, startTime, durationMinutes, customer);
     }
 
     @Override

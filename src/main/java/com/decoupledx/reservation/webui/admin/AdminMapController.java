@@ -6,6 +6,7 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import com.decoupledx.reservation.webui.WebMessages;
 import com.decoupledx.reservation.webui.reserve.Placement;
 import com.decoupledx.reservation.webui.reserve.VenueLayout;
 import com.decoupledx.reservation.webui.reserve.VenueLayoutLoader;
@@ -49,6 +50,7 @@ class AdminMapController {
     private final ResourceApi resourceApi;
     private final VenueLayoutLoader layoutLoader;
     private final ObjectMapper objectMapper;
+    private final WebMessages messages;
 
     @GetMapping("/admin/map")
     String map(Model model) {
@@ -85,14 +87,12 @@ class AdminMapController {
                 }
                 if (params.containsKey("x-" + id) && params.containsKey("y-" + id)
                         && params.containsKey("width-" + id) && params.containsKey("height-" + id)) {
-                    int x = parseInt(params.get("x-" + id), "position");
-                    int y = parseInt(params.get("y-" + id), "position");
-                    int width = parseInt(params.get("width-" + id), "size");
-                    int height = parseInt(params.get("height-" + id), "size");
+                    int x = parseInt(params.get("x-" + id), "admin.map.position");
+                    int y = parseInt(params.get("y-" + id), "admin.map.position");
+                    int width = parseInt(params.get("width-" + id), "admin.map.size");
+                    int height = parseInt(params.get("height-" + id), "admin.map.size");
                     if (x < 0 || y < 0 || width < 1 || height < 1) {
-                        throw new IllegalArgumentException(
-                                "Every field needs a valid position (size at least 1, "
-                                        + "position not negative).");
+                        throw new IllegalArgumentException(messages.get("admin.map.invalidPosition"));
                     }
                     upsertPlacement(layout, resource.id().value(), x, y, width, height);
                     canvasWidth = Math.max(canvasWidth, x + width);
@@ -103,7 +103,7 @@ class AdminMapController {
             layout.put("canvasWidth", canvasWidth);
             layout.put("canvasHeight", canvasHeight);
             saveLayout(layout);
-            redirect.addFlashAttribute("message", "Field layout saved.");
+            redirect.addFlashAttribute("message", messages.get("admin.map.saved"));
         } catch (IllegalArgumentException exception) {
             redirect.addFlashAttribute("error", exception.getMessage());
         }
@@ -116,7 +116,7 @@ class AdminMapController {
             UUID venueId = venueApi.singleVenueId();
             List<ResourceInfo> resources = resourceApi.findResources(venueId);
             if (resources.isEmpty()) {
-                throw new IllegalArgumentException("Cannot add a field before a field group exists.");
+                throw new IllegalArgumentException(messages.get("admin.map.noFieldGroup"));
             }
             ResourceInfo template = resources.getFirst();
             String code = nextFieldCode(resources);
@@ -126,14 +126,14 @@ class AdminMapController {
             ResourceInfo created = resourceApi.findResources(venueId).stream()
                     .filter(resource -> resource.code().equals(code))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("The new field could not be found."));
+                    .orElseThrow(() -> new IllegalArgumentException(messages.get("admin.map.fieldMissing")));
 
             ObjectNode layout = currentLayout();
             int x = layout.path("canvasWidth").asInt(1200);
             int height = layout.path("canvasHeight").asInt(400);
             upsertPlacement(layout, created.id().value(), x, 0, 200, height);
             saveLayout(layout);
-            redirect.addFlashAttribute("message", "Field added — drag it into place.");
+            redirect.addFlashAttribute("message", messages.get("admin.map.fieldAdded"));
         } catch (IllegalArgumentException exception) {
             redirect.addFlashAttribute("error", exception.getMessage());
         }
@@ -143,14 +143,14 @@ class AdminMapController {
     @PostMapping("/admin/map/field/{resourceId}/activate")
     String activateField(@PathVariable UUID resourceId, RedirectAttributes redirect) {
         resourceApi.activate(resourceId);
-        redirect.addFlashAttribute("message", "Field activated.");
+        redirect.addFlashAttribute("message", messages.get("admin.map.fieldActivated"));
         return "redirect:/admin/map";
     }
 
     @PostMapping("/admin/map/field/{resourceId}/deactivate")
     String deactivateField(@PathVariable UUID resourceId, RedirectAttributes redirect) {
         resourceApi.deactivate(resourceId);
-        redirect.addFlashAttribute("message", "Field deactivated.");
+        redirect.addFlashAttribute("message", messages.get("admin.map.fieldDeactivated"));
         return "redirect:/admin/map";
     }
 
@@ -168,12 +168,11 @@ class AdminMapController {
                 placement == null ? 400 : placement.height());
     }
 
-    private int parseInt(String value, String kind) {
+    private int parseInt(String value, String kindKey) {
         try {
             return Integer.parseInt(value.trim());
         } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(
-                    "Every field needs a valid " + kind + " (numeric).");
+            throw new IllegalArgumentException(messages.get("admin.map.invalidNumeric", messages.get(kindKey)));
         }
     }
 
@@ -184,7 +183,7 @@ class AdminMapController {
                 .mapToInt(code -> Integer.parseInt(code.substring(6)))
                 .max()
                 .orElse(0);
-        return String.format("FIELD-%02d", max + 1);
+        return messages.fieldCode(max + 1);
     }
 
     private void upsertPlacement(ObjectNode layout, UUID resourceId,

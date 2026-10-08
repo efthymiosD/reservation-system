@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('About', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.about', ~{::section})}">
 <head>
   <title>About</title>
 </head>
@@ -15,27 +15,27 @@
 
   <div class="row g-4 mt-2">
     <div class="col-md-4">
-      <h2 class="h5">Address</h2>
+      <h2 class="h5" th:text="#{about.address}">Address</h2>
       <p class="text-muted" th:text="${venue.address}">Address</p>
       <a class="link-secondary"
          th:href="@{'https://www.google.com/maps/search/?api=1&query=' + ${#uris.escapeQueryParam(venue.address)}}"
-         target="_blank" rel="noopener noreferrer">View on Google Maps&nbsp;&rarr;</a>
+         target="_blank" rel="noopener noreferrer" th:text="#{about.viewOnMaps}">View on Google Maps&nbsp;&rarr;</a>
     </div>
     <div class="col-md-4">
-      <h2 class="h5">Timezone</h2>
-      <p class="text-muted">All bookings are scheduled in venue-local time
-        (<span th:text="${venue.timezone}">Europe/Warsaw</span>).</p>
+      <h2 class="h5" th:text="#{about.timezone}">Timezone</h2>
+      <p class="text-muted" th:text="#{about.venueLocalTime(${venue.timezone})}">All bookings are scheduled in venue-local
+        time (Europe/Warsaw).</p>
     </div>
     <div class="col-md-4">
-      <h2 class="h5">Booking</h2>
-      <p class="text-muted" th:text="${siteContent['about.booking.body'] ?: 'Reserve a field online — pick a date, start time and duration, and see the price before you confirm.'}">Reserve a field online — pick a date, start time and duration, and see the price before you confirm.</p>
-      <a class="btn btn-primary btn-sm" th:href="@{/reserve}">Make a reservation</a>
+      <h2 class="h5" th:text="#{about.booking}">Booking</h2>
+      <p class="text-muted" th:text="${siteContent['about.booking.body']} ?: #{about.bookingBody}">Reserve a field online — pick a date, start time and duration, and see the price before you confirm.</p>
+      <a class="btn btn-primary btn-sm" th:href="@{/reserve}" th:text="#{nav.makeReservation}">Make a reservation</a>
     </div>
   </div>
 
   <div class="mt-4">
-    <a class="link-secondary me-3" th:href="@{/contact}">Contact us</a>
-    <a class="link-secondary" th:href="@{/}">Home</a>
+    <a class="link-secondary me-3" th:href="@{/contact}" th:text="#{nav.contact}">Contact us</a>
+    <a class="link-secondary" th:href="@{/}" th:text="#{nav.home}">Home</a>
   </div>
 </section>
 </body>

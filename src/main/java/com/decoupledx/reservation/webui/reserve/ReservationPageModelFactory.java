@@ -13,6 +13,7 @@ import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ class ReservationPageModelFactory {
     private final PolicyApi policyService;
     private final AvailabilityApi availabilityService;
     private final VenueApi venueService;
+    private final WebMessages messages;
     private final VenueLayoutLoader venueLayout;
     private final ReservationApi reservationQueries;
     private final ResourceApi resourceService;
@@ -200,7 +202,7 @@ class ReservationPageModelFactory {
         try {
             return resourceService.getResource(resourceId.value()).name();
         } catch (BusinessException gone) {
-            return "the selected field";
+            return messages.get("reserve.theSelectedField");
         }
     }
 
@@ -277,8 +279,8 @@ class ReservationPageModelFactory {
         ResourceAvailabilityStatus status = resource.status();
         String statusClass = status.name().toLowerCase();
         String aria = switch (status) {
-            case AVAILABLE -> resource.name() + " — available — select field";
-            case RESERVED -> resource.name() + " — reserved — unavailable";
+            case AVAILABLE -> messages.get("map.field.available", resource.name());
+            case RESERVED -> messages.get("map.field.reserved", resource.name());
         };
         return new MapField(
                 resource.resourceId(),
