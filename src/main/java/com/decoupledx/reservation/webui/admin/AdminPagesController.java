@@ -3,6 +3,7 @@ package com.decoupledx.reservation.webui.admin;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -26,6 +27,7 @@ class AdminPagesController {
     private final AdminDashboardFactory dashboardFactory;
     private final AdminReservationsFactory reservationsFactory;
     private final ReservationApi reservationApi;
+    private final WebMessages messages;
 
     @GetMapping("/admin")
     String dashboard(Model model) {
@@ -47,23 +49,15 @@ class AdminPagesController {
     String cancel(@PathVariable UUID reservationId, RedirectAttributes redirect) {
         try {
             reservationApi.cancelAdministratively(reservationId);
-            redirect.addFlashAttribute("message", "Reservation " + shortRef(reservationId) + " cancelled (admin override).");
+            redirect.addFlashAttribute("message", messages.get(
+                    "admin.reservationCancelled", shortRef(reservationId)));
         } catch (BusinessException exception) {
-            redirect.addFlashAttribute("error", userMessage(exception));
+            redirect.addFlashAttribute("error", messages.errorMessage(exception));
         }
         return "redirect:/admin/reservations";
     }
 
     private String shortRef(UUID reservationId) {
         return reservationId.toString().substring(0, 8);
-    }
-
-    private String userMessage(BusinessException exception) {
-        return switch (exception.errorCode()) {
-            case RESERVATION_NOT_FOUND -> "That reservation does not exist.";
-            case RESERVATION_ALREADY_CANCELLED -> "This reservation is already cancelled.";
-            case RESERVATION_IN_PAST -> "That reservation is in the past and can no longer be cancelled.";
-            default -> exception.getMessage();
-        };
     }
 }

@@ -18,6 +18,14 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 ./mvnw spotless:apply          # ALWAYS after editing Java (imports+format)
 ```
 
+## i18n (bundles + per-locale site content)
+
+- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (254 keys each, `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang` follows the resolved locale. Page `<title>` keys `meta.*`.
+- Locale resolution (`webui/LocaleConfig`, moved from shared.web): `?lang=` (LocaleChangeInterceptor) → `locale` cookie (365d) → browser `Accept-Language` restricted to enabled set → default EN. Enabled languages: site-content key `ui.locales.enabled` CSV, EMPTY/missing = all on; EN can never be disabled; a stale cookie for a disabled language silently resolves down (not rewritten).
+- **Three text categories (do not blur):** 1) system copy → bundles; 2) shipped site-content defaults → bundles too (`#{...}` fallback behind `${siteContent[k]}` — NO English text rows in V2 seeds, only non-text keys contact.phone/email, photos, venue.map.layout); 3) admin-authored copy → stored verbatim per language: master `key` (EN) + `pl:key`/`el:key` siblings via `/admin/content?contentLang=<tag>` (one dropdown, one page; per-language forms POST `pl:home.feature.1.title` keys). `ContentAdvice` exposes only the request-language authored row (never mixes languages); empty/missing → bundle default. Thymeleaf Elvis must be `${siteContent['k']} ?: #{bundleKey}` (a `#{..}` INSIDE `${...}` renders literally!).
+- `webui/WebMessages` = MessageSource facade for Java-side strings (controllers/model factories); error codes → `error.<code_lower>` keys. Value-free i18n tests: `I18nIntegrationTest`, `SiteContentLocalizationIntegrationTest` (assert `html lang`, `??` absence, `hreflang`, data-attribute ↔ MessageSource agreement — never translation literals).
+- Admin same-hour bookings: `POST /api/admin/reservations` (`createOnBehalfOfCustomer`) → `admin_override` row; customer-overlap EXCLUDE constraint ignores them (`WHERE ... AND admin_override = FALSE`); the resource-overlap one-pitch invariant is unchanged. Customer self-booking keeps its 409.
+
 ## E2E tests (Playwright + Python)
 
 - `e2e-tests/`: Python 3.12 (brew `/opt/homebrew/bin/python3.12`; system 3.9 too old), pytest + pytest-playwright, venv `.venv` gitignored. **CI does NOT run e2e automatically** — manual dispatch workflow `e2e.yml` (Actions tab → Run workflow; browsers input, default chromium+webkit). Local Chromium default.

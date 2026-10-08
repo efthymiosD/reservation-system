@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Make a reservation', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.makeReservation', ~{::section})}">
 <head>
   <title>Make a reservation</title>
 </head>
 <body>
 <section class="container py-4">
-  <h1 class="mb-1">Make a reservation</h1>
-  <p class="text-muted">Pick a date, start time and duration, then select a field on the venue map.</p>
+  <h1 class="mb-1" th:text="#{reserve.title}">Make a reservation</h1>
+  <p class="text-muted" th:text="#{reserve.subtitle}">Pick a date, start time and duration, then select a field on the venue map.</p>
 
 
   <!-- Slot selection: plain GET form — changing the slot re-renders the page
        without JavaScript. The interactive selection (T6) enhances this. -->
   <form th:action="@{/reserve}" method="get" id="slot-form" class="row g-3 align-items-end mb-2">
     <div class="col-6 col-md-3">
-      <label for="date" class="form-label">Date</label>
+      <label for="date" class="form-label" th:text="#{reserve.date}">Date</label>
       <input type="date" id="date" name="date" class="form-control"
              th:min="${page.minDate}" th:max="${page.maxDate}" th:value="${page.date}">
     </div>
     <div class="col-6 col-md-3">
-      <label for="start" class="form-label">Start</label>
+      <label for="start" class="form-label" th:text="#{reserve.start}">Start</label>
       <select id="start" name="start" class="form-select" th:disabled="${#lists.isEmpty(page.timeOptions)}">
         <option th:each="t : ${page.timeOptions}" th:value="${t}" th:text="${t}"
                 th:selected="${t == page.startTime}">18:00</option>
       </select>
     </div>
     <div class="col-6 col-md-3">
-      <label for="durationMinutes" class="form-label">Duration</label>
+      <label for="durationMinutes" class="form-label" th:text="#{reserve.duration}">Duration</label>
       <select id="durationMinutes" name="durationMinutes" class="form-select">
         <option th:each="d : ${page.durationOptions}" th:value="${d}"
                 th:text="${d / 60} + ' h' + (${d % 60} > 0 ? ' ' + ${d % 60} + ' min' : '')"
@@ -33,14 +33,14 @@
       </select>
     </div>
     <div class="col-6 col-md-3">
-      <button type="submit" id="update-availability-button" class="btn btn-outline-primary w-100">Update availability</button>
+      <button type="submit" id="update-availability-button" class="btn btn-outline-primary w-100" th:text="#{reserve.updateAvailability}">Update availability</button>
     </div>
   </form>
 
   <div th:fragment="map" th:replace="~{fragments/venue-map :: venue-map(${page.fields}, ${page.canvasWidth}, ${page.canvasHeight})}"></div>
   <div th:replace="~{fragments/venue-map :: legend}"></div>
 
-  <div th:if="${#lists.isEmpty(page.fields)}" class="alert alert-info" role="status">
+  <div th:if="${#lists.isEmpty(page.fields)}" class="alert alert-info" role="status" th:text="#{reserve.noFields}">
     No fields are available for the selected time. Try another start time or duration.
   </div>
 
@@ -48,7 +48,7 @@
     <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
       <div>
         <div class="fw-bold">
-          Field: <span id="selected-field-label" class="text-muted">— select a field on the map —</span>
+          <span th:text="#{reserve.field}">Field:</span> <span id="selected-field-label" class="text-muted" th:text="#{reserve.pickOnMap}">— select a field on the map —</span>
         </div>
         <div class="text-muted">
           <span th:text="${page.date}">2026-09-03</span>,
@@ -58,7 +58,7 @@
       </div>
       <div class="text-end">
         <div class="fw-bold" th:text="${page.price.amount} + ' ' + ${page.price.currency}">150 PLN</div>
-        <div class="text-muted small">calculated by the venue for this slot</div>
+        <div class="text-muted small" th:text="#{reserve.priceHint}">calculated by the venue for this slot</div>
       </div>
       <!-- Submission: the page is authenticated-only; the backend revalidates
            everything and stale availability redirects back here with a fresh map. -->
@@ -68,15 +68,15 @@
         <input type="hidden" name="start" th:value="${page.startTime}">
         <input type="hidden" name="durationMinutes" th:value="${page.durationMinutes}">
         <span th:if="${page.held != null}" tabindex="0" data-bs-toggle="tooltip"
-              th:title="|You already have a reservation for this slot: ${page.held.fieldName} (${page.held.start} – ${page.held.end}). Please choose a different time.|">
-          <button type="submit" class="btn btn-primary btn-lg" disabled>Reserve</button>
+              th:title="#{reserve.heldTooltip(${page.held.fieldName}, ${page.held.start}, ${page.held.end})}">
+          <button type="submit" class="btn btn-primary btn-lg" disabled th:text="#{reserve.reserve}">Reserve</button>
         </span>
         <span th:if="${page.held == null and !page.anyAvailable}" tabindex="0" data-bs-toggle="tooltip"
-              title="Reservation is not possible: all fields are reserved for this time window.">
-          <button type="submit" class="btn btn-secondary btn-lg" disabled>Reserve</button>
+              th:title="#{reserve.unavailableTooltip}">
+          <button type="submit" class="btn btn-secondary btn-lg" disabled th:text="#{reserve.reserve}">Reserve</button>
         </span>
         <button th:if="${page.held == null and page.anyAvailable}" type="submit" id="reserve-button"
-                class="btn btn-primary btn-lg" disabled>Reserve</button>
+                class="btn btn-primary btn-lg" disabled th:text="#{reserve.reserve}">Reserve</button>
       </form>
     </div>
   </div>

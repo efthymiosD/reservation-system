@@ -2,10 +2,12 @@ package com.decoupledx.reservation.webui.admin;
 
 import com.decoupledx.reservation.content.adapter.api.ContentApi;
 import com.decoupledx.reservation.shared.BusinessException;
-import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.webui.EnabledLocales;
+import com.decoupledx.reservation.webui.SupportedLocales;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -15,8 +17,8 @@ import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +46,7 @@ class AdminContentController {
     private static final long MAX_PHOTO_BYTES = 5L * 1024 * 1024;
 
     private final AdminContentFactory contentFactory;
+    private final WebMessages messages;
     private final VenueApi venueApi;
     private final ContentApi contentApi;
 
@@ -51,9 +54,25 @@ class AdminContentController {
     private String uploadDir;
 
     @GetMapping("/admin/content")
-    String content(Model model) {
-        model.addAttribute("page", contentFactory.build());
+    String content(@RequestParam(defaultValue = "en") String contentLang, Model model) {
+        model.addAttribute("page", contentFactory.build(contentLang));
+        model.addAttribute("contentLang", contentLang.toLowerCase());
         return "admin/content";
+    }
+
+    @PostMapping("/admin/content/languages")
+    String updateLanguages(@RequestParam(defaultValue = "en") String contentLang,
+                           @RequestParam(required = false) List<String> enabled,
+                           RedirectAttributes redirect) {
+        // The default language is always on — it is the final fallback.
+        String csv = SupportedLocales.tags().stream()
+                .filter(tag -> !"en".equals(tag))
+                .filter(tag -> enabled != null && enabled.contains(tag))
+                .reduce((left, right) -> left + "," + right)
+                .orElse("");
+        contentApi.update(EnabledLocales.ENABLED_LOCALES_KEY, csv);
+        redirect.addFlashAttribute("message", messages.get("admin.content.languagesSaved"));
+        return "redirect:/admin/content?contentLang=" + contentLang;
     }
 
     @PostMapping("/admin/content/venue")
@@ -64,7 +83,7 @@ class AdminContentController {
             RedirectAttributes redirect) {
         try {
             venueApi.updateProfile(venueApi.singleVenueId(), name.trim(), description, address);
-            redirect.addFlashAttribute("message", "Venue profile saved.");
+            redirect.addFlashAttribute("message", messages.get("admin.content.venueSaved"));
         } catch (BusinessException exception) {
             redirect.addFlashAttribute("error", userMessage(exception));
         }
@@ -78,19 +97,19 @@ class AdminContentController {
         try {
             if (!photoKey.equals(AdminContentFactory.PHOTO_KEY)
                     && !photoKey.equals(AdminContentFactory.ABOUT_PHOTO_KEY)) {
-                throw new IllegalArgumentException("Unknown photo key.");
+                throw new IllegalArgumentException(messages.get("admin.content.unknownPhotoKey"));
             }
             String prefix = photoKey.equals(AdminContentFactory.ABOUT_PHOTO_KEY) ? "about-" : "hero-";
             String webPath = savePhoto(photo, prefix);
             contentApi.update(photoKey, webPath);
-            redirect.addFlashAttribute("message", photoKey.equals(AdminContentFactory.ABOUT_PHOTO_KEY)
-                    ? "About page photo updated."
-                    : "Hero photo updated.");
+            redirect.addFlashAttribute("message", messages.get(photoKey.equals(AdminContentFactory.ABOUT_PHOTO_KEY)
+                    ? "admin.content.aboutPhotoUpdated"
+                    : "admin.content.heroPhotoUpdated"));
         } catch (IllegalArgumentException exception) {
             redirect.addFlashAttribute("error", exception.getMessage());
         } catch (IOException exception) {
             log.error("Failed to store site photo", exception);
-            redirect.addFlashAttribute("error", "The image could not be stored. Please try again.");
+            redirect.addFlashAttribute("error", messages.get("admin.content.photoStoreFailed"));
         }
         return "redirect:/admin/content";
     }
@@ -106,13 +125,12 @@ class AdminContentController {
                 LocalTime opensAt = parseTime(params.get("opens-" + day));
                 LocalTime closesAt = parseTime(params.get("closes-" + day));
                 if (opensAt == null || closesAt == null || opensAt.equals(closesAt)) {
-                    throw new IllegalArgumentException(
-                            "Each opened day needs an opening time and a closing time that differ.");
+                    throw new IllegalArgumentException(messages.get("admin.content.differingHoursRequired"));
                 }
                 days.put(day, new DailyOpeningHours(opensAt, closesAt));
             }
             venueApi.updateOpeningHours(venueApi.singleVenueId(), new OpeningHours(days));
-            redirect.addFlashAttribute("message", "Opening hours saved.");
+            redirect.addFlashAttribute("message", messages.get("admin.content.hoursSaved"));
         } catch (IllegalArgumentException exception) {
             redirect.addFlashAttribute("error", exception.getMessage());
         }
@@ -123,7 +141,7 @@ class AdminContentController {
     String updateBlock(@PathVariable String key, @RequestParam String body, RedirectAttributes redirect) {
         try {
             contentApi.update(key, body);
-            redirect.addFlashAttribute("message", "Text saved.");
+            redirect.addFlashAttribute("message", messages.get("admin.content.textSaved"));
         } catch (BusinessException exception) {
             redirect.addFlashAttribute("error", userMessage(exception));
         }
@@ -132,16 +150,16 @@ class AdminContentController {
 
     private String savePhoto(MultipartFile photo, String prefix) throws IOException {
         if (photo.isEmpty()) {
-            throw new IllegalArgumentException("Choose an image to upload.");
+            throw new IllegalArgumentException(messages.get("admin.content.chooseImage"));
         }
         String extension = switch (photo.getContentType() == null ? "" : photo.getContentType()) {
             case "image/png" -> "png";
             case "image/webp" -> "webp";
             case "image/jpeg" -> "jpg";
-            default -> throw new IllegalArgumentException("Only PNG, JPEG or WebP images are accepted.");
+            default -> throw new IllegalArgumentException(messages.get("admin.content.imageTypeRejected"));
         };
         if (photo.getSize() > MAX_PHOTO_BYTES) {
-            throw new IllegalArgumentException("The image must be 5 MB or smaller.");
+            throw new IllegalArgumentException(messages.get("admin.content.imageTooLarge"));
         }
         Path targetDir = Path.of(uploadDir);
         Files.createDirectories(targetDir);
@@ -164,9 +182,6 @@ class AdminContentController {
     }
 
     private String userMessage(BusinessException exception) {
-        if (Objects.requireNonNull(exception.errorCode()) == ErrorCode.INVALID_VENUE_NAME) {
-            return "The venue name must not be empty.";
-        }
-        return exception.getMessage();
+        return messages.errorMessage(exception);
     }
 }

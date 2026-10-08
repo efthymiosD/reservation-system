@@ -112,7 +112,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     private ReservationEntity toEntity(ReservationDataValue data) {
         return new ReservationEntity(
                 data.id(), data.resourceId(), data.customerId(),
-                data.startTime(), data.endTime(), data.status(),
+                data.startTime(), data.endTime(), data.status(), data.adminOverride(),
                 data.priceAmount(), data.priceCurrency(),
                 data.createdAt(), data.cancelledAt(), data.cancelledBy(),
                 data.recurringReservationId());
@@ -121,7 +121,7 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     private ReservationDataValue toDomain(ReservationEntity entity) {
         return new ReservationDataValue(
                 entity.getId(), entity.getResourceId(), entity.getCustomerId(),
-                entity.getStartTime(), entity.getEndTime(), entity.getStatus(),
+                entity.getStartTime(), entity.getEndTime(), entity.getStatus(), entity.isAdminOverride(),
                 entity.getPriceAmount(),
                 entity.getPriceCurrency(), entity.getCreatedAt(), entity.getCancelledAt(),
                 entity.getCancelledBy(), entity.getRecurringReservationId());

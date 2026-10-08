@@ -65,16 +65,14 @@ VALUES ('a0000000-0000-0000-0000-000000000001', 'MONDAY', '14:00', '23:00'),
 -- about.photo — about-page hero image (empty default -> bundled default_about_page.jpeg)
 -- venue.map.layout — editable JSON layout for the reservation page venue map
 -- ---------------------------------------------------------------------------
+-- Editable site content for the public pages (home, about, contact) and
+-- non-text keys (photos, layout). Pristine seed rows carry updated_at=epoch;
+-- Site content seeds only NON-TEXT keys and the venue map layout. Every
+-- user-visible text field is per-language, admin-authored (admin panel
+-- ?contentLang=); empty fields fall through to the built-in bundle defaults
+-- (messages_*.properties), which ship localized copy for every supported
+-- language out of the box. No locale-qualified rows are seeded.
 INSERT INTO site_content (key, body, updated_at) VALUES
-    ('home.feature.1.title', 'Live availability', now()),
-    ('home.feature.1.body', 'The venue map shows every field: available or reserved — straight from the booking system.', now()),
-    ('home.feature.2.title', 'Upfront pricing', now()),
-    ('home.feature.2.body', 'The total price is calculated by the venue before you confirm. No surprises at the gate.', now()),
-    ('home.feature.3.title', 'Easy cancellation', now()),
-    ('home.feature.3.body', 'Plans change? Cancel your booking yourself until the venue''s cancellation deadline.', now()),
-    ('about.booking.body', 'Reserve a field online — pick a date, start time and duration, and see the price before you confirm.', now()),
-    ('contact.getting_here.body', 'The venue is located in Wrocław. Parking is available on site; the fields are floodlit for evening play.', now()),
-    ('contact.contact.body', 'For bookings use the online reservation page — it shows live availability and the exact price. For anything else, talk to the staff at the venue during opening hours.', now()),
     ('contact.phone', '', now()),
     ('contact.email', '', now()),
     ('home.hero.photo', '', now()),
@@ -82,3 +80,5 @@ INSERT INTO site_content (key, body, updated_at) VALUES
     ('venue.map.layout',
      '{"canvasWidth":1200,"canvasHeight":400,"placements":[{"resourceId":"a0000000-0000-0000-0000-000000000101","x":0,"y":0,"width":200,"height":400},{"resourceId":"a0000000-0000-0000-0000-000000000102","x":200,"y":0,"width":200,"height":400},{"resourceId":"a0000000-0000-0000-0000-000000000103","x":400,"y":0,"width":200,"height":400},{"resourceId":"a0000000-0000-0000-0000-000000000104","x":600,"y":0,"width":200,"height":400},{"resourceId":"a0000000-0000-0000-0000-000000000105","x":800,"y":0,"width":200,"height":400},{"resourceId":"a0000000-0000-0000-0000-000000000106","x":1000,"y":0,"width":200,"height":400}]}',
      now());
+
+

@@ -11,6 +11,7 @@ public record ReservationDataValue(
         Instant startTime,
         Instant endTime,
         String status,
+        boolean adminOverride,
         BigDecimal priceAmount,
         String priceCurrency,
         Instant createdAt,

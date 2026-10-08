@@ -1,55 +1,55 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Contact us', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.contact', ~{::section})}">
 <head>
   <title>Contact us</title>
 </head>
 <body>
 <section class="container py-5">
-  <h1 class="mb-4" th:text="'Contact us — ' + ${venue.name}">Contact us</h1>
+  <h1 class="mb-4" th:text="#{contact.title(${venue.name})}">Contact us</h1>
 
   <div class="row g-4">
     <div class="col-md-6">
-      <h2 class="h5">Address</h2>
+      <h2 class="h5" th:text="#{about.address}">Address</h2>
       <p class="text-muted" th:text="${venue.address}">Address</p>
 
-      <h2 class="h5 mt-4">Getting here</h2>
-      <p class="text-muted" th:text="${siteContent['contact.getting_here.body'] ?: 'The venue is located in Wrocław. Parking is available on site; the fields are floodlit for evening play.'}">The venue is located in Wrocław. Parking is available
+      <h2 class="h5 mt-4" th:text="#{contact.gettingHere}">Getting here</h2>
+      <p class="text-muted" th:text="${siteContent['contact.getting_here.body']} ?: #{contact.gettingHereBody}">The venue is located in Wrocław. Parking is available
         on site; the fields are floodlit for evening play.</p>
 
-      <h2 class="h5 mt-4">Contact</h2>
-      <p class="text-muted" th:text="${siteContent['contact.contact.body'] ?: 'For bookings use the online reservation page — it shows live availability and the exact price. For anything else, talk to the staff at the venue during opening hours.'}">For bookings use the online reservation page — it shows
+      <h2 class="h5 mt-4" th:text="#{contact.contact}">Contact</h2>
+      <p class="text-muted" th:text="${siteContent['contact.contact.body']} ?: #{contact.contactBody}">For bookings use the online reservation page — it shows
         live availability and the exact price. For anything else, talk to the staff
         at the venue during opening hours.</p>
       <p class="mb-1" th:if="${!#strings.isEmpty(siteContent['contact.phone'])}">
-        Phone: <a th:href="'tel:' + ${siteContent['contact.phone']}" class="text-muted"
+        <span th:text="#{contact.phone}">Phone:</span> <a th:href="'tel:' + ${siteContent['contact.phone']}" class="text-muted"
                   th:text="${siteContent['contact.phone']}">+48 000 000 000</a>
       </p>
       <p class="mb-1" th:if="${!#strings.isEmpty(siteContent['contact.email'])}">
-        Email: <a th:href="'mailto:' + ${siteContent['contact.email']}" class="text-muted"
+        <span th:text="#{contact.email}">Email:</span> <a th:href="'mailto:' + ${siteContent['contact.email']}" class="text-muted"
                   th:text="${siteContent['contact.email']}">bookings@example.com</a>
       </p>
 
       <div class="mt-4">
-        <a class="btn btn-primary" th:href="@{/reserve}">Make a reservation</a>
+        <a class="btn btn-primary" th:href="@{/reserve}" th:text="#{nav.makeReservation}">Make a reservation</a>
       </div>
     </div>
 
     <div class="col-md-6">
-      <h2 class="h5">Opening hours</h2>
-      <p class="text-muted">Venue-local time (<span th:text="${venue.timezone}">Europe/Warsaw</span>).</p>
+      <h2 class="h5" th:text="#{contact.openingHours}">Opening hours</h2>
+      <p class="text-muted" th:text="#{about.venueLocalTime(${venue.timezone})}">Venue-local time (Europe/Warsaw).</p>
       <table class="table table-hover align-middle">
         <thead>
         <tr>
-          <th scope="col">Day</th>
-          <th scope="col">Hours</th>
+          <th scope="col" th:text="#{contact.day}">Day</th>
+          <th scope="col" th:text="#{contact.hours}">Hours</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="entry : ${weeklyHours}">
-          <th scope="row" th:text="${#strings.capitalize(#strings.toLowerCase(entry.key))}">Monday</th>
+          <th scope="row" th:with="weekdayKey=${#strings.toLowerCase(entry.key)}" th:text="#{${'day.' + weekdayKey}}">Monday</th>
           <td th:if="${entry.value.present}"
               th:text="${entry.value.get.opensAt} + ' – ' + ${entry.value.get.closesAt}">14:00 – 23:00</td>
-          <td th:unless="${entry.value.present}" class="text-muted">Closed</td>
+          <td th:unless="${entry.value.present}" class="text-muted" th:text="#{contact.closed}">Closed</td>
         </tr>
         </tbody>
       </table>

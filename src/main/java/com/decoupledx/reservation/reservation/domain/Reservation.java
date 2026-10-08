@@ -25,6 +25,8 @@ class Reservation {
     private final ReservationPeriod period;
     private final Money price;
     private ReservationStatus status;
+    /** Bookings placed administratively on a customer's behalf: exempt from the same-customer overlap invariant. */
+    private final boolean adminOverride;
     private final Instant createdAt;
     private Instant cancelledAt;
     private CustomerId cancelledBy;
@@ -32,14 +34,15 @@ class Reservation {
 
     private Reservation(ReservationId id, ResourceId resourceId, CustomerId customerId,
                         ReservationPeriod period, Money price, ReservationStatus status,
-                        Instant createdAt, Instant cancelledAt, CustomerId cancelledBy,
-                        UUID recurringReservationId) {
+                        boolean adminOverride, Instant createdAt, Instant cancelledAt,
+                        CustomerId cancelledBy, UUID recurringReservationId) {
         this.id = id;
         this.resourceId = resourceId;
         this.customerId = customerId;
         this.period = period;
         this.price = price;
         this.status = status;
+        this.adminOverride = adminOverride;
         this.createdAt = createdAt;
         this.cancelledAt = cancelledAt;
         this.cancelledBy = cancelledBy;
@@ -48,19 +51,32 @@ class Reservation {
 
     public static Reservation create(ResourceId resourceId, CustomerId customerId,
                                      ReservationPeriod period, Money price, Instant now) {
-        return create(resourceId, customerId, period, price, now, null);
+        return create(resourceId, customerId, period, price, now, null, false);
     }
 
     public static Reservation create(ResourceId resourceId, CustomerId customerId,
                                      ReservationPeriod period, Money price, Instant now,
                                      UUID recurringReservationId) {
+        return create(resourceId, customerId, period, price, now, recurringReservationId, false);
+    }
+
+    public static Reservation create(ResourceId resourceId, CustomerId customerId,
+                                     ReservationPeriod period, Money price, Instant now,
+                                     boolean adminOverride) {
+        return create(resourceId, customerId, period, price, now, null, adminOverride);
+    }
+
+    /** Full-arity variant: recurring-linked bookings carry the link id. */
+    public static Reservation create(ResourceId resourceId, CustomerId customerId,
+                                     ReservationPeriod period, Money price, Instant now,
+                                     UUID recurringReservationId, boolean adminOverride) {
         Objects.requireNonNull(resourceId, "resourceId must not be null");
         Objects.requireNonNull(customerId, "customerId must not be null");
         Objects.requireNonNull(period, "period must not be null");
         Objects.requireNonNull(price, "price must not be null");
         Objects.requireNonNull(now, "now must not be null");
         return new Reservation(ReservationId.random(), resourceId, customerId, period, price,
-                ReservationStatus.ACTIVE, now, null, null, recurringReservationId);
+                ReservationStatus.ACTIVE, adminOverride, now, null, null, recurringReservationId);
     }
 
     public static Reservation from(ReservationDataValue data) {
@@ -70,7 +86,7 @@ class Reservation {
                 ReservationId.of(data.id()),
                 ResourceId.of(data.resourceId()),
                 CustomerId.of(data.customerId()),
-                period, price, ReservationStatus.valueOf(data.status()),
+                period, price, ReservationStatus.valueOf(data.status()), data.adminOverride(),
                 data.createdAt(), data.cancelledAt(),
                 data.cancelledBy() != null ? CustomerId.of(data.cancelledBy()) : null,
                 data.recurringReservationId());
@@ -104,7 +120,7 @@ class Reservation {
 
     ReservationDataValue toDataValue() {
         return new ReservationDataValue(id.value(), resourceId.value(), customerId.value(),
-                period.start(), period.end(), status.name(), price.amount(),
+                period.start(), period.end(), status.name(), adminOverride, price.amount(),
                 price.currency().getCurrencyCode(), createdAt, cancelledAt,
                 cancelledBy != null ? cancelledBy.value() : null, recurringReservationId);
     }
@@ -117,9 +133,9 @@ class Reservation {
 
     private static Reservation reconstitute(ReservationId id, ResourceId resourceId, CustomerId customerId,
                                             ReservationPeriod period, Money price, ReservationStatus status,
-                                            Instant createdAt, Instant cancelledAt, CustomerId cancelledBy,
-                                            UUID recurringReservationId) {
-        return new Reservation(id, resourceId, customerId, period, price, status, createdAt, cancelledAt,
-                cancelledBy, recurringReservationId);
+                                            boolean adminOverride, Instant createdAt, Instant cancelledAt,
+                                            CustomerId cancelledBy, UUID recurringReservationId) {
+        return new Reservation(id, resourceId, customerId, period, price, status, adminOverride,
+                createdAt, cancelledAt, cancelledBy, recurringReservationId);
     }
 }

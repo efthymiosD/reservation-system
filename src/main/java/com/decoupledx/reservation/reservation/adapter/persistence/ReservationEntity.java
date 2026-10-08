@@ -32,6 +32,9 @@ class ReservationEntity {
     @Column(nullable = false)
     private String status;
 
+    @Column(nullable = false)
+    private boolean adminOverride;
+
     @Column(name = "price_amount", nullable = false)
     private BigDecimal priceAmount;
 
@@ -54,7 +57,7 @@ class ReservationEntity {
     private long version;
 
     ReservationEntity(UUID id, UUID resourceId, String customerId, Instant startTime, Instant endTime,
-                      String status, BigDecimal priceAmount, String priceCurrency,
+                      String status, boolean adminOverride, BigDecimal priceAmount, String priceCurrency,
                       Instant createdAt, Instant cancelledAt, String cancelledBy,
                       UUID recurringReservationId) {
         this.id = id;
@@ -63,6 +66,7 @@ class ReservationEntity {
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;
+        this.adminOverride = adminOverride;
         this.priceAmount = priceAmount;
         this.priceCurrency = priceCurrency;
         this.createdAt = createdAt;

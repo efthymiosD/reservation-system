@@ -1,6 +1,12 @@
 spring:
   application:
     name: reservation-system
+  messages:
+    # Bundles live in src/main/resources/messages/ (basename "messages/messages").
+    # fallback-to-system-locale=false: a key missing from the requested locale's
+    # bundle falls back to messages.properties, not to the server OS language.
+    basename: messages/messages
+    fallback-to-system-locale: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/reservation}
     username: ${DB_USERNAME:reservation}

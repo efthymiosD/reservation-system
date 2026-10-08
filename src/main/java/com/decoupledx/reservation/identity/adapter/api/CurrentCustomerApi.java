@@ -8,4 +8,11 @@ package com.decoupledx.reservation.identity.adapter.api;
 public interface CurrentCustomerApi {
 
     CustomerId currentCustomerId();
+
+    /**
+     * Whether the current principal acts as an administrator. Booking and
+     * other use cases may relax current-player invariants for admins (the
+     * module context is the only place allowed to look at roles).
+     */
+    boolean isAdministrator();
 }

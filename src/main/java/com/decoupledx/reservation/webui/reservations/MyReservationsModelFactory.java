@@ -8,6 +8,7 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +30,7 @@ class MyReservationsModelFactory {
     private static final int PAGE_SIZE = 100;
 
     private final ReservationApi reservationApi;
+    private final WebMessages messages;
     private final ResourceApi resourceService;
     private final PolicyApi policyService;
     private final VenueApi venueService;
@@ -72,8 +74,8 @@ class MyReservationsModelFactory {
         LocalDate date = reservation.start().atZone(zone).toLocalDate();
         LocalTime start = reservation.start().atZone(zone).toLocalTime();
         LocalTime end = reservation.end().atZone(zone).toLocalTime();
-        String displayStatus = !reservation.isActive() ? "Cancelled"
-                : future ? "Active" : "Completed";
+        String displayStatus = !reservation.isActive() ? messages.get("myres.status.cancelled")
+                : future ? messages.get("myres.status.active") : messages.get("myres.status.completed");
         return new ReservationCard(
                 reservation.id().value(),
                 fieldName,
@@ -90,7 +92,7 @@ class MyReservationsModelFactory {
         try {
             return resourceService.getResource(resourceId.value()).name();
         } catch (BusinessException gone) {
-            return "the selected field";
+            return messages.get("reserve.theSelectedField");
         }
     }
 }

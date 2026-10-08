@@ -120,6 +120,7 @@ CREATE TABLE reservations
     start_time               TIMESTAMPTZ    NOT NULL,
     end_time                 TIMESTAMPTZ    NOT NULL,
     status                   VARCHAR(16)    NOT NULL DEFAULT 'ACTIVE',
+    admin_override           BOOLEAN        NOT NULL DEFAULT false,
     price_amount             NUMERIC(12, 2) NOT NULL,
     price_currency           VARCHAR(3)     NOT NULL,
     created_at               TIMESTAMPTZ    NOT NULL,
@@ -132,7 +133,10 @@ CREATE TABLE reservations
 );
 
 -- The two hard concurrency invariants. Enforced by PostgreSQL, not the app.
--- Cancelled reservations are excluded from both constraints.
+-- Cancelled reservations are excluded from both constraints. Rows flagged
+-- admin_override (bookings an administrator placed on a customer's behalf)
+-- participate in neither constraint: an admin may place several bookings for
+-- the same hour; every other booking still rejects them at insert time.
 ALTER TABLE reservations
     ADD CONSTRAINT reservations_no_resource_overlap
         EXCLUDE USING gist (
@@ -145,7 +149,7 @@ ALTER TABLE reservations
         EXCLUDE USING gist (
             customer_id WITH =,
             (tstzrange(start_time, end_time, '[)')) WITH &&
-            ) WHERE (status = 'ACTIVE');
+            ) WHERE (status = 'ACTIVE' AND admin_override = FALSE);
 
 CREATE INDEX reservations_resource_lookup_idx ON reservations (resource_id, status, start_time);
 CREATE INDEX reservations_customer_lookup_idx ON reservations (customer_id, status, start_time);

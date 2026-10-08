@@ -4,6 +4,7 @@ import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
 import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
 import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.webui.WebMessages;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.UUID;
@@ -31,6 +32,7 @@ class AdminRecurringReservationsUiController {
 
     private final AdminRecurringReservationsFactory recurringReservationsFactory;
     private final AdministrationApi administrationApi;
+    private final WebMessages messages;
 
     @GetMapping("/admin/recurring-reservations")
     String recurringReservations(Model model) {
@@ -52,9 +54,10 @@ class AdminRecurringReservationsUiController {
                     resourceId, customerId, DayOfWeek.valueOf(weekday), startTime,
                     startTime.plusMinutes(durationMinutes), windowMonths);
             administrationApi.createRecurringReservation(command);
-            redirect.addFlashAttribute("message", "Recurring reservation created — upcoming occurrences were booked.");
+            redirect.addFlashAttribute("message",
+                    messages.get("admin.recurringCreated"));
         } catch (BusinessException exception) {
-            redirect.addFlashAttribute("error", userMessage(exception));
+            redirect.addFlashAttribute("error", messages.errorMessage(exception));
         }
         return "redirect:/admin/recurring-reservations";
     }
@@ -64,9 +67,9 @@ class AdminRecurringReservationsUiController {
         try {
             administrationApi.cancelRecurringReservation(recurringReservationId);
             redirect.addFlashAttribute("message",
-                    "Recurring reservation " + shortRef(recurringReservationId) + " cancelled (future bookings released).");
+                    messages.get("admin.recurringCancelled", shortRef(recurringReservationId)));
         } catch (BusinessException exception) {
-            redirect.addFlashAttribute("error", userMessage(exception));
+            redirect.addFlashAttribute("error", messages.errorMessage(exception));
         }
         return "redirect:/admin/recurring-reservations";
     }
@@ -74,27 +77,12 @@ class AdminRecurringReservationsUiController {
     @PostMapping("/admin/recurring-reservations/materialize")
     String materialize(RedirectAttributes redirect) {
         RecurringReservationMaterializationSummary summary = administrationApi.materializeDue();
-        redirect.addFlashAttribute("message",
-                "Materialization done — %d reservation(s) created, %d skipped."
-                        .formatted(summary.created(), summary.skipped()));
+        redirect.addFlashAttribute("message", messages.get(
+                "admin.materializationDone", summary.created(), summary.skipped()));
         return "redirect:/admin/recurring-reservations";
     }
 
     private String shortRef(UUID recurringReservationId) {
         return recurringReservationId.toString().substring(0, 8);
-    }
-
-    private String userMessage(BusinessException exception) {
-        return switch (exception.errorCode()) {
-            case RECURRING_RESERVATION_NOT_FOUND -> "That recurring reservation does not exist.";
-            case RECURRING_RESERVATION_ALREADY_CANCELLED -> "This recurring reservation is already cancelled.";
-            case INVALID_RECURRING_RESERVATION_PERIOD -> "The end time must be after the start time.";
-            case INVALID_RECURRING_RESERVATION_WINDOW -> "The booking window must be 1, 3 or 6 months.";
-            case RESOURCE_NOT_FOUND -> "That resource does not exist.";
-            case RESOURCE_INACTIVE -> "That resource is inactive.";
-            case OUTSIDE_OPENING_HOURS -> "The slot does not fit within the venue's opening hours on that weekday.";
-            case INVALID_RESERVATION_DURATION -> "The slot duration does not match the venue booking policy.";
-            default -> exception.getMessage();
-        };
     }
 }

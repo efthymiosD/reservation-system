@@ -60,6 +60,13 @@ class ReservationQueryServiceImpl implements ReservationQueryService {
 
     @Override
     public List<ReservationInfo> findMyActiveOverlapping(ReservationPeriod period) {
+        // Administrators may hold several same-hour bookings for themselves
+        // (their placements are exempt from the customer-overlap invariant),
+        // so the "you already hold this slot" hint and its blocked Reserve
+        // button must not apply to them.
+        if (currentCustomers.isAdministrator()) {
+            return List.of();
+        }
         return findActiveOverlappingCustomer(currentCustomers.currentCustomerId(), period);
     }
 

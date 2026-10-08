@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('Reservations — Admin', ~{::section})}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.adminReservations', ~{::section})}">
 <head>
   <title>Reservations — Admin</title>
 </head>
 <body>
 <section class="container py-4">
-  <h1 class="mb-4">Reservations</h1>
+  <h1 class="mb-4" th:text="#{admin.res.reservations}">Reservations</h1>
 
   <form th:action="@{/admin/reservations}" method="get" class="row g-3 align-items-end mb-3">
     <div class="col-md-4">
-      <label for="status" class="form-label">Status</label>
+      <label for="status" class="form-label" th:text="#{admin.table.status}">Status</label>
       <select id="status" name="status" class="form-select">
-        <option value="" th:selected="${page.selectedStatus == null}">All</option>
+        <option value="" th:selected="${page.selectedStatus == null}" th:text="#{admin.status.all}">All</option>
         <option th:each="s : ${T(com.decoupledx.reservation.reservation.adapter.api.ReservationStatus).values()}"
-                th:value="${s}" th:text="${s}" th:selected="${s == page.selectedStatus}">ACTIVE</option>
+                th:value="${s}" th:text="#{${'status.' + s.name().toLowerCase()}}" th:selected="${s == page.selectedStatus}">ACTIVE</option>
       </select>
     </div>
     <div class="col-md-4">
-      <button type="submit" class="btn btn-outline-primary">Filter</button>
+      <button type="submit" class="btn btn-outline-primary" th:text="#{admin.filter}">Filter</button>
     </div>
   </form>
 
@@ -25,14 +25,14 @@
     <table class="table table-hover align-middle">
       <thead>
       <tr>
-        <th scope="col">Reservation id</th>
-        <th scope="col">Customer</th>
-        <th scope="col">Customer id</th>
-        <th scope="col">Field</th>
-        <th scope="col">When (venue time)</th>
-        <th scope="col">Price</th>
-        <th scope="col">Status</th>
-        <th scope="col">Action</th>
+        <th scope="col" th:text="#{admin.table.id}">Reservation id</th>
+        <th scope="col" th:text="#{admin.table.customer}">Customer</th>
+        <th scope="col" th:text="#{admin.table.customerId}">Customer id</th>
+        <th scope="col" th:text="#{admin.table.field}">Field</th>
+        <th scope="col" th:text="#{admin.table.when}">When (venue time)</th>
+        <th scope="col" th:text="#{admin.table.price}">Price</th>
+        <th scope="col" th:text="#{admin.table.status}">Status</th>
+        <th scope="col" th:text="#{admin.table.action}">Action</th>
       </tr>
       </thead>
       <tbody>
@@ -47,7 +47,7 @@
         <td>
           <form th:if="${row.cancellable}"
                 th:action="@{/admin/reservations/{id}/cancel(id=${row.reference})}" method="post">
-            <button type="submit" class="btn btn-outline-danger btn-sm">Cancel</button>
+            <button type="submit" class="btn btn-outline-danger btn-sm" th:text="#{myres.cancel}">Cancel</button>
           </form>
         </td>
       </tr>
@@ -56,12 +56,12 @@
   </div>
 
   <nav class="d-flex align-items-center gap-2">
-    <span class="text-muted" th:text="'Total: ' + ${page.total} + ' · page ' + ${page.page}">Total: 0 · page 0</span>
+    <span class="text-muted" th:text="#{admin.table.totalPage(${page.total}, ${page.page})}">Total: 0 · page 0</span>
     <a class="btn btn-sm btn-outline-secondary"
-       th:if="${page.page > 0}" th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page - 1},size=${page.size})}">Newer</a>
+       th:if="${page.page > 0}" th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page - 1},size=${page.size})}" th:text="#{admin.pager.newer}">Newer</a>
     <a class="btn btn-sm btn-outline-secondary"
        th:if="${(page.page + 1) * page.size < page.total}"
-       th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page + 1},size=${page.size})}">Older</a>
+       th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page + 1},size=${page.size})}" th:text="#{admin.pager.older}">Older</a>
   </nav>
 </section>
 </body>

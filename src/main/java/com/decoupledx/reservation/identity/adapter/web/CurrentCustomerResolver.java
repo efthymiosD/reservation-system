@@ -37,6 +37,13 @@ public class CurrentCustomerResolver implements CurrentCustomerApi {
         throw new IllegalStateException("No authenticated customer principal present");
     }
 
+    @Override
+    public boolean isAdministrator() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
+
     private CustomerId resolve(String subject, String displayName, String missingSubjectMessage) {
         if (subject != null && !subject.isBlank()) {
             return customerAccounts.resolveOrProvision(subject, displayName);
