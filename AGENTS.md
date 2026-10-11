@@ -99,6 +99,6 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 
 - `ci.yml` — PR → main: `mvn verify` (JDK 26, Testcontainers; no Keycloak) + optional not-blocking `e2e` job (`needs: verify`, `continue-on-error`: compose stack → pytest chromium+webkit, artifacts on failure). `pull_request` trigger only (push trigger deadlocked branch protection with duplicate checks).
 - `release.yml` — push to main: verify → buildx image → Trivy (fail HIGH/CRITICAL, ignore-unfixed) → push `ghcr.io/…:sha` + `:main`, never `latest`. Jackson pins live in `pom.xml` (`jackson2.version=2.22.3`, `jackson-bom.version=3.2.3`) for the Trivy gate.
-- `deploy.yml` — manual dispatch by SHA → QNAP SSH (deferred: secrets unconfigured; `docker-compose.prod.yml` carries runtime secrets).
+- `deploy.yml` — manual dispatch by SHA → QNAP SSH; QNAP = publicly-tunneled (Cloudflare) DEV environment, real prod deferred; `docker-compose.deploy.yml` carries runtime secrets + `cloudflared` service; app env keeps the prod profile (internet-exposed).
 - Branch protection: PRs required (0 approvals), check `mvn verify (unit + integration)` required, enforced for admins. Dependabot weekly (maven/docker/actions) — merge one PR at a time.
 - Dockerfile: multi-stage temurin-26, non-root `app` user (owns `/app/logs`), curl healthcheck, `/usr/bin/pebble` removed for Trivy.

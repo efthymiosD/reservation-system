@@ -1,6 +1,7 @@
 name: Deploy to QNAP
 
-# Deploys an exact, already-tested image SHA to the QNAP demo environment.
+# Deploys an exact, already-tested image SHA to the QNAP DEV environment
+# (publicly reachable via the Cloudflare tunnel; real prod is deferred).
 # Run manually AFTER a Release workflow has pushed the SHA to GHCR.
 # Rollback = re-run this workflow with the previous known-good SHA.
 
@@ -22,17 +23,36 @@ jobs:
     env:
       IMAGE: ghcr.io/efthymiosd/reservation-system:${{ inputs.image_tag }}
       DEPLOY_DIR: ${{ vars.QNAP_DEPLOY_DIR || '/opt/reservation' }}
+      # Public hostnames behind the Cloudflare tunnel (GitHub variables):
+      #   QNAP_PUBLIC_APP_URL  e.g. https://reservation.example.com  -> the app
+      #   QNAP_PUBLIC_BASE_URL e.g. https://auth.example.com          -> Keycloak
+      APP_URL: ${{ vars.QNAP_PUBLIC_APP_URL }}
     steps:
       - uses: actions/checkout@v7
 
-      # 1) Sync compose file + Keycloak realm to the QNAP (the QNAP never builds from source)
+      # 1a) Generate the QNAP realm: dev URLs -> tunnel hostnames, dev client
+      #     secret -> the real one (B-4). The committed realm stays dev-valid.
+      - name: Generate QNAP realm export
+        env:
+          AUTH_URL: ${{ vars.QNAP_PUBLIC_BASE_URL }}
+          WEB_SECRET: ${{ secrets.KC_WEB_CLIENT_SECRET }}
+        run: |
+          set -euo pipefail
+          sed -e "s|http://localhost:8080|${APP_URL}|g" \
+              -e "s|http://localhost:8081|${AUTH_URL}|g" \
+              -e 's|dev-web-secret|${WEB_SECRET}|g' \
+              keycloak/realm-export.json > keycloak/realm-export.qnap.json
+          grep -q "${APP_URL}" keycloak/realm-export.qnap.json \
+            || { echo "ERROR: no localhost URI was replaced — check QNAP_PUBLIC_APP_URL"; exit 1; }
+
+      # 1b) Sync compose file + generated realm to the QNAP (the QNAP never builds from source)
       - name: Copy deployment files to QNAP
         uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.QNAP_DEPLOY_HOST }}
           username: ${{ secrets.QNAP_DEPLOY_USER }}
           key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
-          source: 'docker-compose.prod.yml,keycloak/realm-export.json'
+          source: 'docker-compose.deploy.yml,keycloak/realm-export.qnap.json'
           target: ${{ env.DEPLOY_DIR }}
           strip_components: 0
           overwrite: true
@@ -48,8 +68,9 @@ jobs:
             set -euo pipefail
             cd ${{ env.DEPLOY_DIR }}
             echo "RESERVATION_IMAGE=${{ env.IMAGE }}" > .env.image
-            docker compose -f docker-compose.prod.yml --env-file .env --env-file .env.image pull app
-            docker compose -f docker-compose.prod.yml --env-file .env --env-file .env.image up -d
+            mv keycloak/realm-export.qnap.json keycloak/realm-export.json
+            docker compose -f docker-compose.deploy.yml --env-file .env --env-file .env.image pull app
+            docker compose -f docker-compose.deploy.yml --env-file .env --env-file .env.image up -d
 
       # 5) Wait for health; 6) smoke test; 7) fail the deployment if either fails
       - name: Health check and smoke test
