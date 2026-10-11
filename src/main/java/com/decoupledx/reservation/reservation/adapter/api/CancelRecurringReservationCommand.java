@@ -11,6 +11,6 @@ import java.util.UUID;
  * fails its own linked rows with the carried actor (listeners run after the
  * publishing transaction commits, outside the request's security context).
  */
-public record RecurringReservationReleaseRequested(UUID recurringReservationId, String actor)
+public record CancelRecurringReservationCommand(UUID recurringReservationId, String actor)
         implements DomainEvent {
 }

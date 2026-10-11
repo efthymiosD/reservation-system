@@ -41,13 +41,13 @@ Modulith stays at 2.1.1.
 5. *Listeners, one per module, logic-free* — the consuming module's single
    listener in its `adapter/listeners/` package declares one reaction per
    event it consumes: methods annotated with the app-facing composed
-   annotation `@DomainEventReaction` (which composes Modulith's
+   annotation `@OnDomainEvent` (which composes Modulith's
    `@ApplicationModuleListener` — the platform annotation appears exactly
    once in the codebase). A reaction body is a translation of the event
    into one use-case call; every reaction policy (filtering, idempotency
    tolerances, actor semantics, logging) is domain-service code
    (`CancelReservationService.releaseFutureOccurrencesOf(...)` carries the
-   release policy). `DomainEventHandler` is a marker contract; Java
+   release policy). `DomainEventListener` is a marker contract; Java
    generics do not allow one class to implement the typed contract twice.
    The registry keeps one publication row per reaction method. The
    class-level bean marker stays the plain `@Component` — component
@@ -77,7 +77,7 @@ auto-DDL exception in the app; no third Flyway migration.
 * `RecurringReservationCancelled`-cascade is eventual: the admin flash says
   "future bookings are being released" (copy reworded in all bundles).
 * First slice publishes: `ReservationCreated`, `ReservationCancelled` (all
-  flows incl. cascade children), `RecurringReservationReleaseRequested`,
+  flows incl. cascade children), `CancelRecurringReservationCommand`,
   `ResourceDeactivated` (no consumer yet). Consumers: notification/audit
   modules subscribe later without touching publishers.
 

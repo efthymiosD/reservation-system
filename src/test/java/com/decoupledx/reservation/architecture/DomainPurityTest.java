@@ -4,8 +4,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.decoupledx.reservation.shared.DomainEventHandler;
-import com.decoupledx.reservation.shared.DomainEventReaction;
+import com.decoupledx.reservation.shared.DomainEventListener;
+import com.decoupledx.reservation.shared.OnDomainEvent;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -27,8 +27,6 @@ class DomainPurityTest {
                     candidate.getPackageName().contains(".domain")
                             && !candidate.getSimpleName().equals("package-info")
                             && !candidate.getSimpleName().contains("Config"));
-
-    private static final String LISTENERS_PACKAGE = "com.decoupledx.reservation..adapter.listeners..";
 
     @Test
     void domainPackagesDoNotDependOnSpringOrPersistenceFrameworks() {
@@ -52,7 +50,7 @@ class DomainPurityTest {
     // domain communicates events only through the shared-kernel contracts.
     private static final DescribedPredicate<JavaClass> CARRIES_REACTION_METHOD = DescribedPredicate
             .describe("carries an @DomainEventReaction method", type -> type.getMethods().stream()
-                    .anyMatch(method -> method.isAnnotatedWith(DomainEventReaction.class)));
+                    .anyMatch(method -> method.isAnnotatedWith(OnDomainEvent.class)));
 
     @Test
     void reactionHandlersLiveOnlyInAdapterListenerPackages() {
@@ -82,7 +80,7 @@ class DomainPurityTest {
     void listenersImplementTheSharedContract() {
         ArchRule rule = classes()
                 .that(CARRIES_REACTION_METHOD)
-                .should().implement(DomainEventHandler.class)
+                .should().implement(DomainEventListener.class)
                 .because("listener classes conform to the per-module event contract (ADR-0004)");
         rule.check(CLASSES);
     }

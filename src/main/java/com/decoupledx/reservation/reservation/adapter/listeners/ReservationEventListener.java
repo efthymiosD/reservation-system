@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.reservation.adapter.listeners;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.reservation.adapter.api.RecurringReservationReleaseRequested;
+import com.decoupledx.reservation.reservation.adapter.api.CancelRecurringReservationCommand;
 import com.decoupledx.reservation.reservation.domain.port.CancelReservationService;
-import com.decoupledx.reservation.shared.DomainEventHandler;
-import com.decoupledx.reservation.shared.DomainEventReaction;
+import com.decoupledx.reservation.shared.DomainEventListener;
+import com.decoupledx.reservation.shared.OnDomainEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,13 +16,14 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-class ReservationEventListener implements DomainEventHandler {
+class ReservationEventListener implements DomainEventListener {
 
     private final CancelReservationService cancels;
 
-    @DomainEventReaction
-    void on(RecurringReservationReleaseRequested event) {
+    @OnDomainEvent
+    void on(CancelRecurringReservationCommand event) {
         cancels.releaseFutureOccurrencesOf(event.recurringReservationId(), CustomerId.of(event.actor()));
     }
+
 }
 
