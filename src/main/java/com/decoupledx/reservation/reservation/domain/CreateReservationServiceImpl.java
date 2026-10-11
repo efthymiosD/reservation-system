@@ -5,6 +5,7 @@ import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationCreated;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.domain.port.CreateReservationService;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
@@ -12,6 +13,7 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.shared.*;
+import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
@@ -32,6 +34,7 @@ class CreateReservationServiceImpl implements CreateReservationService {
     private final CurrentCustomerApi currentCustomers;
     private final Clock clock;
     private final TransactionRunner tx;
+    private final DomainEventPublisher events;
 
     @Override
     public ReservationInfo create(UUID resourceId, LocalDateTime startTime, int durationMinutes) {
@@ -99,6 +102,10 @@ class CreateReservationServiceImpl implements CreateReservationService {
         Reservation reservation = Reservation.create(resourceId, customerId, period, price, now,
                 recurringReservationId, adminOverride);
         ReservationInfo saved = ReservationMappings.toInfo(reservations.save(reservation.toDataValue()));
+        events.publish(new ReservationCreated(saved.id().value(), saved.resourceId().value(),
+                customerId.value(), saved.start(), saved.end(),
+                saved.price().amount(), saved.price().currency().getCurrencyCode(),
+                adminOverride, saved.recurringReservationId()));
         log.info("Reservation created id={} resourceId={} customerId={} price={} recurringReservationId={}",
                 saved.id(), saved.resourceId(), saved.customerId(), saved.price(), saved.recurringReservationId());
         return saved;

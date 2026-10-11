@@ -23,4 +23,13 @@ public interface CancelReservationService {
     void cancelAdministratively(UUID reservationId);
 
     void cancelAdministratively(UUID reservationId, CustomerId actor);
+
+    /**
+     * Releases the still-active future occurrences a recurring reservation
+     * materialized, cancelling each with the given actor (the recurring
+     * cancellation's administrator). The past-skipping and already-cancelled
+     * tolerance are release policy of this use case — callers, e.g. the
+     * module's event listener, stay logic-free.
+     */
+    void releaseFutureOccurrencesOf(UUID recurringReservationId, CustomerId actor);
 }

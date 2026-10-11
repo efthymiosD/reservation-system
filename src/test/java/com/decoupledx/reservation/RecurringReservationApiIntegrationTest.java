@@ -85,11 +85,16 @@ class RecurringReservationApiIntegrationTest extends PostgresIntegrationTest {
                         .with(admin("admin")))
                 .andExpect(status().isNoContent());
 
-        assertThat(activeReservationsFor(recurringReservationId)).isEqualTo(0);
+        awaitActiveCount(recurringReservationId, 0);
         assertThat(cancelledReservationsFor(recurringReservationId)).isEqualTo(5);
         assertThat(jdbc.queryForObject(
                 "SELECT status FROM recurring_reservations WHERE id = ?", String.class, recurringReservationId))
                 .isEqualTo("CANCELLED");
+
+        // The event publication registry cleaned itself up (completion mode
+        // DELETE): no outstanding or completed publications remain.
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM event_publication",
+                Integer.class)).isEqualTo(0);
 
         mockMvc.perform(get("/api/admin/recurring-reservations")
                         .with(admin("admin"))
@@ -215,6 +220,20 @@ class RecurringReservationApiIntegrationTest extends PostgresIntegrationTest {
     private UUID recurringReservationIdOf(MvcResult result) throws Exception {
         JsonNode node = objectMapper.readTree(result.getResponse().getContentAsString());
         return UUID.fromString(node.get("id").asText());
+    }
+
+    /** The release of future occurrences is asynchronous (after-commit
+     *  application-module listener); eventually the count settles to the
+     *  expected value. */
+    private void awaitActiveCount(UUID recurringReservationId, int expected) throws InterruptedException {
+        for (int i = 0; i < 40; i++) {
+            if (activeReservationsFor(recurringReservationId) == expected && jdbc.queryForObject(
+                    "SELECT count(*) FROM event_publication", Integer.class) == 0) {
+                return;
+            }
+            Thread.sleep(250);
+        }
+        assertThat(activeReservationsFor(recurringReservationId)).isEqualTo(expected);
     }
 
     private int activeReservationsFor(UUID recurringReservationId) {

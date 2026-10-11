@@ -7,6 +7,7 @@ import com.decoupledx.reservation.resource.domain.port.ResourceGroupRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceService;
 import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
@@ -20,6 +21,7 @@ class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resources;
     private final ResourceGroupRepository groups;
     private final TransactionRunner tx;
+    private final DomainEventPublisher events;
 
     @Override
     public ResourceInfo getResource(ResourceId resourceId) {
@@ -74,7 +76,9 @@ class ResourceServiceImpl implements ResourceService {
         return tx.run(() -> {
             Resource resource = loadResource(resourceId);
             resource.deactivate();
-            return toInfo(resources.save(resource.toDataValue()));
+            ResourceInfo saved = toInfo(resources.save(resource.toDataValue()));
+            events.publish(new ResourceDeactivated(resourceId.value()));
+            return saved;
         });
     }
 

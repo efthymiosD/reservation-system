@@ -10,10 +10,11 @@ import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
-import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
+import com.decoupledx.reservation.reservation.adapter.api.RecurringReservationReleaseRequested;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.shared.TransactionRunner;
@@ -38,10 +39,10 @@ class RecurringReservationServiceImpl implements RecurringReservationService {
     private final ResourceApi resourceService;
     private final VenueApi venueService;
     private final PolicyApi policyService;
-    private final ReservationApi reservationApi;
     private final CurrentCustomerApi customerApi;
     private final Clock clock;
     private final TransactionRunner tx;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     public RecurringReservationInfo create(CreateRecurringReservationCommand command) {
@@ -76,11 +77,13 @@ class RecurringReservationServiceImpl implements RecurringReservationService {
             CustomerId actor = customerApi.currentCustomerId();
             RecurringReservation recurringReservation = loadActive(recurringReservationId);
             Instant now = clock.instant();
-            reservationApi.findActiveByRecurringReservation(recurringReservationId).stream()
-                    .filter(reservation -> reservation.end().isAfter(now))
-                    .forEach(reservation -> reservationApi.cancelAdministratively(reservation.id().value(), actor));
             recurringReservation.cancel(now, actor);
             recurringReservations.save(recurringReservation.toDataValue());
+            // Future occurrences are released by the reservation module's
+            // listener (after commit, eventual consistency is accepted here);
+            // the actor rides in the event because the listener thread has no
+            // request context.
+            eventPublisher.publish(new RecurringReservationReleaseRequested(recurringReservationId, actor.value()));
         });
     }
 

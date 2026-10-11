@@ -1,6 +1,15 @@
 spring:
   application:
     name: reservation-system
+  modulith:
+    events:
+      # Event publication registry (starter-jdbc): rows persist inside the
+      # publishing transaction, listeners run after commit; failed/stale
+      # publications are visible for resubmission. Completed publications
+      # delete (no housekeeping cron needed at MVP scale).
+      completion-mode: DELETE
+      # Idempotent listeners make redelivery safe (e.g. after a crash).
+      republish-outstanding-events-on-restart: true
   messages:
     # Bundles live in src/main/resources/messages/ (basename "messages/messages").
     # fallback-to-system-locale=false: a key missing from the requested locale's
@@ -70,6 +79,7 @@ management:
       probes:
         enabled: true
       show-details: never
+
 
 app:
   security:

@@ -2,7 +2,9 @@ package com.decoupledx.reservation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.modulith.Modulithic;
 
+@Modulithic(systemName = "reservation-system")
 @SpringBootApplication
 public class ReservationApplication {
 
