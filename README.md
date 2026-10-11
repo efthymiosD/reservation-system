@@ -204,6 +204,6 @@ Useful URLs once the app is up:
 
 ## More documentation
 
-- `docs/adr/` — architecture decisions (module structure, record boundaries)
+- `docs/adr/` — architecture decisions (module structure, record boundaries, domain events)
 - Keycloak realm export: `keycloak/realm-export.json` (dev users + clients)
 - E2E project README: `e2e-tests/README.md` (setup incl. PyCharm recommendation)

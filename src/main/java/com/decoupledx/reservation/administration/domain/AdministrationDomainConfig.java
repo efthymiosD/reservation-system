@@ -7,6 +7,7 @@ import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import java.time.Clock;
@@ -28,12 +29,12 @@ class AdministrationDomainConfig {
     @Bean
     RecurringReservationService recurringReservationService(
             RecurringReservationRepository recurringReservations, ResourceApi resourceService,
-            VenueApi venueService, PolicyApi policyService, ReservationApi reservationApi,
-            CurrentCustomerApi currentCustomer, RecurringReservationMaterializationService materializer,
-            Clock clock, TransactionRunner tx) {
+            VenueApi venueService, PolicyApi policyService, CurrentCustomerApi currentCustomer,
+            RecurringReservationMaterializationService materializer, Clock clock, TransactionRunner tx,
+            DomainEventPublisher events) {
         return new RecurringReservationServiceImpl(
-                recurringReservations, materializer, resourceService, venueService, policyService, reservationApi,
-                currentCustomer, clock, tx);
+                recurringReservations, materializer, resourceService, venueService, policyService,
+                currentCustomer, clock, tx, events);
     }
 
 }

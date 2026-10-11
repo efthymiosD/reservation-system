@@ -8,6 +8,7 @@ import com.decoupledx.reservation.reservation.domain.port.CreateReservationServi
 import com.decoupledx.reservation.reservation.domain.port.ReservationQueryService;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
+import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import java.time.Clock;
@@ -24,17 +25,19 @@ class ReservationDomainConfig {
     CreateReservationService createReservationService(ResourceApi resourceService, VenueApi venueService,
                                                       PolicyApi policyService, PricingApi pricingService,
                                                       ReservationRepository reservations, CurrentCustomerApi currentCustomers,
-                                                      Clock clock, TransactionRunner tx) {
+                                                      Clock clock, TransactionRunner tx, DomainEventPublisher events) {
         return new CreateReservationServiceImpl(resourceService, venueService, policyService, pricingService,
-                reservations, currentCustomers, clock, tx);
+                reservations, currentCustomers, clock, tx, events);
     }
 
     @Bean
     CancelReservationService cancelReservationService(ReservationRepository reservations,
                                                       ResourceApi resourceService, PolicyApi policyService,
                                                       CurrentCustomerApi currentCustomers,
-                                                      Clock clock, TransactionRunner tx) {
-        return new CancelReservationServiceImpl(reservations, currentCustomers, resourceService, policyService, clock, tx);
+                                                      Clock clock, TransactionRunner tx,
+                                                      DomainEventPublisher events) {
+        return new CancelReservationServiceImpl(reservations, currentCustomers, resourceService, policyService,
+                clock, tx, events);
     }
 
     @Bean

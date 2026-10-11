@@ -1,0 +1,91 @@
+= ADR-0004: Domain events over Spring Modulith, abstracted
+
+== Status
+
+Accepted (2026-10)
+
+== Context
+
+Modules communicate exclusively through synchronous API calls. Cross-module
+business facts exist that other modules will react to, and at least one call
+edge (the recurring-reservation cancel cascade) couples four aggregates inside
+a single synchronous request. Spring Modulith is already on the classpath
+(`starter-core`, `ModularityTests.verify()`) but was unused for integration.
+
+Decisions made: async after-commit semantics for event reactions; JDBC event
+publication registry; `ResourceDeactivated` published informationally;
+Modulith stays at 2.1.1.
+
+== Decision
+
+1. *Contract in the shared kernel* — `shared/` (root package, like
+   `TransactionRunner`): `DomainEvent` marker, `DomainEventPublisher` port
+   (`void publish(DomainEvent)`), `DomainEventHandler<E>` inbound contract.
+   Pure Java; `DomainPurityTest` keeps the domain free of the event platform.
+
+2. *Single platform seam* — `shared/event/SpringDomainEventPublisher`
+   implements the port on Spring's `ApplicationEventPublisher`. Swapping the
+   event mechanism touches this one class plus listener annotations, never
+   use cases.
+
+3. *Event payloads are plain records* in the publishing (or reactive) module's
+   `adapter/api` package — the single exported NamedInterface, no rule churn
+   (ADR-0001). Cross-module listeners may reach them.
+
+4. *Cycle-break rule*: an event type lives with the REACTIVE module. When an
+   edge inversion would create a Modulith-detectable dependency cycle, the
+   payload moves to the module that consumes it. `RecurrenceReservationReleaseRequested`
+   lives in `reservation.adapter.api` and is published by
+   `administration` (which already depends on reservation).
+
+5. *Listeners, one per module, logic-free* — the consuming module's single
+   listener in its `adapter/listeners/` package declares one reaction per
+   event it consumes: methods annotated with the app-facing composed
+   annotation `@DomainEventReaction` (which composes Modulith's
+   `@ApplicationModuleListener` — the platform annotation appears exactly
+   once in the codebase). A reaction body is a translation of the event
+   into one use-case call; every reaction policy (filtering, idempotency
+   tolerances, actor semantics, logging) is domain-service code
+   (`CancelReservationService.releaseFutureOccurrencesOf(...)` carries the
+   release policy). `DomainEventHandler` is a marker contract; Java
+   generics do not allow one class to implement the typed contract twice.
+   The registry keeps one publication row per reaction method. The
+   class-level bean marker stays the plain `@Component` — component
+   scanning understands type-level composed bean annotations only. Arch
+   checks: reactions live only in `adapter/listeners/` and implement the
+   marker contract.
+
+6. *Actors* — listeners run after the publishing transaction commits,
+   outside the request's `SecurityContext`; any event that implies an acting
+   customer carries `String actor` explicitly.
+
+7. *Idempotency* — every reaction tolerates redelivery (registry restart
+   republish, failed-publication resubmission): the release use case skips
+   already-cancelled/past reservations, so replays are harmless no-ops.
+
+== Publication registry
+
+`spring-modulith-starter-jdbc` 2.1.1: rows persist inside the publishing tx;
+`completion-mode=DELETE` (no housekeeping); `republish-outstanding-events-on-restart=true`
+(safe because of rule 7). Jackson 3 (tools.jackson) serialization natively
+supported by 2.1.1's `events-jackson` — no custom serializer, no Jackson 2
+at runtime. The registry table is auto-created (idempotent) — the only
+auto-DDL exception in the app; no third Flyway migration.
+
+== Consequences
+
+* `RecurringReservationCancelled`-cascade is eventual: the admin flash says
+  "future bookings are being released" (copy reworded in all bundles).
+* First slice publishes: `ReservationCreated`, `ReservationCancelled` (all
+  flows incl. cascade children), `RecurringReservationReleaseRequested`,
+  `ResourceDeactivated` (no consumer yet). Consumers: notification/audit
+  modules subscribe later without touching publishers.
+
+== Alternatives rejected
+
+* Full mediator/`DomainEventBus` two-way abstraction — reimplements Modulith's
+  listener lifecycle for zero business value; rejected.
+* Event payloads in the shared kernel for cycle-breaking — blurs module
+  ownership; the reactive-module placement (rule 4) keeps module peercosity.
+* Completing in-memory delivery only — loses failure observability and crash
+  recovery for booking facts; rejected once decision (2) was taken.
