@@ -2,6 +2,7 @@ package com.decoupledx.reservation.reservation.domain;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
+import com.decoupledx.reservation.reservation.adapter.api.ReservationCancelled;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.adapter.persistence.ReservationDataValue;
@@ -131,11 +132,13 @@ class Reservation {
         }
     }
 
-    private static Reservation reconstitute(ReservationId id, ResourceId resourceId, CustomerId customerId,
-                                            ReservationPeriod period, Money price, ReservationStatus status,
-                                            boolean adminOverride, Instant createdAt, Instant cancelledAt,
-                                            CustomerId cancelledBy, UUID recurringReservationId) {
-        return new Reservation(id, resourceId, customerId, period, price, status, adminOverride,
-                createdAt, cancelledAt, cancelledBy, recurringReservationId);
+    public ReservationCancelled toCancelledEvent() {
+        return new ReservationCancelled(
+                this.getId().value(),
+                this.getResourceId().value(),
+                this.getCustomerId().value(),
+                this.getCancelledBy() != null ? this.getCancelledBy().value() : null,
+                this.getCancelledAt(),
+                this.getRecurringReservationId());
     }
 }

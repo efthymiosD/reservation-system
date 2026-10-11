@@ -8,7 +8,7 @@ import org.springframework.modulith.events.ApplicationModuleListener;
 
 /**
  * The application-facing event-reaction annotation (ADR-0004): a method of a
- * {@code DomainEventHandler} implementation carries this to react to its
+ * {@code DomainEventListener} implementation carries this to react to its
  * event after the publishing transaction commits. Modulith's platform
  * listener annotation is composed exactly once — here — so feature modules
  * never name the event platform directly, while the publication registry
@@ -19,5 +19,5 @@ import org.springframework.modulith.events.ApplicationModuleListener;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @ApplicationModuleListener
-public @interface DomainEventReaction {
+public @interface OnDomainEvent {
 }

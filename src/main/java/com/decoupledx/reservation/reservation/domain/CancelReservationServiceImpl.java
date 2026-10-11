@@ -4,7 +4,6 @@ import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
-import com.decoupledx.reservation.reservation.adapter.api.ReservationCancelled;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.domain.port.CancelReservationService;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
@@ -13,27 +12,29 @@ import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.DomainEventPublisher;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.TransactionRunner;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
 class CancelReservationServiceImpl implements CancelReservationService {
 
-    private final ReservationRepository reservations;
-    private final CurrentCustomerApi currentCustomers;
-    private final ResourceApi resourceService;
-    private final PolicyApi policyService;
+    private final ReservationRepository dataRepo;
+    private final CurrentCustomerApi customerApi;
+    private final ResourceApi resourceApi;
+    private final PolicyApi policyApi;
     private final Clock clock;
     private final TransactionRunner tx;
-    private final DomainEventPublisher events;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     public void cancel(UUID reservationId) {
-        cancel(reservationId, currentCustomers.currentCustomerId());
+        cancel(reservationId, customerApi.currentCustomerId());
     }
 
     @Override
@@ -43,18 +44,17 @@ class CancelReservationServiceImpl implements CancelReservationService {
             if (!reservation.getCustomerId().equals(customerId)) {
                 throw new BusinessException(ErrorCode.RESERVATION_NOT_FOUND);
             }
-            CancellationPolicy currentPolicy = policyService.cancellationPolicyFor(venueIdOf(reservation));
+            CancellationPolicy currentPolicy = policyApi.cancellationPolicyFor(venueIdOf(reservation));
             reservation.cancel(clock.instant(), currentPolicy);
-            reservations.save(reservation.toDataValue());
-            publishCancelled(reservation);
-            log.info("Reservation cancelled id={} customerId={} actor=customer",
-                    reservationId, customerId.value());
+            dataRepo.save(reservation.toDataValue());
+            eventPublisher.publish(reservation.toCancelledEvent());
+            log.info("Reservation cancelled id={} customerId={} actor=customer", reservationId, customerId.value());
         });
     }
 
     @Override
     public void cancelAdministratively(UUID reservationId) {
-        cancelAdministratively(reservationId, currentCustomers.currentCustomerId());
+        cancelAdministratively(reservationId, customerApi.currentCustomerId());
     }
 
     @Override
@@ -62,10 +62,9 @@ class CancelReservationServiceImpl implements CancelReservationService {
         tx.run(() -> {
             Reservation reservation = loadReservation(ReservationId.of(reservationId));
             reservation.cancelAdministratively(clock.instant(), actor);
-            reservations.save(reservation.toDataValue());
-            publishCancelled(reservation);
-            log.info("Reservation administratively cancelled id={} actor={}",
-                    reservationId, actor.value());
+            dataRepo.save(reservation.toDataValue());
+            eventPublisher.publish(reservation.toCancelledEvent());
+            log.info("Reservation administratively cancelled id={} actor={}", reservationId, actor.value());
         });
     }
 
@@ -75,37 +74,32 @@ class CancelReservationServiceImpl implements CancelReservationService {
             Instant now = clock.instant();
             // Already-cancelled and past occurrences are skipped: registry
             // redelivery of the release event must be a harmless no-op.
-            long released = reservations.findActiveByRecurringReservationId(recurringReservationId).stream()
-                    .filter(data -> data.endTime().isAfter(now))
-                    .map(Reservation::from)
-                    .filter(Reservation::isActive)
-                    .map(value -> {
-                        value.cancelAdministratively(now, actor);
-                        return reservations.save(value.toDataValue());
-                    })
-                    .count();
+            List<Reservation> activeRecurringReservations = getActiveRecurringReservations(recurringReservationId, now);
+            activeRecurringReservations
+                    .forEach(reservation -> {
+                        reservation.cancelAdministratively(now, actor);
+                        dataRepo.save(reservation.toDataValue());
+                    });
             log.info("Recurring reservation {} released: {} future occurrence(s) by actor={}",
-                    recurringReservationId, released, actor.value());
+                    recurringReservationId, activeRecurringReservations.size(), actor.value());
         });
     }
 
-    private void publishCancelled(Reservation reservation) {
-        events.publish(new ReservationCancelled(
-                reservation.getId().value(),
-                reservation.getResourceId().value(),
-                reservation.getCustomerId().value(),
-                reservation.getCancelledBy() != null ? reservation.getCancelledBy().value() : null,
-                reservation.getCancelledAt(),
-                reservation.getRecurringReservationId()));
+    private List<Reservation> getActiveRecurringReservations(UUID recurringReservationId, Instant now) {
+        return dataRepo.findActiveByRecurringReservationId(recurringReservationId).stream()
+                .filter(data -> data.endTime().isAfter(now))
+                .map(Reservation::from)
+                .filter(Reservation::isActive)
+                .toList();
     }
 
     private Reservation loadReservation(ReservationId reservationId) {
-        return reservations.findById(reservationId)
+        return dataRepo.findById(reservationId)
                 .map(Reservation::from)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
     }
 
     private UUID venueIdOf(Reservation reservation) {
-        return resourceService.getResource(reservation.getResourceId().value()).venueId().value();
+        return resourceApi.getResource(reservation.getResourceId().value()).venueId().value();
     }
 }
