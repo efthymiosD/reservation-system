@@ -1,5 +1,11 @@
-# Production/demo compose for the QNAP. NOT for local development (use docker-compose.yml).
-# The image tag is injected by the deploy workflow; never reference 'latest'.
+# Compose for the QNAP DEV environment (publicly reachable via the Cloudflare
+# tunnel; the real production deployment is deferred). NOT for local
+# development (use docker-compose.yml). The image tag is injected by the
+# deploy workflow; never reference 'latest'.
+#
+# It runs the app with the prod Spring profile (real OAuth2/JWT enforcement,
+# no dev-key fallback) despite being a dev environment: the box is internet-
+# exposed, so the security posture must be genuine.
 #
 # Runtime secrets come from an env file on the host (e.g. /opt/reservation/.env):
 #   POSTGRES_PASSWORD=...
@@ -29,10 +35,30 @@ services:
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
+      # Pin the external hostname so every issued token carries the same `iss`,
+      # no matter which route reached Keycloak (Cloudflare tunnel vs. container
+      # traffic). The tunnel terminates TLS; backend stays plain HTTP (dev mode).
+      KC_HOSTNAME_URL: ${KC_PUBLIC_BASE_URL:?KC_PUBLIC_BASE_URL is required}
+      KC_PROXY_HEADERS: xforwarded
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       - postgres
+
+  # Public access runs exclusively through the Cloudflare tunnel: two public
+  # hostnames route to http://app:8080 and http://keycloak:8081 (configured in
+  # the Cloudflare dashboard for this tunnel; remotely-managed ingress). The
+  # token lives in the host .env file (CLOUDFLARED_TUNNEL_TOKEN).
+  cloudflared:
+    image: cloudflare/cloudflared:2025.9.1
+    container_name: reservation-cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is required}
+    depends_on:
+      - app
+      - keycloak
 
   app:
     image: ${RESERVATION_IMAGE:?RESERVATION_IMAGE is required (ghcr.io/owner/reservation-api:<sha>)}
@@ -49,6 +75,9 @@ services:
       KEYCLOAK_TOKEN_URI: ${KEYCLOAK_TOKEN_URI:?KEYCLOAK_TOKEN_URI is required}
       KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:?KEYCLOAK_JWK_SET_URI is required}
       KEYCLOAK_END_SESSION_URI: ${KEYCLOAK_END_SESSION_URI:?KEYCLOAK_END_SESSION_URI is required}
+      # Public traffic arrives via the tunnel with X-Forwarded-Proto https;
+      # without this the OAuth2 callback redirect would be generated as http.
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
     depends_on:
       postgres:
         condition: service_healthy
