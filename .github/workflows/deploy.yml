@@ -30,20 +30,77 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # The dispatch input must be a bare 40-char commit SHA before it reaches
+      # any shell (workflow-dispatch input injection guard).
+      - name: Validate image tag input
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/efthymiosd/reservation-system:${{ inputs.image_tag }}"
+          [[ "$IMAGE" =~ ^ghcr\.io/[a-z0-9-]+/reservation-system:[0-9a-f]{40}$ ]] \
+            || { echo "ERROR: image_tag must be a full 40-char git SHA"; exit 1; }
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
       # 1a) Generate the QNAP realm: dev URLs -> tunnel hostnames, dev client
-      #     secret -> the real one (B-4). The committed realm stays dev-valid.
+      #     secret -> the real one (B-4). JSON-aware transformation (no text
+      #     substitution pitfalls); the file is validated and never printed
+      #     or uploaded as an artifact. The committed realm stays dev-valid.
       - name: Generate QNAP realm export
         env:
           AUTH_URL: ${{ vars.QNAP_PUBLIC_BASE_URL }}
           WEB_SECRET: ${{ secrets.KC_WEB_CLIENT_SECRET }}
         run: |
           set -euo pipefail
-          sed -e "s|http://localhost:8080|${APP_URL}|g" \
-              -e "s|http://localhost:8081|${AUTH_URL}|g" \
-              -e 's|dev-web-secret|${WEB_SECRET}|g' \
-              keycloak/realm-export.json > keycloak/realm-export.qnap.json
-          grep -q "${APP_URL}" keycloak/realm-export.qnap.json \
+          python3 -B - <<'PY'
+          import json
+          import os
+          import pathlib
+          import re
+
+          app_url = os.environ["APP_URL"].rstrip("/")
+          auth_url = os.environ["AUTH_URL"].rstrip("/")
+          web_secret = os.environ["WEB_SECRET"]
+
+          src = pathlib.Path("keycloak/realm-export.json")
+          out = pathlib.Path("keycloak/realm-export.qnap.json")
+
+          raw = src.read_text(encoding="utf-8")
+          dev_secret_count = raw.count("dev-web-secret")
+          localhost_count = len(re.findall(r"http://localhost:\d+", raw))
+          realm = json.loads(raw)
+
+          for client in realm.get("clients", []):
+              if client.get("secret") == "dev-web-secret":
+                  client["secret"] = web_secret
+              client["redirectUris"] = [
+                  u.replace("http://localhost:8080", app_url) for u in client.get("redirectUris", [])
+              ]
+              client["webOrigins"] = [
+                  o.replace("http://localhost:8080", app_url) for o in client.get("webOrigins", [])
+              ]
+              logout_uris = client.get("attributes", {}).get("post.logout.redirect.uris")
+              if isinstance(logout_uris, str):
+                  client["attributes"]["post.logout.redirect.uris"] = logout_uris.replace(
+                      "http://localhost:8080", app_url
+                  )
+
+          for client in realm.get("clients", []):
+              uris = json.dumps(client.get("redirectUris", [])) + json.dumps(client.get("webOrigins", []))
+              assert "localhost" not in uris, f"unreplaced localhost URI in client {client.get('clientId')}"
+              if client.get("secret") == "dev-web-secret":
+                  raise SystemExit("unreplaced dev secret in client " + str(client.get("clientId")))
+
+          tmp = out.with_suffix(".tmp")
+          tmp.write_text(json.dumps(realm, indent=2), encoding="utf-8")
+          json.loads(tmp.read_text(encoding="utf-8"))  # validate
+          tmp.rename(out)
+
+          # evidence WITHOUT secret contents
+          print(f"realm generated: {dev_secret_count} dev secret(s) replaced, "
+                f"{localhost_count} dev URL reference(s) rewritten, output {out}")
+          PY
+          grep -q "$APP_URL" keycloak/realm-export.qnap.json \
             || { echo "ERROR: no localhost URI was replaced — check QNAP_PUBLIC_APP_URL"; exit 1; }
+          [ -s keycloak/realm-export.qnap.json ] || { echo "ERROR: empty generated realm"; exit 1; }
 
       # 1b) Sync compose file + generated realm to the QNAP (the QNAP never builds from source)
       - name: Copy deployment files to QNAP
@@ -67,21 +124,37 @@ jobs:
           script: |
             set -euo pipefail
             cd ${{ env.DEPLOY_DIR }}
+
+            # One-time setup expectations; never overwrite the host .env.
+            test -f .env || { echo "ERROR: .env missing — see docs/RUNBOOK.md provisioning"; exit 1; }
+            mkdir -p keycloak
+
+            # record the currently deployed image for the rollback procedure
+            cp .env.image .previous-image 2>/dev/null || true
+
             echo "RESERVATION_IMAGE=${{ env.IMAGE }}" > .env.image
             mv keycloak/realm-export.qnap.json keycloak/realm-export.json
             docker compose -f docker-compose.deploy.yml --env-file .env --env-file .env.image pull app
             docker compose -f docker-compose.deploy.yml --env-file .env --env-file .env.image up -d
 
-      # 5) Wait for health; 6) smoke test; 7) fail the deployment if either fails
+      # 5) Wait for health; 6) smoke tests; 7) fail the deployment if either fails
+      # APP_URL forwards into the remote script via envs (public-door check).
+      # Smoke rules: dynamic future date (never stale), unauthenticated
+      # availability stays 401 (STATELESS JWT resource server), and after the
+      # LAN checks pass, the public door through the Cloudflare tunnel gets
+      # verified too. Container names are pinned via container_name.
       - name: Health check and smoke test
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.QNAP_DEPLOY_HOST }}
           username: ${{ secrets.QNAP_DEPLOY_USER }}
           key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
+          envs: APP_URL
           script: |
             set -euo pipefail
             BASE=http://localhost:8080
+            # Compose container_name pins these; container names are stable.
+            APP_LOGS=reservation-api
 
             echo "== Waiting for health =="
             ok=""
@@ -89,14 +162,36 @@ jobs:
               if curl -sf "$BASE/actuator/health" | grep -q '"status":"UP"'; then ok=yes; break; fi
               sleep 3
             done
-            [ -n "$ok" ] || { echo "HEALTH CHECK FAILED"; docker logs reservation-api --tail 100; exit 1; }
+            [ -n "$ok" ] || { echo "HEALTH CHECK FAILED"; docker logs "$APP_LOGS" --tail 100; exit 1; }
             echo "health: UP"
 
             echo "== Smoke: public venue endpoint =="
             curl -sf "$BASE/api/public/venue" | grep -q . || { echo "SMOKE FAILED: /api/public/venue"; exit 1; }
 
             echo "== Smoke: availability requires authentication =="
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/api/availability?date=2026-09-10&start=10:00&durationMinutes=60")
+            FUTURE_DATE=$(date -u -d "+14 days" +%F 2>/dev/null || date -u -v+14d +%F)
+            code=$(curl -s -o /dev/null -w '%{http_code}' \
+              "$BASE/api/availability?date=$FUTURE_DATE&start=10:00&durationMinutes=60")
             [ "$code" = "401" ] || { echo "SMOKE FAILED: /api/availability returned $code, expected 401"; exit 1; }
+
+            echo "== Smoke: stack containers healthy =="
+            for c in reservation-postgres reservation-keycloak reservation-cloudflared; do
+              if docker ps --format '{{.Names}}' | grep -qx "$c"; then
+                echo "$c: running"
+              else
+                echo "SMOKE FAILED: $c is not running"; exit 1
+              fi
+            done
+
+            echo "== Smoke: public door through the Cloudflare tunnel =="
+            if [ -n "${APP_URL:-}" ]; then
+              pub=""
+              for i in $(seq 1 10); do
+                if curl -sf -m 10 "$APP_URL/actuator/health" | grep -q '"status":"UP"'; then pub=yes; break; fi
+                sleep 3
+              done
+              [ -n "$pub" ] || { echo "SMOKE FAILED: $APP_URL unreachable via tunnel (DNS or cloudflared?)"; exit 1; }
+              echo "public health via tunnel: UP"
+            fi
 
             echo "smoke tests passed for ${{ env.IMAGE }}"
