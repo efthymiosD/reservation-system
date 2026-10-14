@@ -15,6 +15,20 @@ Cloudflare edge (TLS)
         └─ https://<auth-host> → http://keycloak:8081
 ```
 
+## NAS safety box (hard rules)
+
+- Never delete `/container-station-data`, reinstall QTS, or touch unrelated
+  services (e.g. QuMagie's `system-docker`) from this runbook.
+- Never run `docker compose down -v` against the QNAP deployment — data
+  (postgres volume, keycloak data) survives routine deploys.
+- Never paste database passwords, client secrets, SSH keys, tunnel tokens or
+  diagnostic-backup contents into logs/chat (the deploy workflow is written
+  to fail loudly without printing the injected realm secret).
+- Diagnostic backups exist at
+  `/share/CACHEDEV1_DATA/Container-Station-diagnostic-backup-*` — read-only
+  reference.
+
+
 ## One-time host provisioning
 
 1. **Deployment directory** — create the dir the workflow deploys to
@@ -72,6 +86,11 @@ Cloudflare edge (TLS)
    # pairs with the secret the deploy injects into the realm
    KC_WEB_CLIENT_SECRET=<same value as the GitHub secret>
    CLOUDFLARED_TUNNEL_TOKEN=<from the tunnel creation>
+
+   # public app hostname (redirect derivation + tunnel smoke)
+   # optional: the app resolves {baseUrl} from forwarded headers by default
+   APP_PUBLIC_BASE_URL=https://reservation.example.com
+   KC_WEB_REDIRECT_URI=https://reservation.example.com/login/oauth2/code/keycloak
    ```
 
 7. **GHCR pull (private package, B-2)** — one-time on the QNAP: create a
@@ -101,13 +120,19 @@ stack, health-checks, and smokes (public venue + 401 on availability).
 ## Maintenance
 
 - **Rollback**: re-run the Deploy workflow with the previous known-good SHA
-  (compose recreates containers, images stay on the host).
+  (compose recreates containers; images and volumes stay untouched). The
+  workflow records the previously deployed tag into
+  `/opt/reservation/.previous-image` before every overwrite — copy that
+  value from the host as the rollback input.
 - **Database backup** (run on the QNAP, schedule via cron):
   `docker exec reservation-postgres pg_dump -U reservation reservation | gzip > /opt/reservation/backup/reservation-$(date +%F).sql.gz`
   Restore: `gunzip -c <file> | docker exec -i reservation-postgres psql -U reservation -d reservation`.
 - **Secret rotation**: change the value in the host `.env` (and the GitHub
   `KC_WEB_CLIENT_SECRET` for the realm injection) → re-run Deploy. Keycloak
-  realm-internal secrets can also be rotated in its admin console.
+  realm-internal secrets can also be rotated in its admin console (the
+  realm persists across recreations now — a rotated password stays rotated).
+  Note: changing the realm inject happens on fresh realm imports only; to
+  force one, delete the keycloak volume AND re-run deploy on a fresh DB.
 - **Tunnel incidents**: `docker logs reservation-cloudflared` on the QNAP;
   the connector is stateless — recreating it with the same token reconnects.
 - **Realm tightening notes**: demo realm has `directAccessGrantsEnabled` on

@@ -1,9 +1,29 @@
+# Production profile. REQUIRED values come strictly from the environment;
+# there are no development fallbacks here (JwtDecoderConfig refuses the dev
+# key: app.security.allow-dev-key=false).
 spring:
   # No dev defaults in prod: DB credentials MUST come from the environment.
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            # REQUIRED: no dev web-client secret in prod.
+            client-secret: ${KC_WEB_CLIENT_SECRET}
+            # Defaults to the standard OAuth2 callback derived from the
+            # request's forwarded scheme/host (SERVER_FORWARD_HEADERS_STRATEGY
+            # is set in the deploy stack). Override only with a fixed URI.
+            redirect-uri: ${KC_WEB_REDIRECT_URI:{baseUrl}/login/oauth2/code/keycloak}
+        provider:
+          keycloak:
+            # REQUIRED: the web client talks to the real realm endpoints.
+            authorization-uri: ${KEYCLOAK_AUTHORIZATION_URI}
+            token-uri: ${KEYCLOAK_TOKEN_URI}
+            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI}
 
 server:
   port: ${PORT:8080}
@@ -23,22 +43,6 @@ app:
     issuer-uri: ${JWT_ISSUER_URI}
     allow-dev-key: false
     end-session-uri: ${KEYCLOAK_END_SESSION_URI}
-
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          keycloak:
-            # REQUIRED: no dev web-client secret or redirect URI in prod.
-            client-secret: ${KC_WEB_CLIENT_SECRET}
-            redirect-uri: ${KC_WEB_REDIRECT_URI}
-        provider:
-          keycloak:
-            # REQUIRED: the web client talks to the real realm endpoints.
-            authorization-uri: ${KEYCLOAK_AUTHORIZATION_URI}
-            token-uri: ${KEYCLOAK_TOKEN_URI}
-            jwk-set-uri: ${KEYCLOAK_JWK_SET_URI}
 
 # Docs/UI disabled in prod by default; re-enable only if explicitly required.
 springdoc:

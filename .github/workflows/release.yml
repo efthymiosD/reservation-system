@@ -56,41 +56,43 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Immutable tags only: the exact git SHA plus the branch name.
+      # Supply chain (ADR with the pre-deploy plan): the image is built and
+      # PUSHED ONCE as a candidate tag, scanned at exactly that ref, then
+      # promoted to the immutable release tags via a manifest-level copy
+      # (`imagetools create` — same bytes, same digest, no second build).
       # 'latest' is intentionally NOT produced.
-      - name: Build image (no push)
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          load: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:main
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Scan image for vulnerabilities (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
-          severity: HIGH,CRITICAL
-          exit-code: '1'
-          ignore-unfixed: true
-
-      - name: Push image
+      - name: Build and push candidate image
         uses: docker/build-push-action@v7
         with:
           context: .
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:main
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:candidate-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Scan candidate image for vulnerabilities (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:candidate-${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Promote scanned candidate to release tags
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create \
+            -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }} \
+            -t ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:main \
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:candidate-${{ github.sha }}
+          echo "candidate and release tags share one digest (model: scan-then-promote)"
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }} | head -20
+
       - name: Summary
         run: |
-          echo "### Published image" >> $GITHUB_STEP_SUMMARY
+          echo "### Published image (candidate scanned before promotion)" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           echo "${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "audit trail: candidate scan ref \\`${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:candidate-${{ github.sha }}\\`" >> $GITHUB_STEP_SUMMARY

@@ -42,6 +42,10 @@ services:
       KC_PROXY_HEADERS: xforwarded
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+      # Deliberate persistence: the realm (incl. rotated demo-user passwords)
+      # survives container recreation; the import only re-applies when the
+      # realm is absent. Postgres-backed Keycloak deferred (demo scale).
+      - reservation-kcdata:/opt/keycloak/data
     depends_on:
       - postgres
 
@@ -92,3 +96,4 @@ services:
 
 volumes:
   reservation-pgdata:
+  reservation-kcdata:
