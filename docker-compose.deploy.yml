@@ -1,6 +1,7 @@
 # Compose for the QNAP DEV environment (publicly reachable via myQNAPcloud
-# DDNS + router port forwards; real production deployment with a real TLS
-# gateway is deferred). NOT for local
+# DDNS + router forwards: ext 8086->NAS 6680 (app), ext 8087->NAS 6681
+# (keycloak); the real production deployment with a proper TLS gateway is
+# deferred). NOT for local
 # development (use docker-compose.yml). The image tag is injected by the
 # deploy workflow; never reference 'latest'.
 #

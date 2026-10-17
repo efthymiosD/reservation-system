@@ -55,9 +55,9 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
 
 3. **GitHub variables**
    - `QNAP_PUBLIC_APP_URL` — the app's public DDNS URL
-     (e.g. `http://dukescloud.myqnapcloud.com:8080`)
+     (`http://dukescloud.myqnapcloud.com:8086`)
    - `QNAP_PUBLIC_BASE_URL` — the Keycloak public DDNS URL
-     (e.g. `http://dukescloud.myqnapcloud.com:8081`)
+     (`http://dukescloud.myqnapcloud.com:8087`)
    - `QNAP_DEPLOY_DIR` — deployment directory
      (e.g. `/share/CACHEDEV1_DATA/reservation`)
 
@@ -66,11 +66,13 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
    deployed realm (`dev-web-secret` never carries to the QNAP).
 
 5. **Router port forwards** (needed for public access + the CI deploy):
-   - `8080` → QNAP:6680 (app; the NAS-side bind avoids QTS's admin 8080)
-   - `8081` → QNAP:6681 (Keycloak public entry; same reasoning)
+   - `8086` → QNAP:6680 (app; external 8080 is the router's management port)
+   - `8087` → QNAP:6681 (Keycloak public entry)
    - `22` → QNAP:22 (deploy SSH; keys-only enforced in QTS)
-   With myQNAPcloud DDNS the public URLs keep :8080 / :8081 (mapped to
-   NAS-side 6680 / 6681 by the router).
+   With myQNAPcloud DDNS the public URLs become
+   `http://dukescloud.myqnapcloud.com:8086` (app) and
+   `http://dukescloud.myqnapcloud.com:8087` (Keycloak), mapped by the
+   router to the NAS-side 6680 / 6681.
 
 6. **Host env file** — `/opt/reservation/.env` (mode 600):
 
@@ -118,13 +120,13 @@ stack, health-checks, and smokes (public venue + 401 on availability).
 
 ## Post-deploy manual checks
 
-1. `http://dukescloud.myqnapcloud.com:8080` — home page in the default language (this lands on NAS :6680 via the router)
+1. `http://dukescloud.myqnapcloud.com:8086` — home page in the default language (lands on NAS :6680 via the router)
 2. Language selector → Polish / Greek — copy + `lang` attribute switch
 3. Log in (alice / alice → first sign-in forces a password rotation) —
    redirected through `https://<auth-host>`, back to the app
 4. Book a slot end to end; cancel it
 5. Admin panel → /admin/content (per-language editor), /admin/map
-6. Keycloak console at the DDNS host's 8081 (master realm;
+6. Keycloak console at the DDNS host :8087 (master realm;
    `KEYCLOAK_ADMIN` credentials) — check the `reservation` realm users
 
 ## Maintenance
