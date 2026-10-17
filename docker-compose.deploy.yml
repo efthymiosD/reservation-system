@@ -1,5 +1,6 @@
-# Compose for the QNAP DEV environment (publicly reachable via the Cloudflare
-# tunnel; the real production deployment is deferred). NOT for local
+# Compose for the QNAP DEV environment (publicly reachable via myQNAPcloud
+# DDNS + router port forwards; real production deployment with a real TLS
+# gateway is deferred). NOT for local
 # development (use docker-compose.yml). The image tag is injected by the
 # deploy workflow; never reference 'latest'.
 #
@@ -46,23 +47,13 @@ services:
       # survives container recreation; the import only re-applies when the
       # realm is absent. Postgres-backed Keycloak deferred (demo scale).
       - reservation-kcdata:/opt/keycloak/data
+    ports:
+      # public Keycloak entry (browser OIDC redirects); sshd-style hardening:
+      # routable only if your router forwards 8081
+      - "8081:8080"
     depends_on:
-      - postgres
-
-  # Public access runs exclusively through the Cloudflare tunnel: two public
-  # hostnames route to http://app:8080 and http://keycloak:8081 (configured in
-  # the Cloudflare dashboard for this tunnel; remotely-managed ingress). The
-  # token lives in the host .env file (CLOUDFLARED_TUNNEL_TOKEN).
-  cloudflared:
-    image: cloudflare/cloudflared:2025.9.1
-    container_name: reservation-cloudflared
-    restart: unless-stopped
-    command: tunnel run
-    environment:
-      TUNNEL_TOKEN: ${CLOUDFLARED_TUNNEL_TOKEN:?CLOUDFLARED_TUNNEL_TOKEN is required}
-    depends_on:
-      - app
-      - keycloak
+      postgres:
+        condition: service_healthy
 
   app:
     image: ${RESERVATION_IMAGE:?RESERVATION_IMAGE is required (ghcr.io/owner/reservation-api:<sha>)}
@@ -79,8 +70,8 @@ services:
       KEYCLOAK_TOKEN_URI: ${KEYCLOAK_TOKEN_URI:?KEYCLOAK_TOKEN_URI is required}
       KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:?KEYCLOAK_JWK_SET_URI is required}
       KEYCLOAK_END_SESSION_URI: ${KEYCLOAK_END_SESSION_URI:?KEYCLOAK_END_SESSION_URI is required}
-      # Public traffic arrives via the tunnel with X-Forwarded-Proto https;
-      # without this the OAuth2 callback redirect would be generated as http.
+      # Kept for reverse-proxy/LAN access through non-default schemes;
+      # ensures the OAuth2 callback derives from the visible scheme/host.
       SERVER_FORWARD_HEADERS_STRATEGY: framework
     depends_on:
       postgres:

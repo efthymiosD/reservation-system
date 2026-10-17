@@ -1,19 +1,22 @@
 # QNAP Deployment Runbook
 
-DEV environment on the QNAP (publicly reachable via the Cloudflare tunnel;
-the real production deployment is deferred): Postgres + Keycloak + the app,
-public access exclusively through the tunnel (no public host ports; the
-`8080:8080` LAN binding remains for operator smoke checks only). The stack
-runs the app with the prod Spring profile on purpose — the box is
-internet-exposed, so real OAuth2/JWT enforcement applies despite the
-environment label.
+DEV environment on the QNAP, publicly reachable via **myQNAPcloud DDNS +
+router port forwards** (Cloudflare tunnel deferred until a real domain and a
+TLS gateway exist — the real production deployment is deferred anyway):
+Postgres + Keycloak + the app. The stack runs the app with the prod Spring
+profile on purpose — the box is internet-exposed, so real OAuth2/JWT
+enforcement applies despite the environment label. All public traffic is
+plain HTTP on nonstandard ports for now (`6680` app / `6681` keycloak) —
+documented, dev-grade. The dedicated SSH route is the ONLY public
+management port.
 
 ```
-Cloudflare edge (TLS)
-   └─ cloudflared (container, tunnel token) — remotely-managed ingress
-        ├─ https://<app-host>  → http://app:8080
-        └─ https://<auth-host> → http://keycloak:8081
+Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescloud.myqnapcloud.com)
+   ├─ :8080 → compose `app`         (reservation site/API; LAN + DDNS)
+   ├─ :8081 → compose `keycloak`    (browser OIDC redirects; LAN + DDNS)
+   └─ :22   → QTS sshd              (CI deploy path via the DDNS; keys only)
 ```
+
 
 ## NAS safety box (hard rules)
 
@@ -21,7 +24,7 @@ Cloudflare edge (TLS)
   services (e.g. QuMagie's `system-docker`) from this runbook.
 - Never run `docker compose down -v` against the QNAP deployment — data
   (postgres volume, keycloak data) survives routine deploys.
-- Never paste database passwords, client secrets, SSH keys, tunnel tokens or
+- Never paste database passwords, client secrets, SSH private keys or
   diagnostic-backup contents into logs/chat (the deploy workflow is written
   to fail loudly without printing the injected realm secret).
 - Diagnostic backups exist at
@@ -36,29 +39,38 @@ Cloudflare edge (TLS)
    deviate). The SSH user needs a Docker-capable account (QNAP "admin" group
    or a dedicated docker user).
 
-2. **SSH access** — generate a dedicated keypair; public key into the QNAP
-   user's `authorized_keys`. Store in GitHub secrets as
-   `QNAP_DEPLOY_SSH_KEY` (+ `QNAP_DEPLOY_HOST`, `QNAP_DEPLOY_USER`).
+2. **SSH for the deploy workflow** — the runner connects via the DDNS name;
+   no Cloudflare involvement:
+   - generate a dedicated keypair (`ssh-keygen -t ed25519 -f qnap-deploy-key
+     -N ""`) and put the public key in the QNAP user's `~/.ssh/authorized_keys`
+     (STRICT host keys over the first connect: `accept-new` is workflow-set)
+   - router: forward an EXTERNAL port to the QNAP:22 (browse: forward 8080
+     and 8081 too); a non-key-accessible host must be reachable by the GitHub
+     runner
+   - HARDENING (QTS → Control Panel → Telnet / SSH): **disable SSH password
+     logins**; key-only. Optionally restrict sshd attempts/QTS IP-block.
+   - GitHub secrets: `QNAP_DEPLOY_HOST` (= `dukescloud.myqnapcloud.com`),
+     `QNAP_DEPLOY_USER` (= `technical_user`), `QNAP_DEPLOY_SSH_KEY` (= the
+     private key file content)
 
 3. **GitHub variables**
-   - `QNAP_PUBLIC_APP_URL` — the app's tunnel hostname
-     (e.g. `https://reservation.example.com`)
-   - `QNAP_PUBLIC_BASE_URL` — the Keycloak tunnel hostname
-     (e.g. `https://auth.example.com`)
-   - optional `QNAP_DEPLOY_DIR`
+   - `QNAP_PUBLIC_APP_URL` — the app's public DDNS URL
+     (e.g. `http://dukescloud.myqnapcloud.com:8080`)
+   - `QNAP_PUBLIC_BASE_URL` — the Keycloak public DDNS URL
+     (e.g. `http://dukescloud.myqnapcloud.com:8081`)
+   - `QNAP_DEPLOY_DIR` — deployment directory
+     (e.g. `/share/CACHEDEV1_DATA/reservation`)
 
 4. **GitHub secret** — `KC_WEB_CLIENT_SECRET`: generate strongly
    (`openssl rand -base64 24`). The deploy workflow substitutes it into the
    deployed realm (`dev-web-secret` never carries to the QNAP).
 
-5. **Cloudflare tunnel**
-   - Zero Trust dashboard → Networks → Tunnels → Create tunnel
-     (Cloudflared connector; copy the tunnel token)
-   - Public hostnames (remotely-managed ingress) on the tunnel:
-     - `<app-host>` → service `http://app:8080`
-     - `<auth-host>` → service `http://keycloak:8081`
-     (the service names resolve because cloudflared joins the compose network)
-   - Store the token on the host: `CLOUDFLARED_TUNNEL_TOKEN=...` in `.env`
+5. **Router port forwards** (needed for public access + the CI deploy):
+   - `8080` → QNAP:8080 (app)
+   - `8081` → QNAP:8081 (Keycloak public entry)
+   - `22` → QNAP:22 (deploy SSH; keys-only enforced in QTS)
+   With myQNAPcloud DDNS all three become reachable under
+   `dukescloud.myqnapcloud.com`.
 
 6. **Host env file** — `/opt/reservation/.env` (mode 600):
 
@@ -85,7 +97,6 @@ Cloudflare edge (TLS)
 
    # pairs with the secret the deploy injects into the realm
    KC_WEB_CLIENT_SECRET=<same value as the GitHub secret>
-   CLOUDFLARED_TUNNEL_TOKEN=<from the tunnel creation>
 
    # public app hostname (redirect derivation + tunnel smoke)
    # optional: the app resolves {baseUrl} from forwarded headers by default
@@ -108,13 +119,13 @@ stack, health-checks, and smokes (public venue + 401 on availability).
 
 ## Post-deploy manual checks
 
-1. `https://<app-host>` — home page in the default language
+1. `http://dukescloud.myqnapcloud.com:8080` — home page in the default language
 2. Language selector → Polish / Greek — copy + `lang` attribute switch
 3. Log in (alice / alice → first sign-in forces a password rotation) —
    redirected through `https://<auth-host>`, back to the app
 4. Book a slot end to end; cancel it
 5. Admin panel → /admin/content (per-language editor), /admin/map
-6. Keycloak console at `https://auth.example.com` (master realm;
+6. Keycloak console at the DDNS host's 8081 (master realm;
    `KEYCLOAK_ADMIN` credentials) — check the `reservation` realm users
 
 ## Maintenance
@@ -133,8 +144,10 @@ stack, health-checks, and smokes (public venue + 401 on availability).
   realm persists across recreations now — a rotated password stays rotated).
   Note: changing the realm inject happens on fresh realm imports only; to
   force one, delete the keycloak volume AND re-run deploy on a fresh DB.
-- **Tunnel incidents**: `docker logs reservation-cloudflared` on the QNAP;
-  the connector is stateless — recreating it with the same token reconnects.
+- **TLS status (dev)**: everything routes plain HTTP on forwarded ports; a
+  TLS termination gateway (Cloudflare/domain or QNAP reverse proxy + LE cert)
+  comes with the real production environment. The Keycloak + app URLs the
+  realm redirect URIs use must match the exposed ports exactly.
 - **Realm tightening notes**: demo realm has `directAccessGrantsEnabled` on
   `reservation-api` (password grant) — acceptable for the demo, disable for
   anything longer-lived; demo users are seeded `temporary:true`.
