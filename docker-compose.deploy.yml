@@ -48,9 +48,10 @@ services:
       # realm is absent. Postgres-backed Keycloak deferred (demo scale).
       - reservation-kcdata:/opt/keycloak/data
     ports:
-      # public Keycloak entry (browser OIDC redirects); sshd-style hardening:
-      # routable only if your router forwards 8081
-      - "8081:8080"
+      # HOST side 6681+8080: QTS's web admin owns 8080 on the NAS itself, so
+      # we stop the hosts' own admin from conflicting with app and Keycloak.
+      # Router maps external 8080/8081 -> internal NAS 6680/6681.
+      - "6681:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,7 +78,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "8080:8080"
+      # HOST side 6680: QTS admin occupies 8080 on the NAS itself.
+      - "6680:8080"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 30s

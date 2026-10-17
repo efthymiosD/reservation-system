@@ -145,8 +145,21 @@ jobs:
           username: ${{ secrets.QNAP_DEPLOY_USER }}
           key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
           script_path: scripts/qnap/smoke-remote.sh
-          envs: APP_URL,FUTURE_DATE
+          envs: FUTURE_DATE
           command_timeout: 10m
+
+      # 4) Public door from a true external vantage point (the router's
+      #    public URLs): language-agnostic health probe. Fails the deploy.
+      - name: Public door smoke (runner vantage)
+        run: |
+          set -euo pipefail
+          ok=""
+          for i in $(seq 1 10); do
+            if curl -sf -m 15 "$APP_URL/actuator/health" | grep -q '"status":"UP"'; then ok=yes; break; fi
+            sleep 3
+          done
+          [ -n "$ok" ] || { echo "PUBLIC DOOR FAILED: $APP_URL unreachable (router forwards? DDNS? firewall?)"; exit 1; }
+          echo "public door: UP"
 
       - name: Summary
         if: success()
