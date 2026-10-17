@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# QNAP helper: QTS SSH exec sessions do not source .profile, so the docker
+# CLI (installed with Container Station) is missing from PATH on non-
+# interactive channels. Both remote legs add it explicitly.
+export PATH="$PATH:/share/CACHEDEV1_DATA/.qpkg/container-station/bin:/usr/local/bin"
 # QNAP deploy — runs ON the QNAP via SSH (appleboy forwards IMAGE_TAG).
 # Contract: the deployment directory is the current working directory.
 set -euo pipefail

@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# QNAP helper: QTS SSH exec sessions do not source .profile, so the docker
+# CLI (installed with Container Station) is missing from PATH on non-
+# interactive channels. Both remote legs add it explicitly.
+export PATH="$PATH:/share/CACHEDEV1_DATA/.qpkg/container-station/bin:/usr/local/bin"
 # QNAP smoke tests — runs ON the QNAP via SSH; appleboy forwards FUTURE_DATE
 # (computed on the runner, GNU date — busybox dialects differ on QTS).
 # The LAN-side app port is 6680 on the NAS (host side) because the QTS web
