@@ -92,22 +92,21 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
    KEYCLOAK_END_SESSION_URI=https://auth.example.com/realms/reservation/protocol/openid-connect/logout
 
    # server legs (compose-internal, no tunnel)
-   KEYCLOAK_TOKEN_URI=http://keycloak:8081/realms/reservation/protocol/openid-connect/token
-   KEYCLOAK_JWK_SET_URI=http://keycloak:8081/realms/reservation/protocol/openid-connect/certs
+   KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/reservation/protocol/openid-connect/token
+   KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/reservation/protocol/openid-connect/certs
 
    # pairs with the secret the deploy injects into the realm
    KC_WEB_CLIENT_SECRET=<same value as the GitHub secret>
 
-   # public app hostname (redirect derivation + tunnel smoke)
-   # optional: the app resolves {baseUrl} from forwarded headers by default
-   APP_PUBLIC_BASE_URL=https://reservation.example.com
-   KC_WEB_REDIRECT_URI=https://reservation.example.com/login/oauth2/code/keycloak
+   # APP_PUBLIC_BASE_URL / KC_WEB_REDIRECT_URI are intentionally ABSENT:
+   # the callback URL derives from the request's visible scheme+host via
+   # SERVER_FORWARD_HEADERS_STRATEGY (= the DDNS URL), and the realm's
+   # redirect URIs are generated from the QNAP_PUBLIC_APP_URL GitHub var.
    ```
 
-7. **GHCR pull (private package, B-2)** — one-time on the QNAP: create a
-   fine-grained PAT with `read:packages`, then
-   `docker login ghcr.io -u <github-username>` using it. Potentially re-login
-   when the PAT expires.
+7. **GHCR pull (private package, B-2)** — already done during provisioning
+   (classic PAT with `read:packages`; fine-grained tokens are NOT accepted by
+   ghcr.io). Re-login when the PAT expires.
 
 ## Deploy
 

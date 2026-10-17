@@ -10,7 +10,7 @@
 #
 # Runtime secrets come from an env file on the host (e.g. /opt/reservation/.env):
 #   POSTGRES_PASSWORD=...
-#   JWT_ISSUER_URI=http://keycloak:8081/realms/reservation  (or the public realm URL)
+#   JWT_ISSUER_URI=http://dukescloud.myqnapcloud.com:8081/realms/reservation (public)
 services:
   postgres:
     image: postgres:17-alpine
