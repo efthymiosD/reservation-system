@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# QNAP smoke tests — runs ON the QNAP via SSH; appleboy forwards
-# APP_URL (public app hostname) and FUTURE_DATE (computed on the runner,
-# GNU date — busybox date dialects differ on QTS).
+# QNAP smoke tests — runs ON the QNAP via SSH; appleboy forwards FUTURE_DATE
+# (computed on the runner, GNU date — busybox dialects differ on QTS).
+# The LAN-side app port is 6680 on the NAS (host side) because the QTS web
+# admin owns 8080. The	public-door check runs from the GitHub runner.
 set -euo pipefail
-APP_URL="${APP_URL:-}"
-FUTURE_DATE="${FUTURE_DATE:-$(date -u -d "+14 days" +%F 2>/dev/null || date -u -v+14d +%F)}"
-BASE=http://localhost:8080
+FUTURE_DATE="${FUTURE_DATE:?FUTURE_DATE required}"
+BASE=http://localhost:6680
 # Compose pins container_name; names are stable.
 APP_LOGS=reservation-api
 
@@ -35,16 +35,5 @@ for c in reservation-postgres reservation-keycloak; do
     echo "SMOKE FAILED: $c is not running"; exit 1
   fi
 done
-
-echo "== Smoke: public door through the Cloudflare tunnel =="
-if [ -n "$APP_URL" ]; then
-  pub=""
-  for i in $(seq 1 10); do
-    if curl -sf -m 10 "$APP_URL/actuator/health" | grep -q '"status":"UP"'; then pub=yes; break; fi
-    sleep 3
-  done
-  [ -n "$pub" ] || { echo "SMOKE FAILED: $APP_URL unreachable via the public DDNS door (router port-forward?)"; exit 1; }
-  echo "public health via DDNS: UP"
-fi
 
 echo "smoke tests passed"

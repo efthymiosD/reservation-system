@@ -66,11 +66,11 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
    deployed realm (`dev-web-secret` never carries to the QNAP).
 
 5. **Router port forwards** (needed for public access + the CI deploy):
-   - `8080` → QNAP:8080 (app)
-   - `8081` → QNAP:8081 (Keycloak public entry)
+   - `8080` → QNAP:6680 (app; the NAS-side bind avoids QTS's admin 8080)
+   - `8081` → QNAP:6681 (Keycloak public entry; same reasoning)
    - `22` → QNAP:22 (deploy SSH; keys-only enforced in QTS)
-   With myQNAPcloud DDNS all three become reachable under
-   `dukescloud.myqnapcloud.com`.
+   With myQNAPcloud DDNS the public URLs keep :8080 / :8081 (mapped to
+   NAS-side 6680 / 6681 by the router).
 
 6. **Host env file** — `/opt/reservation/.env` (mode 600):
 
@@ -119,7 +119,7 @@ stack, health-checks, and smokes (public venue + 401 on availability).
 
 ## Post-deploy manual checks
 
-1. `http://dukescloud.myqnapcloud.com:8080` — home page in the default language
+1. `http://dukescloud.myqnapcloud.com:8080` — home page in the default language (this lands on NAS :6680 via the router)
 2. Language selector → Polish / Greek — copy + `lang` attribute switch
 3. Log in (alice / alice → first sign-in forces a password rotation) —
    redirected through `https://<auth-host>`, back to the app
