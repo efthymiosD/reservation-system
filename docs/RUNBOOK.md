@@ -1,20 +1,27 @@
 # QNAP Deployment Runbook
 
-DEV environment on the QNAP, publicly reachable via **myQNAPcloud DDNS +
-router port forwards** (Cloudflare tunnel deferred until a real domain and a
-TLS gateway exist — the real production deployment is deferred anyway):
-Postgres + Keycloak + the app. The stack runs the app with the prod Spring
-profile on purpose — the box is internet-exposed, so real OAuth2/JWT
-enforcement applies despite the environment label. All public traffic is
-plain HTTP on nonstandard ports for now (`6680` app / `6681` keycloak) —
-documented, dev-grade. The dedicated SSH route is the ONLY public
-management port.
+DEV environment on the QNAP, publicly reachable via **Tailscale Funnel**:
+two public origins on `<node>.<tailnet>.ts.net` — the app on `443` and
+Keycloak on `:8443`. The Netask ISP line is CGNAT (the router never owns a
+public IP), so router port forwarding is impossible by design; instead, BOTH
+critical paths dial **outward**: the deploy runs on a **self-hosted GitHub
+runner inside the LAN** (runner → GitHub outbound), and public access comes
+in through the **funnel carrier → Tailscale edge outbound**. MyQNAPcloud
+DDNS is no longer part of the app story (may stay for NAS console
+convenience). The stack runs the app with the prod Spring profile on
+purpose — the box is internet-exposed, so real OAuth2/JWT enforcement
+applies despite the environment label. TLS terminates at the funnel node
+(Tailscale-issued Let's Encrypt certs for the ts.net name); node → stack is
+plain HTTP over loopback — documented, dev-grade. The funnel publishes ONLY
+the two configured services (opt-in per `tailscale funnel` call).
 
 ```
-Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescloud.myqnapcloud.com)
-   ├─ :8080 → compose `app`         (reservation site/API; LAN + DDNS)
-   ├─ :8081 → compose `keycloak`    (browser OIDC redirects; LAN + DDNS)
-   └─ :22   → QTS sshd              (CI deploy path via the DDNS; keys only)
+GitHub Actions (Deploy) ── outbound runner connection ──┐
+                                                        ▼
+Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
+    └── outbound tunnel ── QNAP (tailscale carrier, reservation-qnap)
+          ├─ funnel 443  → NAS loopback :6680 → compose `app`        (reservation site/API)
+          └─ funnel 8443 → NAS loopback :6681 → compose `keycloak`   (browser OIDC redirects)
 ```
 
 
@@ -24,9 +31,13 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
   services (e.g. QuMagie's `system-docker`) from this runbook.
 - Never run `docker compose down -v` against the QNAP deployment — data
   (postgres volume, keycloak data) survives routine deploys.
-- Never paste database passwords, client secrets, SSH private keys or
+- Never paste database passwords, client secrets, tokens or
   diagnostic-backup contents into logs/chat (the deploy workflow is written
-  to fail loudly without printing the injected realm secret).
+  to fail loudly without printing the realm secret).
+- The self-hosted runner container runs with a mounted docker.sock —
+  root-equivalent on the NAS. Accepted DEV trade-off (branch protection +
+  a repo-scoped PAT gate who can trigger it). Do not reuse that PAT
+  elsewhere.
 - Diagnostic backups exist at
   `/share/CACHEDEV1_DATA/Container-Station-diagnostic-backup-*` — read-only
   reference.
@@ -34,45 +45,85 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
 
 ## One-time host provisioning
 
-1. **Deployment directory** — create the dir the workflow deploys to
+1. **Deployment directory** — create the dir the workflow deploys into
    (default `/opt/reservation`; set the `QNAP_DEPLOY_DIR` GitHub variable to
-   deviate). The SSH user needs a Docker-capable account (QNAP "admin" group
-   or a dedicated docker user).
+   deviate). The runner container bind-mounts it at the SAME path, so
+   compose-relative paths agree on both sides.
 
-2. **SSH for the deploy workflow** — the runner connects via the DDNS name;
-   no Cloudflare involvement:
-   - generate a dedicated keypair (`ssh-keygen -t ed25519 -f qnap-deploy-key
-     -N ""`) and put the public key in the QNAP user's `~/.ssh/authorized_keys`
-     (STRICT host keys over the first connect: `accept-new` is workflow-set)
-   - router: forward an EXTERNAL port to the QNAP:22 (browse: forward 8080
-     and 8081 too); a non-key-accessible host must be reachable by the GitHub
-     runner
-   - HARDENING (QTS → Control Panel → Telnet / SSH): **disable SSH password
-     logins**; key-only. Optionally restrict sshd attempts/QTS IP-block.
-   - GitHub secrets: `QNAP_DEPLOY_HOST` (= `dukescloud.myqnapcloud.com`),
-     `QNAP_DEPLOY_USER` (= `technical_user`), `QNAP_DEPLOY_SSH_KEY` (= the
-     private key file content)
+2. **Tailscale + Funnel** (public access):
+   - Create a Tailscale account (free plan suffices). In the admin console:
+     **DNS → MagicDNS** enable; **DNS → HTTPS Certificates** enable.
+   - Funnel permission: the first `funnel` run walks you through an approval
+     URL and adds the default `nodeAttrs` (`autogroup:member` →
+     `attr: ["funnel"]`). You can pre-add or restrict it under
+     Access controls → Funnel.
+   - Generate an auth key (**Settings → Keys**, reusable + preauthorized)
+     and put it into the host `.env` as `TS_AUTHKEY`.
+   - Copy `docker-compose.tailscale.yml` from this repo to the deploy dir,
+     then:
+     ```bash
+     cd /opt/reservation
+     docker compose -f docker-compose.tailscale.yml --env-file .env up -d
+     ```
+   - Run `scripts/qnap/tailscale-setup.sh` (from a repo clone on the NAS or
+     the runner workspace). First run blocks until you approve Funnel in the
+     browser, then prints both public URLs.
+   - Mind Let's Encrypt rate limits: do NOT toggle funnel on/off repeatedly
+     (up to 34h lockout).
+   - If QTS cannot provide `/dev/net/tun` to Container Station, use the
+     userspace fallback documented in `docker-compose.tailscale.yml`
+     (`TS_USERSPACE: "true"`, bridge network) and re-run the setup script
+     with `FUNNEL_APP_TARGET=http://192.168.0.3:6680`
+     `FUNNEL_KC_TARGET=http://192.168.0.3:6681`.
 
-3. **GitHub variables**
-   - `QNAP_PUBLIC_APP_URL` — the app's public DDNS URL
-     (`http://dukescloud.myqnapcloud.com:8086`)
-   - `QNAP_PUBLIC_BASE_URL` — the Keycloak public DDNS URL
-     (`http://dukescloud.myqnapcloud.com:8087`)
+3. **Self-hosted GitHub runner** (deploy path; replaces the old SSH story):
+   - Check the NAS CPU: `uname -m` (x86_64 vs aarch64) when choosing the
+     runner image.
+   - Run the runner as a Container Station container so it survives QTS
+     reboots. Pragmatic image: `myoung34/github-runner:latest` (git +
+     docker CLI + PAT auto-registration; verify `python3 --version`
+     inside — the realm step needs it). Requirements for the image: git,
+     python3, docker CLI.
+     ```yaml
+     services:
+       runner:
+         image: myoung34/github-runner:latest
+         container_name: reservation-runner
+         restart: unless-stopped
+         network_mode: host          # so localhost:6680 = the NAS app port
+         environment:
+           ACCESS_TOKEN: ${GH_RUNNER_PAT:?classic PAT required}
+           RUNNER_SCOPE: repo
+           LABELS: reservation
+           RUNNER_NAME: reservation-qnap
+           DOCKER_CONFIG: /runner-docker
+         volumes:
+           - /var/run/docker.sock:/var/run/docker.sock      # compose control
+           - /opt/reservation:/opt/reservation              # SAME host path
+           - reservation-runner-docker:/runner-docker       # GHCR login persists
+     volumes:
+       reservation-runner-docker:
+     ```
+   - One classic PAT with `repo` + `read:packages` scopes: used as
+     `ACCESS_TOKEN` (runner registration) and for the GHCR pull. Generate
+     it, `docker exec -it reservation-runner docker login ghcr.io -u <user>`
+     (password via stdin), then store it ONLY in the runner's env file on
+     the NAS (`GH_RUNNER_PAT`) — never in GitHub.
+   - Verify the runner appears: repo → Settings → Actions → Runners, label
+     `reservation`.
+
+4. **GitHub variables**
+   - `QNAP_PUBLIC_APP_URL` — the app's public funnel URL
+     (`https://reservation-qnap.<tailnet>.ts.net`)
+   - `QNAP_PUBLIC_BASE_URL` — the Keycloak public funnel URL
+     (`https://reservation-qnap.<tailnet>.ts.net:8443`)
    - `QNAP_DEPLOY_DIR` — deployment directory
-     (e.g. `/share/CACHEDEV1_DATA/reservation`)
+     (e.g. `/opt/reservation`)
 
-4. **GitHub secret** — `KC_WEB_CLIENT_SECRET`: generate strongly
-   (`openssl rand -base64 24`). The deploy workflow substitutes it into the
-   deployed realm (`dev-web-secret` never carries to the QNAP).
-
-5. **Router port forwards** (needed for public access + the CI deploy):
-   - `8086` → QNAP:6680 (app; external 8080 is the router's management port)
-   - `8087` → QNAP:6681 (Keycloak public entry)
-   - `22` → QNAP:22 (deploy SSH; keys-only enforced in QTS)
-   With myQNAPcloud DDNS the public URLs become
-   `http://dukescloud.myqnapcloud.com:8086` (app) and
-   `http://dukescloud.myqnapcloud.com:8087` (Keycloak), mapped by the
-   router to the NAS-side 6680 / 6681.
+5. **GitHub secrets cleanup** — DELETE (no longer used):
+   `QNAP_DEPLOY_HOST`, `QNAP_DEPLOY_USER`, `QNAP_DEPLOY_SSH_KEY`, and
+   `KC_WEB_CLIENT_SECRET` (the client secret now lives ONLY on the NAS:
+   host `.env` for the realm generation and the app container).
 
 6. **Host env file** — `/opt/reservation/.env` (mode 600):
 
@@ -85,49 +136,70 @@ Internet ─ router (port forwards 22, 8080, 8081) ─ QNAP (DukesCloud, dukescl
    KEYCLOAK_ADMIN=<console user>
    KEYCLOAK_ADMIN_PASSWORD=<openssl rand -base64 24>
 
-   # Keycloak public face (through the tunnel) — pins every token's `iss`
-   KC_PUBLIC_BASE_URL=https://auth.example.com
-   JWT_ISSUER_URI=https://auth.example.com/realms/reservation
+   # Tailscale funnel (one-time auth key from the admin console)
+   TS_AUTHKEY=tskey-auth-...
 
-   # browser-facing legs (public, tunnel)
-   KEYCLOAK_AUTHORIZATION_URI=https://auth.example.com/realms/reservation/protocol/openid-connect/auth
-   KEYCLOAK_END_SESSION_URI=https://auth.example.com/realms/reservation/protocol/openid-connect/logout
+   # Keycloak public face (funnel, port 8443) — pins every token's `iss`;
+   # the funnel path is root(/) so no path prefix appears in these URLs
+   KC_PUBLIC_BASE_URL=https://reservation-qnap.<tailnet>.ts.net:8443
+   JWT_ISSUER_URI=https://reservation-qnap.<tailnet>.ts.net:8443/realms/reservation
 
-   # server legs (compose-internal, no tunnel)
+   # browser-facing legs (public, funnel)
+   KEYCLOAK_AUTHORIZATION_URI=https://reservation-qnap.<tailnet>.ts.net:8443/realms/reservation/protocol/openid-connect/auth
+   KEYCLOAK_END_SESSION_URI=https://reservation-qnap.<tailnet>.ts.net:8443/realms/reservation/protocol/openid-connect/logout
+
+   # server legs (compose-internal, no funnel)
    KEYCLOAK_TOKEN_URI=http://keycloak:8080/realms/reservation/protocol/openid-connect/token
    KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/reservation/protocol/openid-connect/certs
 
-   # pairs with the secret the deploy injects into the realm
-   KC_WEB_CLIENT_SECRET=<same value as the GitHub secret>
+   # pairs with the secret the NAS-side realm generation injects; NOT a
+   # GitHub secret anymore — the only copy is here
+   KC_WEB_CLIENT_SECRET=<openssl rand -base64 24>
 
    # APP_PUBLIC_BASE_URL / KC_WEB_REDIRECT_URI are intentionally ABSENT:
    # the callback URL derives from the request's visible scheme+host via
-   # SERVER_FORWARD_HEADERS_STRATEGY (= the DDNS URL), and the realm's
-   # redirect URIs are generated from the QNAP_PUBLIC_APP_URL GitHub var.
+   # SERVER_FORWARD_HEADERS_STRATEGY (= the funnel ts.net URL), and the
+   # realm's redirect URIs are generated from the QNAP_PUBLIC_APP_URL var.
    ```
 
-7. **GHCR pull (private package, B-2)** — already done during provisioning
-   (classic PAT with `read:packages`; fine-grained tokens are NOT accepted by
-   ghcr.io). Re-login when the PAT expires.
+7. **Realm secret rotation note**: changing `KC_WEB_CLIENT_SECRET` in the
+   host `.env` → re-run Deploy (the NAS-side generation applies it). The
+   realm import only re-applies on a fresh realm (delete the keycloak
+   volume AND re-run deploy on a fresh DB to force one). Keycloak
+   realm-internal secrets can also be rotated in its admin console.
+
+8. **First main-branch deploy** — fire the workflow; the Post-deploy checks
+   below must pass from a phone on LTE (true external vantage) at least
+   once after provisioning.
+
 
 ## Deploy
 
 GitHub → Actions → **Deploy to QNAP** → run with the image SHA you want
 (the Release workflow publishes `:sha` images on every main push). The
-workflow: generates the QNAP realm (tunnel URLs + real client secret),
-syncs `docker-compose.deploy.yml` + realm, pulls the exact SHA, boots the
-stack, health-checks, and smokes (public venue + 401 on availability).
+workflow runs on the self-hosted runner ON the QNAP: generates the QNAP
+realm locally (funnel URLs + real client secret from the host `.env`),
+syncs `docker-compose.deploy.yml` + realm into the deploy dir, pulls the
+exact SHA, boots the stack, health-checks, and smokes (public venue + 401
+on availability on the LAN port, then both funnel doors + all containers
+running). The runner must be online when you fire the action.
 
 ## Post-deploy manual checks
 
-1. `http://dukescloud.myqnapcloud.com:8086` — home page in the default language (lands on NAS :6680 via the router)
+1. `https://reservation-qnap.<tailnet>.ts.net` — home page in the default
+   language (funnel 443 → NAS 6680)
 2. Language selector → Polish / Greek — copy + `lang` attribute switch
 3. Log in (alice / alice → first sign-in forces a password rotation) —
-   redirected through `https://<auth-host>`, back to the app
+   redirected through `https://reservation-qnap.<tailnet>.ts.net:8443`,
+   back to the app
 4. Book a slot end to end; cancel it
 5. Admin panel → /admin/content (per-language editor), /admin/map
-6. Keycloak console at the DDNS host :8087 (master realm;
-   `KEYCLOAK_ADMIN` credentials) — check the `reservation` realm users
+6. Keycloak console at `https://reservation-qnap.<tailnet>.ts.net:8443`
+   (master realm; `KEYCLOAK_ADMIN` credentials) — check the `reservation`
+   realm users
+7. First run after provisioning: do 1–4 from a phone on LTE (not the LAN
+   Wi-Fi) — the funnel-door smoke in the workflow hairpins via the Tailscale
+   relay, but an LTE check is the honest external vantage.
 
 ## Maintenance
 
@@ -136,19 +208,25 @@ stack, health-checks, and smokes (public venue + 401 on availability).
   workflow records the previously deployed tag into
   `/opt/reservation/.previous-image` before every overwrite — copy that
   value from the host as the rollback input.
+- **Runner down?** Deploys queue until the runner reconnects (Actions job
+  waits for the label). Check `docker logs reservation-runner` or just
+  restart the runner container.
+- **Funnel down?** Public URLs die but LAN + deploy keep working. Inspect
+  `docker logs reservation-tailscale`, then `docker exec
+  reservation-tailscale tailscale funnel status`.
 - **Database backup** (run on the QNAP, schedule via cron):
   `docker exec reservation-postgres pg_dump -U reservation reservation | gzip > /opt/reservation/backup/reservation-$(date +%F).sql.gz`
   Restore: `gunzip -c <file> | docker exec -i reservation-postgres psql -U reservation -d reservation`.
-- **Secret rotation**: change the value in the host `.env` (and the GitHub
-  `KC_WEB_CLIENT_SECRET` for the realm injection) → re-run Deploy. Keycloak
-  realm-internal secrets can also be rotated in its admin console (the
-  realm persists across recreations now — a rotated password stays rotated).
-  Note: changing the realm inject happens on fresh realm imports only; to
-  force one, delete the keycloak volume AND re-run deploy on a fresh DB.
-- **TLS status (dev)**: everything routes plain HTTP on forwarded ports; a
-  TLS termination gateway (Cloudflare/domain or QNAP reverse proxy + LE cert)
-  comes with the real production environment. The Keycloak + app URLs the
-  realm redirect URIs use must match the exposed ports exactly.
+- **Secret rotation**: change the value in the host `.env` → re-run Deploy.
+  The realm import only re-applies on a fresh realm import (see the note
+  above); Keycloak realm-internal secrets can also be rotated in its admin
+  console (the realm persists across container recreations — a rotated
+  password stays rotated).
+- **TLS status (dev)**: TLS terminates at the funnel node (Tailscale-issued
+  Let's Encrypt cert for the ts.net name); node → stack is plain HTTP on
+  the NAS loopback. A custom-domain gateway remains a real-production
+  concern. The Keycloak + app URLs the realm redirect URIs use must match
+  the exposed funnel ports exactly.
 - **Realm tightening notes**: demo realm has `directAccessGrantsEnabled` on
   `reservation-api` (password grant) — acceptable for the demo, disable for
   anything longer-lived; demo users are seeded `temporary:true`.

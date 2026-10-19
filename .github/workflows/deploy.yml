@@ -1,11 +1,14 @@
 name: Deploy to QNAP
 
-# Deploys an exact, already-tested image SHA to the QNAP DEV environment
-# (publicly reachable via myQNAPcloud DDNS + router port forwards; real prod
-# with a TLS gateway and a proper domain is deferred). Run manually AFTER a
-# Release workflow has pushed the SHA to GHCR. Rollback = re-run this
-# workflow with the previous known-good SHA (also recorded on the host in
-# .previous-image after every deploy).
+# Deploys an exact, already-tested image SHA to the QNAP DEV environment,
+# reachable via Tailscale Funnel (443 app / 8443 keycloak on
+# <node>.<tailnet>.ts.net). The job runs ON the QNAP itself (self-hosted
+# runner inside the LAN): no SSH hop, no router ports, no DDNS — the ISP
+# line is CGNAT, so both directions dial outbound (runner -> GitHub, funnel
+# carrier -> Tailscale edge). Run manually AFTER a Release workflow has
+# pushed the SHA to GHCR. Rollback = re-run this workflow with the previous
+# known-good SHA (also recorded on the host in .previous-image after every
+# deploy).
 
 on:
   workflow_dispatch:
@@ -18,18 +21,20 @@ permissions:
   contents: read
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_REPOSITORY: efthymiosd/reservation-system
-  DEPLOY_DIR: ${{ vars.QNAP_DEPLOY_DIR || '/opt/reservation' }}
-  # Public app hostname (GitHub variable):
-  #   QNAP_PUBLIC_APP_URL e.g. http://dukescloud.myqnapcloud.com:8080
-  # Used by the realm substitution AND the final public smoke test.
+  # Public funnel URLs (GitHub variables):
+  #   QNAP_PUBLIC_APP_URL  e.g. https://reservation-qnap.<tailnet>.ts.net
+  #   QNAP_PUBLIC_BASE_URL e.g. https://reservation-qnap.<tailnet>.ts.net:8443
+  # Used by the realm substitution AND the funnel-door smoke checks.
   APP_URL: ${{ vars.QNAP_PUBLIC_APP_URL }}
+  KC_URL: ${{ vars.QNAP_PUBLIC_BASE_URL }}
+  DEPLOY_DIR: ${{ vars.QNAP_DEPLOY_DIR || '/opt/reservation' }}
 
 jobs:
   deploy:
     name: Deploy ${{ inputs.image_tag }} to QNAP
-    runs-on: ubuntu-latest
+    # Self-hosted runner container on the QNAP (host networking; docker.sock
+    # and the deploy dir bind-mounted at the SAME path as on the host).
+    runs-on: [self-hosted, reservation]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
@@ -45,126 +50,48 @@ jobs:
             || { echo "ERROR: image_tag must be a full 40-char git SHA"; exit 1; }
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
-      # 1a) Generate the QNAP realm: dev URLs -> public DDNS hostnames (app
-      #     8080 / keycloak 8081), dev client secret -> the real one (B-4).
-      #     JSON-aware transformation; validated; never printed or uploaded.
-      #     The committed realm stays dev-valid.
+      # 1) Generate the QNAP realm: dev URLs -> public funnel hostnames (app
+      #    443 / keycloak 8443); the client secret is read from the HOST .env
+      #    (never from GitHub) and never printed (B-4).
       - name: Generate QNAP realm export
-        env:
-          APP_URL: ${{ vars.QNAP_PUBLIC_APP_URL }}
-          AUTH_URL: ${{ vars.QNAP_PUBLIC_BASE_URL }}
-          WEB_SECRET: ${{ secrets.KC_WEB_CLIENT_SECRET }}
+        run: bash scripts/qnap/generate-realm.sh
+
+      # 2) Sync compose file + generated realm into the deploy dir (local cp
+      #    — the runner IS on the QNAP).
+      - name: Copy deployment files to the deploy directory
         run: |
           set -euo pipefail
-          python3 -B - <<'PY'
-          import json
-          import os
-          import pathlib
-          import re
+          mkdir -p "$DEPLOY_DIR/keycloak"
+          cp docker-compose.deploy.yml "$DEPLOY_DIR/"
+          cp keycloak/realm-export.qnap.json "$DEPLOY_DIR/keycloak/"
 
-          app_url = os.environ["APP_URL"].rstrip("/")
-          auth_url = os.environ["AUTH_URL"].rstrip("/")
-          web_secret = os.environ["WEB_SECRET"]
-
-          src = pathlib.Path("keycloak/realm-export.json")
-          out = pathlib.Path("keycloak/realm-export.qnap.json")
-
-          raw = src.read_text(encoding="utf-8")
-          dev_secret_count = raw.count("dev-web-secret")
-          localhost_count = len(re.findall(r"http://localhost:\d+", raw))
-          realm = json.loads(raw)
-
-          for client in realm.get("clients", []):
-              if client.get("secret") == "dev-web-secret":
-                  client["secret"] = web_secret
-              client["redirectUris"] = [
-                  u.replace("http://localhost:8080", app_url) for u in client.get("redirectUris", [])
-              ]
-              client["webOrigins"] = [
-                  o.replace("http://localhost:8080", app_url) for o in client.get("webOrigins", [])
-              ]
-              logout_uris = client.get("attributes", {}).get("post.logout.redirect.uris")
-              if isinstance(logout_uris, str):
-                  client["attributes"]["post.logout.redirect.uris"] = logout_uris.replace(
-                      "http://localhost:8080", app_url
-                  )
-
-          for client in realm.get("clients", []):
-              uris = json.dumps(client.get("redirectUris", [])) + json.dumps(client.get("webOrigins", []))
-              assert "localhost" not in uris, f"unreplaced localhost URI in client {client.get('clientId')}"
-              assert client.get("secret") != "dev-web-secret", f"unreplaced dev secret in client {client.get('clientId')}"
-
-          tmp = out.with_suffix(".tmp")
-          tmp.write_text(json.dumps(realm, indent=2), encoding="utf-8")
-          json.loads(tmp.read_text(encoding="utf-8"))  # validate
-          tmp.rename(out)
-
-          # evidence WITHOUT secret contents
-          print(f"realm generated: {dev_secret_count} dev secret(s) replaced, "
-                f"{localhost_count} dev URL reference(s) rewritten, output {out}")
-          PY
-          grep -q "$APP_URL" keycloak/realm-export.qnap.json \
-            || { echo "ERROR: no localhost URI was replaced — check QNAP_PUBLIC_APP_URL"; exit 1; }
-          [ -s keycloak/realm-export.qnap.json ] || { echo "ERROR: empty generated realm"; exit 1; }
-
-      # 1b) Sync compose file + generated realm to the QNAP (the QNAP never
-      #     builds from source)
-      - name: Copy deployment files to QNAP
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.QNAP_DEPLOY_HOST }}
-          username: ${{ secrets.QNAP_DEPLOY_USER }}
-          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
-          source: 'docker-compose.deploy.yml,keycloak/realm-export.qnap.json'
-          target: ${{ env.DEPLOY_DIR }}
-          strip_components: 0
-          overwrite: true
-
-      # 2) Pull the exact SHA, (re)start the stack
+      # 3) Pull the exact SHA, (re)start the stack.
       - name: Pull and start stack
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.QNAP_DEPLOY_HOST }}
-          username: ${{ secrets.QNAP_DEPLOY_USER }}
-          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
-          script_path: scripts/qnap/deploy-remote.sh
-          envs: IMAGE_TAG
-          command_timeout: 10m
         env:
           IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          cd "$DEPLOY_DIR"
+          bash "$GITHUB_WORKSPACE/scripts/qnap/deploy.sh"
 
-      # 3) Health check + smoke tests (LAN + public DDNS door); failure ==
-      #    failed deployment (with log tail in the remote output).
-      - name: Compute smoke date on the runner (GNU date; QTS busybox differs)
+      # 4) Health check + smoke tests (LAN + both funnel doors); failure ==
+      #    failed deployment (with log tail on health failure). FUTURE_DATE
+      #    computed here (GNU date; QTS busybox dialects differ).
+      - name: Compute smoke date on the runner (GNU date)
         run: echo "FUTURE_DATE=$(date -u -d '+14 days' +%F)" >> "$GITHUB_ENV"
 
       - name: Health check and smoke test
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.QNAP_DEPLOY_HOST }}
-          username: ${{ secrets.QNAP_DEPLOY_USER }}
-          key: ${{ secrets.QNAP_DEPLOY_SSH_KEY }}
-          script_path: scripts/qnap/smoke-remote.sh
-          envs: FUTURE_DATE
-          command_timeout: 10m
-
-      # 4) Public door from a true external vantage point (the router's
-      #    public URLs): language-agnostic health probe. Fails the deploy.
-      - name: Public door smoke (runner vantage)
         run: |
           set -euo pipefail
-          ok=""
-          for i in $(seq 1 10); do
-            if curl -sf -m 15 "$APP_URL/actuator/health" | grep -q '"status":"UP"'; then ok=yes; break; fi
-            sleep 3
-          done
-          [ -n "$ok" ] || { echo "PUBLIC DOOR FAILED: $APP_URL unreachable (router forwards? DDNS? firewall?)"; exit 1; }
-          echo "public door: UP"
+          cd "$DEPLOY_DIR"
+          PUBLIC_APP_URL="$APP_URL" PUBLIC_KC_URL="$KC_URL" FUTURE_DATE="$FUTURE_DATE" \
+            bash "$GITHUB_WORKSPACE/scripts/qnap/smoke.sh"
 
       - name: Summary
         if: success()
         run: |
           echo "### Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "- image: \`${IMAGE}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- app: $APP_URL" >> $GITHUB_STEP_SUMMARY
-          echo "- rollback: previous tag recorded on the host in \`${DEPLOY_DIR}/.previous-image\`" >> $GITHUB_STEP_SUMMARY
+          echo "- image: \`$IMAGE\`" >> $GITHUB_STEP_SUMMARY
+          echo "- app: $APP_URL (funnel 443)" >> $GITHUB_STEP_SUMMARY
+          echo "- keycloak: $KC_URL (funnel 8443)" >> $GITHUB_STEP_SUMMARY
+          echo "- rollback: previous tag recorded on the host in \`$DEPLOY_DIR/.previous-image\`" >> $GITHUB_STEP_SUMMARY
