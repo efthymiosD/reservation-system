@@ -1,0 +1,40 @@
+# Tailscale Funnel carrier for the QNAP DEV environment — the PUBLIC access
+# path. The Netask ISP line is CGNAT (the router never owns a public IP), so
+# inbound forwarding is impossible; the funnel dials OUT to Tailscale's edge
+# and public traffic arrives over that tunnel. One-time provisioning (see
+# docs/RUNBOOK.md): bring up with the host .env (TS_AUTHKEY), then run
+# scripts/qnap/tailscale-setup.sh to publish:
+#   funnel 443  -> NAS loopback 6680 (app)
+#   funnel 8443 -> NAS loopback 6681 (keycloak)
+# TLS terminates at the node with Tailscale-issued Let's Encrypt certs for
+# the ts.net name; node -> stack is plain HTTP on loopback (dev-grade).
+# Not part of the deploy workflow — stable infrastructure, updated manually.
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: reservation-tailscale
+    restart: unless-stopped
+    # Host networking: serve/funnel targets 127.0.0.1:6680/6681 hit the NAS
+    # host bindings published by docker-compose.deploy.yml.
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      # Persists the node identity, funnel config and TLS certs across
+      # container recreations and QTS reboots.
+      - reservation-tsstate:/tsstate
+    environment:
+      # One-time auth key from the Tailscale admin console (preauthorized,
+      # reusable) — lives ONLY in the host .env, never in GitHub.
+      TS_AUTHKEY: ${TS_AUTHKEY:?TS_AUTHKEY is required (host .env; see docs/RUNBOOK.md)}
+      TS_HOSTNAME: reservation-qnap
+      TS_STATE_DIR: /tsstate
+      # Fallback if QTS cannot provide /dev/net/tun: set TS_USERSPACE: "true"
+      # (and drop network_mode/cap_add/devices), then re-run
+      # scripts/qnap/tailscale-setup.sh with FUNNEL_APP_TARGET /
+      # FUNNEL_KC_TARGET pointed at the NAS LAN IP (see docs/RUNBOOK.md).
+
+volumes:
+  reservation-tsstate:

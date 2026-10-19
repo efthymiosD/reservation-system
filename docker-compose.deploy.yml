@@ -1,7 +1,8 @@
-# Compose for the QNAP DEV environment (publicly reachable via myQNAPcloud
-# DDNS + router forwards: ext 8086->NAS 6680 (app), ext 8087->NAS 6681
-# (keycloak); the real production deployment with a proper TLS gateway is
-# deferred). NOT for local
+# Compose for the QNAP DEV environment (publicly reachable via Tailscale
+# Funnel: https://<node>.<tailnet>.ts.net -> NAS 6680 (app), :8443 -> NAS
+# 6681 (keycloak); the funnel carrier lives in docker-compose.tailscale.yml
+# and proxies these host bindings over loopback — the ISP line is CGNAT, so
+# no router forwarding exists or can exist). NOT for local
 # development (use docker-compose.yml). The image tag is injected by the
 # deploy workflow; never reference 'latest'.
 #
@@ -11,7 +12,7 @@
 #
 # Runtime secrets come from an env file on the host (e.g. /opt/reservation/.env):
 #   POSTGRES_PASSWORD=...
-#   JWT_ISSUER_URI=http://dukescloud.myqnapcloud.com:8081/realms/reservation (public)
+#   JWT_ISSUER_URI=https://reservation-qnap.<tailnet>.ts.net:8443/realms/reservation (public, funnel)
 services:
   postgres:
     image: postgres:17-alpine
@@ -38,8 +39,8 @@ services:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
       # Pin the external hostname so every issued token carries the same `iss`,
-      # no matter which route reached Keycloak (Cloudflare tunnel vs. container
-      # traffic). The tunnel terminates TLS; backend stays plain HTTP (dev mode).
+      # no matter which route reached Keycloak (funnel vs. compose-internal
+      # traffic). The funnel terminates TLS; backend stays plain HTTP (dev mode).
       KC_HOSTNAME_URL: ${KC_PUBLIC_BASE_URL:?KC_PUBLIC_BASE_URL is required}
       KC_PROXY_HEADERS: xforwarded
     volumes:
@@ -49,9 +50,8 @@ services:
       # realm is absent. Postgres-backed Keycloak deferred (demo scale).
       - reservation-kcdata:/opt/keycloak/data
     ports:
-      # HOST side 6681+8080: QTS's web admin owns 8080 on the NAS itself, so
-      # we stop the hosts' own admin from conflicting with app and Keycloak.
-      # Router maps external 8080/8081 -> internal NAS 6680/6681.
+      # HOST side 6681: QTS's web admin owns 8080 on the NAS itself. The
+      # funnel maps https://<node>.<tailnet>.ts.net:8443 -> NAS 6681.
       - "6681:8080"
     depends_on:
       postgres:
@@ -73,13 +73,20 @@ services:
       KEYCLOAK_JWK_SET_URI: ${KEYCLOAK_JWK_SET_URI:?KEYCLOAK_JWK_SET_URI is required}
       KEYCLOAK_END_SESSION_URI: ${KEYCLOAK_END_SESSION_URI:?KEYCLOAK_END_SESSION_URI is required}
       # Kept for reverse-proxy/LAN access through non-default schemes;
-      # ensures the OAuth2 callback derives from the visible scheme/host.
+      # ensures the OAuth2 callback derives from the visible scheme/host
+      # (X-Forwarded-* set by the funnel proxy).
       SERVER_FORWARD_HEADERS_STRATEGY: framework
+      # Session cookie renamed: the funnel serves app (443) and Keycloak
+      # (8443) under ONE ts.net hostname, and cookies ignore ports (RFC
+      # 6265) — a stock JSESSIONID on / would collide with Keycloak's own
+      # JSESSIONID and shadow the app session during login.
+      SERVER_SERVLET_SESSION_COOKIE_NAME: RESERVATION_SESSION
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      # HOST side 6680: QTS admin occupies 8080 on the NAS itself.
+      # HOST side 6680: QTS admin occupies 8080 on the NAS itself. The
+      # funnel maps https://<node>.<tailnet>.ts.net (443) -> NAS 6680.
       - "6680:8080"
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
-# QNAP helper: QTS SSH exec sessions do not source .profile, so the docker
-# CLI (installed with Container Station) is missing from PATH on non-
-# interactive channels. Both remote legs add it explicitly.
-export PATH="$PATH:/share/CACHEDEV1_DATA/.qpkg/container-station/bin:/usr/local/bin"
-# QNAP deploy — runs ON the QNAP via SSH (appleboy forwards IMAGE_TAG).
+# QNAP deploy — runs ON the QNAP in the self-hosted runner (no SSH hop; the
+# runner container mounts the deploy dir AND /var/run/docker.sock at the
+# same host path, so compose sees identical absolute paths on both sides).
 # Contract: the deployment directory is the current working directory.
 set -euo pipefail
 
