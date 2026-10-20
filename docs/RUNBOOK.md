@@ -131,8 +131,8 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
    # data plane
    POSTGRES_PASSWORD=<openssl rand -base64 24>
 
-   # Keycloak console bootstrap (NOT admin/admin — the realm-imported admin
-   # user is seeded temporary:true and rotates at first sign-in)
+   # Keycloak master-console bootstrap (temporary; replaced by a permanent
+   # admin per "Keycloak console tasks" — NOT admin/admin)
    KEYCLOAK_ADMIN=<console user>
    KEYCLOAK_ADMIN_PASSWORD=<openssl rand -base64 24>
 
@@ -173,6 +173,51 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
    once after provisioning.
 
 
+## Keycloak console tasks (one-time, live realm)
+
+The live realm predates the updated realm export/generation — the following
+are set via the admin console once and persist in the kcdata volume. A
+fresh-import deployment (delete kcdata → re-run Deploy) carries them from
+the repo content instead.
+
+1. **Permanent master-console admin** (removes the "temporary admin user"
+   banner): log in at `…:8443` master realm as `KEYCLOAK_ADMIN` → Users →
+   Add user (`kcadmin`, real email/name) → Credentials → set password with
+   **Temporary OFF** → Role mapping → Assign role → filter client
+   `realm-management` → assign `realm-admin`. Log out, log back in as
+   `kcadmin` to verify, then delete the temporary bootstrap user.
+
+2. **Console + login localization (EN/PL/EL)**: Realm settings →
+   Localization → Internationalization **on**, supported locales
+   `en, pl, el`, default `en` — in BOTH the master realm (governs the
+   admin console) and the `reservation` realm (governs the login page).
+   Keycloak ships PL and EL translations for these UIs; any string without
+   a translation renders English. The app carries its own locale into the
+   login page automatically: the OAuth2 redirect includes
+   `ui_locales=<app locale cookie>` — see "Locale memory" below.
+
+3. **Demo-user rotation**: the app's `generate-realm.sh` now marks every
+   demo password temporary at QNAP-realm generation ("N demo password(s)
+   set temporary" in the deploy log) — but the currently-live realm was
+   imported from the older generation, where users were NOT temporary (the
+   committed dev realm is deliberately non-rotating because the e2e login
+   helper logs in with fixed seeds). To force rotation on the live realm:
+   reservation realm → Users → `alice`/`bob`/`admin` → Credentials → set
+   **temporary**; each user must rotate at their next sign-in.
+   (applied to the live realm on 2026-10-20; later fresh imports get it
+   from the generated realm automatically)
+
+## Locale memory
+
+The app's own `locale` cookie (365 days) is the single source of truth for
+the visitor's language: set by the site's language selector (`?lang=`),
+honored on every later visit (constraint-checked against the enabled
+languages — a disabled/stale value falls back silently). The Keycloak
+login screen follows the app locale via the `ui_locales` parameter on the
+login redirect. A language switcher inside the Keycloak screen changes
+only that Keycloak session and is deliberately NOT propagated back into
+the app cookie.
+
 ## Deploy
 
 GitHub → Actions → **Deploy to QNAP** → run with the image SHA you want
@@ -189,9 +234,11 @@ running). The runner must be online when you fire the action.
 1. `https://reservation-qnap.<tailnet>.ts.net` — home page in the default
    language (funnel 443 → NAS 6680)
 2. Language selector → Polish / Greek — copy + `lang` attribute switch
-3. Log in (alice / alice → first sign-in forces a password rotation) —
-   redirected through `https://reservation-qnap.<tailnet>.ts.net:8443`,
-   back to the app
+3. Log in (alice / alice — until the console "demo-user rotation" task is
+   applied there is NO forced rotation screen; after it, the first
+   sign-in forces a password rotation) — redirected through
+   `https://reservation-qnap.<tailnet>.ts.net:8443`, back to the app;
+   the login screen should open in the language last chosen on the site
 4. Book a slot end to end; cancel it
 5. Admin panel → /admin/content (per-language editor), /admin/map
 6. Keycloak console at `https://reservation-qnap.<tailnet>.ts.net:8443`
@@ -229,4 +276,6 @@ running). The runner must be online when you fire the action.
   the exposed funnel ports exactly.
 - **Realm tightening notes**: demo realm has `directAccessGrantsEnabled` on
   `reservation-api` (password grant) — acceptable for the demo, disable for
-  anything longer-lived; demo users are seeded `temporary:true`.
+  anything longer-lived. Demo-user password rotation on the QNAP realm is
+  forced via temporary credentials at realm generation; console-task
+  section above applies to the long-lived live realm.

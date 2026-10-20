@@ -54,6 +54,18 @@ for client in realm.get("clients", []):
     assert "localhost" not in uris, f"unreplaced localhost URI in client {client.get('clientId')}"
     assert client.get("secret") != "dev-web-secret", f"unreplaced dev secret in client {client.get('clientId')}"
 
+# The public DEV box is internet-exposed: every demo user must rotate their
+# password at first sign-in (UPDATE_PASSWORD required action via a temporary
+# credential). The COMMITTED dev realm stays temporary:false on purpose —
+# the e2e stack imports this exact file and its login helper must not hit
+# the rotation screen.
+rotated = 0
+for user in realm.get("users", []):
+    for cred in user.get("credentials", []):
+        if cred.get("type") == "password":
+            cred["temporary"] = True
+            rotated += 1
+
 tmp = out.with_suffix(".tmp")
 tmp.write_text(json.dumps(realm, indent=2), encoding="utf-8")
 json.loads(tmp.read_text(encoding="utf-8"))  # validate
@@ -61,7 +73,9 @@ tmp.rename(out)
 
 # evidence WITHOUT secret contents
 print(f"realm generated: {dev_secret_count} dev secret(s) replaced, "
-      f"{localhost_count} dev URL reference(s) rewritten, output {out}")
+      f"{localhost_count} dev URL reference(s) rewritten, "
+      f"{rotated} demo password(s) set temporary (rotate at first sign-in), "
+      f"output {out}")
 PY
 
 grep -q "$APP_URL" keycloak/realm-export.qnap.json \
