@@ -6,6 +6,9 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "sslRequired": "external",
+  "internationalizationEnabled": true,
+  "defaultLocale": "en",
+  "supportedLocales": ["en", "pl", "el"],
   "roles": {
     "realm": [
       {
@@ -152,7 +155,7 @@
         {
           "type": "password",
           "value": "admin",
-          "temporary": false
+          "temporary": true
         }
       ],
       "realmRoles": [
@@ -170,7 +173,7 @@
         {
           "type": "password",
           "value": "alice",
-          "temporary": false
+          "temporary": true
         }
       ],
       "realmRoles": [
@@ -188,7 +191,7 @@
         {
           "type": "password",
           "value": "bob",
-          "temporary": false
+          "temporary": true
         }
       ],
       "realmRoles": [
