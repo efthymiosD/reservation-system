@@ -88,11 +88,14 @@ services:
       # HOST side 6680: QTS admin occupies 8080 on the NAS itself. The
       # funnel maps https://<node>.<tailnet>.ts.net (443) -> NAS 6680.
       - "6680:8080"
+    # start_period tuned for the QNAP: cold boot (Flyway + Hibernate) can
+    # exceed 2 minutes on this hardware; 40s marked the container unhealthy
+    # mid-boot on first deploy.
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 5s
-      start_period: 40s
+      start_period: 150s
       retries: 3
 
 volumes:

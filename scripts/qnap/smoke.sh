@@ -14,8 +14,10 @@ BASE="${LAN_APP_URL:-http://localhost:6680}"
 APP_LOGS=reservation-api
 
 echo "== Waiting for health (LAN: $BASE) =="
+# Generous for a NAS: first boot with a fresh DB (Flyway + Hibernate wiring)
+# can take 3+ minutes on this hardware (observed ~2 min to reach Tomcat).
 ok=""
-for i in $(seq 1 40); do
+for i in $(seq 1 100); do
   if curl -sf "$BASE/actuator/health" | grep -q '"status":"UP"'; then ok=yes; break; fi
   sleep 3
 done
