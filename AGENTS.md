@@ -1,5 +1,13 @@
 # reservation-system — Agent Instructions
 
+## Delivery gate (user-directed rule)
+
+Do NOT commit, push, open a PR, merge, or check out an updated main until
+the user says **"go-live"**. Until then: prepare changes in the working
+tree, validate locally, and present them for review. On **"go-live"**: do
+the whole delivery chain in order (commit → push → create PR → merge PR →
+check out updated main).
+
 ## Status
 
 All phases implemented (Boot 4.1.1 + Modulith 2.1.1, Java 26, 10 modules); **189 tests green** (`./mvnw verify`, Testcontainers Postgres via Rancher Desktop) incl. go-live hardening, mobile-first responsive UI, and the Playwright e2e layer. Opt-in `@Tag("keycloak")` realm-contract test excluded by default (runs only vs live Keycloak).
