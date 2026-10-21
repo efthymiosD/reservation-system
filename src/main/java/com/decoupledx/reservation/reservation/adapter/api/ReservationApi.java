@@ -73,7 +73,7 @@ public interface ReservationApi {
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);
 
-    ReservationPage listAllForAdmin(ReservationStatus status, int page, int size);
+    ReservationPage listAllForAdmin(AdminReservationFilter filter, int page, int size);
 
     /**
      * Administrative cancel by the current player acting as administrator (ADR 0002).

@@ -8,7 +8,7 @@
   <h1 class="mb-4" th:text="#{admin.res.reservations}">Reservations</h1>
 
   <form th:action="@{/admin/reservations}" method="get" class="row g-3 align-items-end mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <label for="status" class="form-label" th:text="#{admin.table.status}">Status</label>
       <select id="status" name="status" class="form-select">
         <option value="" th:selected="${page.selectedStatus == null}" th:text="#{admin.status.all}">All</option>
@@ -16,7 +16,24 @@
                 th:value="${s}" th:text="#{${'status.' + s.name().toLowerCase()}}" th:selected="${s == page.selectedStatus}">ACTIVE</option>
       </select>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <label for="customer" class="form-label" th:text="#{admin.filter.customer}">Customer</label>
+      <select id="customer" name="customer" class="form-select">
+        <option value="" th:selected="${page.selectedCustomer == null}" th:text="#{admin.status.all}">All</option>
+        <option th:each="name : ${page.customerNameOptions}"
+                th:value="${name}" th:text="${name}"
+                th:selected="${name == page.selectedCustomer}">Ann Smith</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label for="from" class="form-label" th:text="#{admin.filter.from}">From (day)</label>
+      <input id="from" name="from" type="date" class="form-control" th:value="${page.selectedFrom}">
+    </div>
+    <div class="col-md-2">
+      <label for="to" class="form-label" th:text="#{admin.filter.to}">To (day)</label>
+      <input id="to" name="to" type="date" class="form-control" th:value="${page.selectedTo}">
+    </div>
+    <div class="col-md-2">
       <button type="submit" class="btn btn-outline-primary" th:text="#{admin.filter}">Filter</button>
     </div>
   </form>
@@ -55,13 +72,20 @@
     </table>
   </div>
 
+  <p class="text-warning small" th:if="${page.rangeClamped}"
+     th:text="#{admin.filter.tooWide}">The date range was shortened to the configured maximum.</p>
+  <p class="text-muted" th:if="${page.total == 0}" th:text="#{admin.filter.noMatch}">No reservations match the given filters.</p>
+
   <nav class="d-flex align-items-center gap-2">
     <span class="text-muted" th:text="#{admin.table.totalPage(${page.total}, ${page.page})}">Total: 0 · page 0</span>
     <a class="btn btn-sm btn-outline-secondary"
-       th:if="${page.page > 0}" th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page - 1},size=${page.size})}" th:text="#{admin.pager.newer}">Newer</a>
+       th:if="${page.page > 0}"
+       th:href="@{/admin/reservations(status=${page.selectedStatus},customer=${page.selectedCustomer},from=${page.selectedFrom},to=${page.selectedTo},page=${page.page - 1},size=${page.size})}"
+       th:text="#{admin.pager.newer}">Newer</a>
     <a class="btn btn-sm btn-outline-secondary"
        th:if="${(page.page + 1) * page.size < page.total}"
-       th:href="@{/admin/reservations(status=${page.selectedStatus},page=${page.page + 1},size=${page.size})}" th:text="#{admin.pager.older}">Older</a>
+       th:href="@{/admin/reservations(status=${page.selectedStatus},customer=${page.selectedCustomer},from=${page.selectedFrom},to=${page.selectedTo},page=${page.page + 1},size=${page.size})}"
+       th:text="#{admin.pager.older}">Older</a>
   </nav>
 </section>
 </body>

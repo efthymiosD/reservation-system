@@ -49,6 +49,7 @@ class AdminContentController {
     private final WebMessages messages;
     private final VenueApi venueApi;
     private final ContentApi contentApi;
+    private final AdminFilterSettings filterSettings;
 
     @Value("${app.content.upload-dir:uploads}")
     private String uploadDir;
@@ -57,7 +58,21 @@ class AdminContentController {
     String content(@RequestParam(defaultValue = "en") String contentLang, Model model) {
         model.addAttribute("page", contentFactory.build(contentLang));
         model.addAttribute("contentLang", contentLang.toLowerCase());
+        model.addAttribute("filterMaxRangeDays", filterSettings.maxRangeDays());
         return "admin/content";
+    }
+
+    @PostMapping("/admin/content/filter-limit")
+    String updateFilterLimit(@RequestParam(required = false) String maxRangeDays,
+                             RedirectAttributes redirect) {
+        Integer parsed = AdminFilterSettings.parseDays(maxRangeDays);
+        if (parsed == null) {
+            redirect.addFlashAttribute("error", messages.get("admin.content.filterLimitRejected"));
+            return "redirect:/admin/content";
+        }
+        contentApi.update(AdminFilterSettings.MAX_RANGE_DAYS_KEY, String.valueOf(parsed));
+        redirect.addFlashAttribute("message", messages.get("admin.content.filterLimitSaved"));
+        return "redirect:/admin/content";
     }
 
     @PostMapping("/admin/content/languages")

@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.reservation.domain.port;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.adapter.persistence.ReservationDataValue;
@@ -30,7 +31,7 @@ public interface ReservationRepository {
 
     List<ReservationDataValue> findActiveByRecurringReservationId(UUID recurringReservationId);
 
-    List<ReservationDataValue> findAll(ReservationStatus status, int page, int size);
+    List<ReservationDataValue> findAll(AdminReservationFilter filter, int page, int size);
 
-    long countAll(ReservationStatus status);
+    long countAll(AdminReservationFilter filter);
 }

@@ -27,14 +27,16 @@
       </ul>
       <ul class="navbar-nav">
         <li class="nav-item" th:if="${currentUser.authenticated}">
-          <span class="navbar-text me-3"><span th:text="#{nav.signedInAs} + ' '">Signed in as </span><a
-               href="#" class="fw-bold text-info text-decoration-none" tabindex="0" role="button"
-               data-bs-toggle="popover" data-bs-trigger="hover focus"
-               data-bs-placement="bottom" data-bs-html="true"
-               th:title="#{nav.signedInAs} + ' ' + ${currentUser.displayName}"
-               th:attr="data-bs-content=${'<div>' + 'Id: ' + (currentUser.customerId != null ? currentUser.customerId : '&mdash;') + '</div><div>Username: ' + currentUser.displayName + '</div><div>Email: ' + (currentUser.email != null ? currentUser.email : '&mdash;') + '</div>'}">
-              <span th:text="${currentUser.displayName}">alice</span></a>
-          </span>
+          <!-- nav-link line-height keeps the chip level with the neighbouring
+               menu items and the language selector (a navbar-text span floats
+               a few pixels off their baseline). -->
+          <a class="nav-link px-2 py-1 text-info text-decoration-none" href="#" tabindex="0" role="button"
+             data-bs-toggle="popover" data-bs-trigger="hover focus"
+             data-bs-placement="bottom" data-bs-html="true"
+             th:title="#{nav.signedInAs} + ' ' + ${currentUser.displayName}"
+             th:attr="data-bs-content=${'<div>' + 'Id: ' + (currentUser.customerId != null ? currentUser.customerId : '&mdash;') + '</div><div>Username: ' + currentUser.displayName + '</div><div>Email: ' + (currentUser.email != null ? currentUser.email : '&mdash;') + '</div>'}">
+            <span th:text="#{nav.signedInAs} + ' '">Signed in as </span><strong th:text="${currentUser.displayName}">alice</strong>
+          </a>
         </li>
         <li class="nav-item dropdown">
           <button class="nav-link btn btn-link dropdown-toggle bg-dark text-light border-0 d-flex align-items-center gap-1"

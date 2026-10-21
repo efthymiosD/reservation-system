@@ -62,6 +62,16 @@ class CustomerPersistenceAdapter implements CustomerAccountRepository {
     }
 
     @Override
+    public List<CustomerId> byExactName(String displayName) {
+        if (displayName == null || displayName.isBlank()) {
+            return List.of();
+        }
+        return customers.findByDisplayNameIgnoreCase(displayName.trim()).stream()
+                .map(entity -> CustomerId.of(entity.getCustomerId().toString()))
+                .toList();
+    }
+
+    @Override
     public void updateDisplayName(CustomerId customerId, String displayName) {
         customers.findFirstByCustomerId(UUID.fromString(customerId.value()))
                 .ifPresent(entity -> {

@@ -19,4 +19,12 @@ public interface CustomerAccountService {
     Map<UUID, String> displayNames(Collection<CustomerId> customers);
 
     List<CustomerEntry> findAll();
+
+    /**
+     * Internal ids of the provisioned customers whose stored display name
+     * EQUALS the given name (case-insensitive); several customers may share
+     * a name. An empty or blank name yields an empty list — never an
+     * unfiltered directory.
+     */
+    List<CustomerId> byExactName(String displayName);
 }

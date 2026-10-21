@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Component;
 
@@ -96,17 +98,16 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     }
 
     @Override
-    public List<ReservationDataValue> findAll(ReservationStatus status, int page, int size) {
-        var pageRequest = PageRequest.of(page, size);
-        var entities = status == null
-                ? reservations.findAllByOrderByStartTimeDesc(pageRequest)
-                : reservations.findByStatusOrderByStartTimeDesc(status.name(), pageRequest);
-        return entities.stream().map(this::toDomain).toList();
+    public List<ReservationDataValue> findAll(AdminReservationFilter filter, int page, int size) {
+        return reservations
+                .findAll(ReservationAdminSpecs.forFilter(filter),
+                        PageRequest.of(Math.max(page, 0), size, Sort.by(Sort.Direction.DESC, "startTime")))
+                .stream().map(this::toDomain).toList();
     }
 
     @Override
-    public long countAll(ReservationStatus status) {
-        return status == null ? reservations.count() : reservations.countByStatus(status.name());
+    public long countAll(AdminReservationFilter filter) {
+        return reservations.count(ReservationAdminSpecs.forFilter(filter));
     }
 
     private ReservationEntity toEntity(ReservationDataValue data) {

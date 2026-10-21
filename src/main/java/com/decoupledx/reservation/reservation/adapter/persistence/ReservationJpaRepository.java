@@ -6,10 +6,11 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID> {
+interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID>, JpaSpecificationExecutor<ReservationEntity> {
 
     List<ReservationEntity> findByCustomerIdOrderByStartTimeDesc(String customerId);
 
@@ -20,12 +21,6 @@ interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID
     long countByCustomerIdAndStatus(String customerId, String status);
 
     long countByCustomerId(String customerId);
-
-    Page<ReservationEntity> findByStatusOrderByStartTimeDesc(String status, Pageable pageable);
-
-    Page<ReservationEntity> findAllByOrderByStartTimeDesc(Pageable pageable);
-
-    long countByStatus(String status);
 
     @Query("""
             select r from ReservationEntity r
