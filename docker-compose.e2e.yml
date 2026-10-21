@@ -24,8 +24,10 @@ services:
     image: quay.io/keycloak/keycloak:26.0
     command: start-dev --import-realm
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      # Temporary bootstrap admin (Keycloak 26 naming; legacy KEYCLOAK_ADMIN
+      # pair is deprecated) — deterministic e2e defaults.
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       # Pin the external hostname so issued tokens always carry the same `iss`
       # regardless of which leg contacted Keycloak (browser -> localhost:8081 vs
       # app container -> keycloak:8080 over the compose network). Without this,

@@ -36,8 +36,12 @@ services:
     restart: unless-stopped
     command: start-dev --import-realm
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN is required}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
+      # Temporary bootstrap admin (Keycloak 26 naming — legacy KEYCLOAK_ADMIN
+      # pair is deprecated): created ONLY when the master realm doesn't exist
+      # yet, meant to be exchanged for a permanent admin per docs/RUNBOOK.md
+      # "Keycloak console tasks" and then DELETED from the console.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:?KC_BOOTSTRAP_ADMIN_USERNAME is required}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:?KC_BOOTSTRAP_ADMIN_PASSWORD is required}
       # Pin the external hostname so every issued token carries the same `iss`,
       # no matter which route reached Keycloak (funnel vs. compose-internal
       # traffic). The funnel terminates TLS; backend stays plain HTTP (dev mode).
