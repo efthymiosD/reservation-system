@@ -155,7 +155,7 @@
         {
           "type": "password",
           "value": "admin",
-          "temporary": true
+          "temporary": false
         }
       ],
       "realmRoles": [
@@ -166,14 +166,14 @@
       "username": "alice",
       "enabled": true,
       "emailVerified": true,
-      "email": "alice@reservation.local",
+      "email": "alice@reservation.e2e",
       "firstName": "Alice",
-      "lastName": "Customer",
+      "lastName": "TestUser",
       "credentials": [
         {
           "type": "password",
           "value": "alice",
-          "temporary": true
+          "temporary": false
         }
       ],
       "realmRoles": [
@@ -184,14 +184,14 @@
       "username": "bob",
       "enabled": true,
       "emailVerified": true,
-      "email": "bob@reservation.local",
+      "email": "bob@reservation.e2e",
       "firstName": "Bob",
-      "lastName": "Customer",
+      "lastName": "TestUser",
       "credentials": [
         {
           "type": "password",
           "value": "bob",
-          "temporary": true
+          "temporary": false
         }
       ],
       "realmRoles": [
