@@ -4,8 +4,10 @@ import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
+import java.time.LocalDate;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,10 +40,14 @@ class AdminPagesController {
     @GetMapping("/admin/reservations")
     String reservations(
             @RequestParam(required = false) ReservationStatus status,
+            @RequestParam(required = false) String customer,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Model model) {
-        model.addAttribute("page", reservationsFactory.build(status, page, size));
+        model.addAttribute("page",
+                reservationsFactory.build(status, customer, from, to, page, size));
         return "admin/reservations";
     }
 

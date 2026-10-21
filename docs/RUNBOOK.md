@@ -220,9 +220,30 @@ the visitor's language: set by the site's language selector (`?lang=`),
 honored on every later visit (constraint-checked against the enabled
 languages — a disabled/stale value falls back silently). The Keycloak
 login screen follows the app locale via the `ui_locales` parameter on the
-login redirect. A language switcher inside the Keycloak screen changes
-only that Keycloak session and is deliberately NOT propagated back into
-the app cookie.
+login redirect (verbatim: `ui_locales` requires the realm's
+internationalization ON — console task 2; the resolution order in
+Keycloak's `DefaultLocaleSelectorProvider` puts the login-page switcher's
+own choice first, the client-provided `ui_locales` third).
+
+Propagating a choice made INSIDE the Keycloak login screen back into the
+app is NOT possible with stock Keycloak, verified against the source:
+- the switcher writes only an auth-session note + the `KEYCLOAK_LOCALE`
+  cookie, which is realm-path scoped (`/realms/reservation/...` —
+  `CookieType.LOCALE`, `CookiePath.REALM`); the app's pages never receive
+  it (cookies match by host AND path; the ports are irrelevant),
+- there is no configuration to widen that cookie's path (the cookie
+  provider exposes no options), and the session note dies with the
+  auth session.
+
+Consequences: the KC-side switcher stays session-local there (logout screens
+DO follow it — they live on the realm path and read the cookie), and the
+app keeps its own cookie as the authority. Pick the language on the site,
+and login opens localized automatically; to change the site language,
+switch on the site, not inside the login screen. If real back-propagation
+becomes a requirement later, the options are a customized Keycloak LOGIN
+THEME that writes a path-root cookie on the switcher click, or a Keycloak
+SPI with a custom cookie provider — both are deliberate extensions beyond
+stock Keycloak.
 
 ## Deploy
 

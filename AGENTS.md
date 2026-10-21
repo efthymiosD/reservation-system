@@ -28,7 +28,7 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 
 ## i18n (bundles + per-locale site content)
 
-- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (254 keys each, `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang` follows the resolved locale. Page `<title>` keys `meta.*`.
+- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (265 keys each, `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang` follows the resolved locale. Page `<title>` keys `meta.*`.
 - Locale resolution (`webui/LocaleConfig`, moved from shared.web): `?lang=` (LocaleChangeInterceptor) → `locale` cookie (365d) → browser `Accept-Language` restricted to enabled set → default EN. Enabled languages: site-content key `ui.locales.enabled` CSV, EMPTY/missing = all on; EN can never be disabled; a stale cookie for a disabled language silently resolves down (not rewritten).
 - **Three text categories (do not blur):** 1) system copy → bundles; 2) shipped site-content defaults → bundles too (`#{...}` fallback behind `${siteContent[k]}` — NO English text rows in V2 seeds, only non-text keys contact.phone/email, photos, venue.map.layout); 3) admin-authored copy → stored verbatim per language: master `key` (EN) + `pl:key`/`el:key` siblings via `/admin/content?contentLang=<tag>` (one dropdown, one page; per-language forms POST `pl:home.feature.1.title` keys). `ContentAdvice` exposes only the request-language authored row (never mixes languages); empty/missing → bundle default. Thymeleaf Elvis must be `${siteContent['k']} ?: #{bundleKey}` (a `#{..}` INSIDE `${...}` renders literally!).
 - `webui/WebMessages` = MessageSource facade for Java-side strings (controllers/model factories); error codes → `error.<code_lower>` keys. Value-free i18n tests: `I18nIntegrationTest`, `SiteContentLocalizationIntegrationTest` (assert `html lang`, `??` absence, `hreflang`, data-attribute ↔ MessageSource agreement — never translation literals).
@@ -99,7 +99,7 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 - `GET /api/public/venue`; `GET /api/availability?date&start&durationMinutes`
 - `POST /api/reservations` `{resourceId, startTime, durationMinutes}`; `GET /api/reservations?status&page&size`, `/{id}`, `POST /{id}/cancel`
 - `GET/POST /api/admin/resources` (+ activate/deactivate/PATCH); `GET/PUT /api/admin/booking-policy|/cancellation-policy|/pricing`
-- `GET /api/admin/reservations?status&page&size`; `POST /api/admin/resource-blocks` + `/override` (atomic) + `/{id}/cancel` + list `?resourceId&status`
+- `GET /api/admin/reservations` — filters combine: `status` + repeatable `customer` (EXISTING customer display names, case-insensitive equality; unknown name ⇒ explicit empty page) + `startTimeFrom`/`startTimeTo` (ISO-8601 UTC instants; start-in-range semantics) + `page&size`; the webui page uses the same name filter over a directory-options picker and venue-local dates; `POST /api/admin/resource-blocks` + `/override` (atomic) + `/{id}/cancel` + list `?resourceId&status`
 - `GET/PUT /api/admin/venue`; `GET/PUT /api/admin/content` (+ `PUT /{key}`)
 - Web-UI admin: `/admin/content` (+ venue/photos/opening-hours/{key} POSTs), `/admin/map` (+ `/layout`, `/fields`, `/field/{id}/activate|deactivate`)
 
