@@ -21,8 +21,10 @@ services:
     container_name: reservation-keycloak
     command: start-dev --import-realm
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      # Temporary bootstrap admin (Keycloak 26 naming; legacy KEYCLOAK_ADMIN
+      # pair is deprecated) — localhost dev defaults only.
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_BOOTSTRAP_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_BOOTSTRAP_ADMIN_PASSWORD:-admin}
     ports:
       - "8081:8080"
     volumes:
