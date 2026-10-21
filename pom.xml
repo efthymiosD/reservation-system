@@ -27,7 +27,7 @@
         <springdoc.version>3.1.1</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <lombok.version>1.18.48</lombok.version>
-        <jackson2.version>2.22.3</jackson2.version>
+        <jackson2.version>2.22.4</jackson2.version>
         <!-- Trivy gate: Boot BOM pins Jackson 3 (tools.jackson) at 3.1.5, which
              Trivy flags with HIGH CVEs; 3.2.3 is the fully patched line
              (3.2.2 still misses CVE-2026-89425 / 91776 / 91777). -->
