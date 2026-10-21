@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.reservation.domain.port;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
@@ -38,7 +39,7 @@ public interface ReservationQueryService {
 
     List<ReservationInfo> findActiveByRecurringReservation(UUID recurringReservationId);
 
-    ReservationPage listAllForAdmin(ReservationStatus status, int page, int size);
+    ReservationPage listAllForAdmin(AdminReservationFilter filter, int page, int size);
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);
 }

@@ -101,8 +101,8 @@ class ReservationApiImpl implements ReservationApi {
     }
 
     @Override
-    public ReservationPage listAllForAdmin(ReservationStatus status, int page, int size) {
-        return reservationQueries.listAllForAdmin(status, page, size);
+    public ReservationPage listAllForAdmin(AdminReservationFilter filter, int page, int size) {
+        return reservationQueries.listAllForAdmin(filter, page, size);
     }
 
     @Override

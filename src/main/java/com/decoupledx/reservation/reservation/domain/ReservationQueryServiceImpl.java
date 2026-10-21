@@ -2,6 +2,7 @@ package com.decoupledx.reservation.reservation.domain;
 
 import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
@@ -85,11 +86,11 @@ class ReservationQueryServiceImpl implements ReservationQueryService {
     }
 
     @Override
-    public ReservationPage listAllForAdmin(ReservationStatus status, int page, int size) {
-        List<ReservationInfo> items = reservations.findAll(status, page, size).stream()
+    public ReservationPage listAllForAdmin(AdminReservationFilter filter, int page, int size) {
+        List<ReservationInfo> items = reservations.findAll(filter, page, size).stream()
                 .map(ReservationMappings::toInfo)
                 .toList();
-        return new ReservationPage(items, reservations.countAll(status), Math.max(page, 0), size);
+        return new ReservationPage(items, reservations.countAll(filter), Math.max(page, 0), size);
     }
 
     @Override
