@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,86 @@ class AdminReadApiIntegrationTest extends PostgresIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isArray())
                 .andExpect(jsonPath("$.items[0].status").value("ACTIVE"));
+    }
+
+    @Test
+    void adminCustomerAndDateWindowFiltersWorkInConjunction() throws Exception {
+        customerWithName("filterset-anna", "Ann Smith", "2026-09-20T18:00:00", FIELD_1);
+        customerWithName("filterset-bob", "Bob Jones", "2026-09-21T18:00:00", FIELD_1);
+
+        // Ann books 2026-09-20 18:00 Warsaw == 16:00Z (CEST); the name plus
+        // the window match exactly one row.
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("customer", "Ann Smith")
+                        .param("status", "ACTIVE")
+                        .param("startTimeFrom", "2026-09-20T00:00:00Z")
+                        .param("startTimeTo", "2026-09-21T00:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].customerId").value(
+                        jdbc.queryForObject(
+                                "SELECT customer_id FROM customers WHERE idp_subject = 'filterset-anna'",
+                                String.class)));
+
+        // The same window without the customer constraint: both days.
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("status", "ACTIVE")
+                        .param("startTimeFrom", "2026-09-20T00:00:00Z")
+                        .param("startTimeTo", "2026-09-22T00:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2));
+    }
+
+    @Test
+    void adminDateWindowIsStartInclusiveAndEndExclusive() throws Exception {
+        // Carl books 2026-09-22 18:00 Warsaw == 16:00Z.
+        customerWithName("filterset-carl", "Carl Bean", "2026-09-22T18:00:00", FIELD_1);
+
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("startTimeFrom", "2026-09-22T16:00:00Z")
+                        .param("startTimeTo", "2026-09-22T16:01:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1));
+
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("startTimeFrom", "2026-09-22T16:00:00.000001Z")
+                        .param("startTimeTo", "2026-09-22T16:01:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0));
+
+        // The exclusive upper bound at exactly the booking start: nothing.
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("startTimeFrom", "2026-09-22T00:00:00Z")
+                        .param("startTimeTo", "2026-09-22T16:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0));
+    }
+
+    @Test
+    void adminFilterForUnknownCustomerYieldsExplicitEmptyPage() throws Exception {
+        createReservation("filterset-dan", FIELD_1, "2026-09-23T18:00:00", 90);
+
+        mockMvc.perform(get("/api/admin/reservations")
+                        .with(admin("admin"))
+                        .param("customer", "Nobody Known"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    /** Books via the API, then stores a directory display name for the subject. */
+    private UUID customerWithName(String subject, String displayName, String startTime, String field)
+            throws Exception {
+        createReservation(subject, field, startTime, 90);
+        UUID customerId = jdbc.queryForObject(
+                "SELECT customer_id FROM customers WHERE idp_subject = ?", UUID.class, subject);
+        jdbc.update("UPDATE customers SET display_name = ? WHERE customer_id = ?", displayName, customerId);
+        return customerId;
     }
 
     @Test

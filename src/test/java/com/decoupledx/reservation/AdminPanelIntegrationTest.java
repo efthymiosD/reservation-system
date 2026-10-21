@@ -60,6 +60,25 @@ class AdminPanelIntegrationTest extends PostgresIntegrationTest {
     }
 
     @Test
+    void adminReservationsPageAcceptsCombinedFilters() throws Exception {
+        mockMvc.perform(get("/admin/reservations")
+                        .with(webAdmin("admin"))
+                        .param("status", "ACTIVE")
+                        .param("customer", "anna")
+                        .param("from", "2026-09-20")
+                        .param("to", "2026-09-21"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void adminReservationsPageRejectsMalformedRangeInput() throws Exception {
+        mockMvc.perform(get("/admin/reservations")
+                        .with(webAdmin("admin"))
+                        .param("from", "not-a-date"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void adminCanCancelAnyReservationRegardlessOfDeadline() throws Exception {
         // Run directly into a slot within the customer cancellation deadline
         // (fixed clock 2026-09-01T10:00Z; deadline 120 min) — inserted via SQL
