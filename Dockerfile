@@ -15,7 +15,7 @@ RUN ./mvnw -B -q -DskipTests package
 # --- Runtime stage ---
 # JRE version matches the build JDK (temurin 26) — deliberate pairing;
 # the Maven build targets Java 26, so the runtime must be >= 26.
-FROM eclipse-temurin:26-jre AS runtime
+FROM eclipse-temurin:27-jre AS runtime
 
 # curl for the container healthcheck (temurin images do not ship it);
 # drop /usr/bin/pebble (Canonical init daemon baked into the Ubuntu base, not a
