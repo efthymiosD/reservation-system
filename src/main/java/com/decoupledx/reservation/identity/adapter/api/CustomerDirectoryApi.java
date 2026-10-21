@@ -20,4 +20,13 @@ public interface CustomerDirectoryApi {
      * reservation.
      */
     List<CustomerEntry> findAll();
+
+    /**
+     * Internal ids of all provisioned customers whose stored display name
+     * EQUALS the given name (case-insensitive); several customers may share
+     * a name. An empty or blank name yields an empty list — never an
+     * unfiltered directory. Used by the admin filters to translate a picked
+     * customer name into ids.
+     */
+    List<CustomerId> idsByExactName(String displayName);
 }

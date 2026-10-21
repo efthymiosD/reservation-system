@@ -27,6 +27,13 @@ public interface CustomerAccountRepository {
     List<CustomerAccountInfo> findAll();
 
     /**
+     * Provisioned customers with the EXACT stored display name
+     * (case-insensitive). A blank name yields an empty list — never an
+     * unfiltered directory.
+     */
+    List<CustomerId> byExactName(String displayName);
+
+    /**
      * Seeds/overwrites the display name for an already-provisioned customer.
      */
     void updateDisplayName(CustomerId customerId, String displayName);

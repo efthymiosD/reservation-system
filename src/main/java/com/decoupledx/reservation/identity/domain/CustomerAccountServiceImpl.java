@@ -56,6 +56,11 @@ class CustomerAccountServiceImpl implements CustomerAccountService {
                 .toList();
     }
 
+    @Override
+    public List<CustomerId> byExactName(String displayName) {
+        return customerAccounts.byExactName(displayName);
+    }
+
     private boolean isUuid(String value) {
         try {
             UUID.fromString(value);

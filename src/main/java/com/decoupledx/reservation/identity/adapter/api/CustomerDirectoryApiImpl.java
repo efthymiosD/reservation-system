@@ -25,4 +25,9 @@ class CustomerDirectoryApiImpl implements CustomerDirectoryApi {
     public List<CustomerEntry> findAll() {
         return customerAccountService.findAll();
     }
+
+    @Override
+    public List<CustomerId> idsByExactName(String displayName) {
+        return customerAccountService.byExactName(displayName);
+    }
 }
