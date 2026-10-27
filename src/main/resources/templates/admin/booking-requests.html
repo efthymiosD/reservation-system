@@ -36,7 +36,34 @@
                 <div class="small text-muted" th:text="#{admin.bookingRequests.freshLinkOnce}">Shown once — copy it
                     now:
                 </div>
-                <code class="text-break" th:text="${freshShareLink}">https://…</code>
+                <code class="text-break" data-share-link th:text="${freshShareLink}">https://…</code>
+                <button type="button" class="btn btn-sm btn-outline-secondary ms-2"
+                        th:text="#{admin.bookingRequests.copy}" th:attr="data-copied=#{admin.bookingRequests.copied}"
+                        onclick="copyShareLink(this)">Copy
+                </button>
+                <script>
+                    function copyShareLink(button) {
+                        var link = document.querySelector('[data-share-link]')?.textContent;
+                        var done = function () {
+                            var original = button.textContent;
+                            button.textContent = button.dataset.copied;
+                            setTimeout(function () { button.textContent = original; }, 2000);
+                        };
+                        var fallback = function () {
+                            var ta = document.createElement('textarea');
+                            ta.value = link;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            try { document.execCommand('copy'); done(); } finally { ta.remove(); }
+                        };
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(link).then(done).catch(fallback);
+                        } else {
+                            // Non-secure contexts (LAN, http) have no async clipboard.
+                            fallback();
+                        }
+                    }
+                </script>
             </div>
         </div>
     </div>
