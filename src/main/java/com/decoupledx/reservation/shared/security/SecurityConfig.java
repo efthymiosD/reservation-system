@@ -1,7 +1,5 @@
 package com.decoupledx.reservation.shared.security;
 
-import java.util.Arrays;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +16,9 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -102,6 +103,12 @@ class SecurityConfig {
                                 "/contact",
                                 "/logged-out")
                         .permitAll()
+                        // The admin shared booking-request link: the public form
+                        // AND its submission post live here (token-gated by the
+                        // module's link service — an unknown/revoked token gets a
+                        // friendly error page, never stray access).
+                        .requestMatchers(HttpMethod.GET, "/booking-requests/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/booking-requests/new/{token}").permitAll()
                         .requestMatchers(
                                 "/error",
                                 "/favicon.ico",

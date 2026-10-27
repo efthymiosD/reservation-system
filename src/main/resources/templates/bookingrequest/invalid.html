@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.bookingRequestInvalid', ~{::section})}">
+<head>
+    <title>Link not valid</title>
+</head>
+<body>
+<section class="container py-4" style="max-width: 640px;">
+    <h1 class="mb-1" th:text="#{bookingrequest.invalidTitle}">This booking link is not valid</h1>
+    <p th:text="#{bookingrequest.invalidLead}">The link is unknown, expired or was revoked by the venue. Please ask the
+        coach for a fresh link over WhatsApp.</p>
+</section>
+</body>
+</html>

@@ -2,6 +2,7 @@ package com.decoupledx.reservation.identity.domain.port;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerEntry;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,4 +28,10 @@ public interface CustomerAccountService {
      * unfiltered directory.
      */
     List<CustomerId> byExactName(String displayName);
+
+    /**
+     * Provisions (or reuses) an internal identity under a
+     * workflow-namespaced subject: the booking-request approval path.
+     */
+    CustomerId provision(String idpSubject, String displayName);
 }

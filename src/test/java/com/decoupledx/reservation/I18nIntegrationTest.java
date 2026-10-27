@@ -1,22 +1,23 @@
 package com.decoupledx.reservation;
 
-import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
-import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
 import jakarta.servlet.http.Cookie;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-import java.util.Properties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.MessageSource;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.Properties;
+
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
+import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * i18n contract: locale plumbing (cookie + Accept-Language + ?lang switch),
@@ -74,8 +75,9 @@ class I18nIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void adminPagesDeployCarryNoUnresolvedKeys() throws Exception {
-        for (String path : new String[] {"/admin", "/admin/reservations", "/admin/pricing",
-                "/admin/map", "/admin/recurring-reservations", "/admin/content"}) {
+        for (String path : new String[]{"/admin", "/admin/reservations", "/admin/pricing",
+                "/admin/map", "/admin/recurring-reservations", "/admin/content",
+                "/admin/booking-requests"}) {
             String html = mockMvc.perform(get(path).with(webAdmin("admin-sub")))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -85,7 +87,8 @@ class I18nIntegrationTest extends PostgresIntegrationTest {
 
     @Test
     void customerPagesDeployCarryNoUnresolvedKeys() throws Exception {
-        for (String path : new String[] {"/", "/about", "/contact", "/logged-out"}) {
+        for (String path : new String[]{"/", "/about", "/contact", "/logged-out",
+                "/booking-requests/invalid"}) {
             String html = mockMvc.perform(get(path))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -114,7 +117,7 @@ class I18nIntegrationTest extends PostgresIntegrationTest {
     @Test
     void messageBundlesCarryIdenticalKeySets() throws Exception {
         Properties reference = bundle("messages_en.properties");
-        for (String name : new String[] {"messages.properties", "messages_pl.properties", "messages_el.properties"}) {
+        for (String name : new String[]{"messages.properties", "messages_pl.properties", "messages_el.properties"}) {
             assertThat(bundle(name).stringPropertyNames()).as("bundle " + name)
                     .isEqualTo(reference.stringPropertyNames());
         }

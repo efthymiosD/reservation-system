@@ -10,8 +10,8 @@ in through the **funnel carrier → Tailscale edge outbound**. MyQNAPcloud
 DDNS is no longer part of the app story (may stay for NAS console
 convenience). The stack runs the app with the prod Spring profile on
 purpose — the box is internet-exposed, so real OAuth2/JWT enforcement
-applies despite the environment label. TLS terminates at the funnel node
-(Tailscale-issued Let's Encrypt certs for the ts.net name); node → stack is
+applies despite the environment label. TLS terminates at the funnel node (Tailscale-issued Let's Encrypt certs for the
+ts.net name); node → stack is
 plain HTTP over loopback — documented, dev-grade. The funnel publishes ONLY
 the two configured services (opt-in per `tailscale funnel` call).
 
@@ -24,13 +24,12 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
           └─ funnel 8443 → NAS loopback :6681 → compose `keycloak`   (browser OIDC redirects)
 ```
 
-
 ## NAS safety box (hard rules)
 
 - Never delete `/container-station-data`, reinstall QTS, or touch unrelated
   services (e.g. QuMagie's `system-docker`) from this runbook.
-- Never run `docker compose down -v` against the QNAP deployment — data
-  (postgres volume, keycloak data) survives routine deploys.
+- Never run `docker compose down -v` against the QNAP deployment — data (postgres volume, keycloak data) survives
+  routine deploys.
 - Never paste database passwords, client secrets, tokens or
   diagnostic-backup contents into logs/chat (the deploy workflow is written
   to fail loudly without printing the realm secret).
@@ -42,83 +41,78 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
   `/share/CACHEDEV1_DATA/Container-Station-diagnostic-backup-*` — read-only
   reference.
 
-
 ## One-time host provisioning
 
-1. **Deployment directory** — create the dir the workflow deploys into
-   (default `/opt/reservation`; set the `QNAP_DEPLOY_DIR` GitHub variable to
+1. **Deployment directory** — create the dir the workflow deploys into (default `/opt/reservation`; set the
+   `QNAP_DEPLOY_DIR` GitHub variable to
    deviate). The runner container bind-mounts it at the SAME path, so
    compose-relative paths agree on both sides.
 
 2. **Tailscale + Funnel** (public access):
-   - Create a Tailscale account (free plan suffices). In the admin console:
-     **DNS → MagicDNS** enable; **DNS → HTTPS Certificates** enable.
-   - Funnel permission: the first `funnel` run walks you through an approval
-     URL and adds the default `nodeAttrs` (`autogroup:member` →
-     `attr: ["funnel"]`). You can pre-add or restrict it under
-     Access controls → Funnel.
-   - Generate an auth key (**Settings → Keys**, reusable + preauthorized)
-     and put it into the host `.env` as `TS_AUTHKEY`.
-   - Copy `docker-compose.tailscale.yml` from this repo to the deploy dir,
-     then:
-     ```bash
-     cd /opt/reservation
-     docker compose -f docker-compose.tailscale.yml --env-file .env up -d
-     ```
-   - Run `scripts/qnap/tailscale-setup.sh` (from a repo clone on the NAS or
-     the runner workspace). First run blocks until you approve Funnel in the
-     browser, then prints both public URLs.
-   - Mind Let's Encrypt rate limits: do NOT toggle funnel on/off repeatedly
-     (up to 34h lockout).
-   - If QTS cannot provide `/dev/net/tun` to Container Station, use the
-     userspace fallback documented in `docker-compose.tailscale.yml`
-     (`TS_USERSPACE: "true"`, bridge network) and re-run the setup script
-     with `FUNNEL_APP_TARGET=http://192.168.0.3:6680`
-     `FUNNEL_KC_TARGET=http://192.168.0.3:6681`.
+    - Create a Tailscale account (free plan suffices). In the admin console:
+      **DNS → MagicDNS** enable; **DNS → HTTPS Certificates** enable.
+    - Funnel permission: the first `funnel` run walks you through an approval
+      URL and adds the default `nodeAttrs` (`autogroup:member` →
+      `attr: ["funnel"]`). You can pre-add or restrict it under
+      Access controls → Funnel.
+    - Generate an auth key (**Settings → Keys**, reusable + preauthorized)
+      and put it into the host `.env` as `TS_AUTHKEY`.
+    - Copy `docker-compose.tailscale.yml` from this repo to the deploy dir,
+      then:
+      ```bash
+      cd /opt/reservation
+      docker compose -f docker-compose.tailscale.yml --env-file .env up -d
+      ```
+    - Run `scripts/qnap/tailscale-setup.sh` (from a repo clone on the NAS or
+      the runner workspace). First run blocks until you approve Funnel in the
+      browser, then prints both public URLs.
+    - Mind Let's Encrypt rate limits: do NOT toggle funnel on/off repeatedly (up to 34h lockout).
+    - If QTS cannot provide `/dev/net/tun` to Container Station, use the
+      userspace fallback documented in `docker-compose.tailscale.yml`
+      (`TS_USERSPACE: "true"`, bridge network) and re-run the setup script
+      with `FUNNEL_APP_TARGET=http://192.168.0.3:6680`
+      `FUNNEL_KC_TARGET=http://192.168.0.3:6681`.
 
 3. **Self-hosted GitHub runner** (deploy path; replaces the old SSH story):
-   - Check the NAS CPU: `uname -m` (x86_64 vs aarch64) when choosing the
-     runner image.
-   - Run the runner as a Container Station container so it survives QTS
-     reboots. Pragmatic image: `myoung34/github-runner:latest` (git +
-     docker CLI + PAT auto-registration; verify `python3 --version`
-     inside — the realm step needs it). Requirements for the image: git,
-     python3, docker CLI.
-     ```yaml
-     services:
-       runner:
-         image: myoung34/github-runner:latest
-         container_name: reservation-runner
-         restart: unless-stopped
-         network_mode: host          # so localhost:6680 = the NAS app port
-         environment:
-           ACCESS_TOKEN: ${GH_RUNNER_PAT:?classic PAT required}
-           RUNNER_SCOPE: repo
-           LABELS: reservation
-           RUNNER_NAME: reservation-qnap
-           DOCKER_CONFIG: /runner-docker
-         volumes:
-           - /var/run/docker.sock:/var/run/docker.sock      # compose control
-           - /opt/reservation:/opt/reservation              # SAME host path
-           - reservation-runner-docker:/runner-docker       # GHCR login persists
-     volumes:
-       reservation-runner-docker:
-     ```
-   - One classic PAT with `repo` + `read:packages` scopes: used as
-     `ACCESS_TOKEN` (runner registration) and for the GHCR pull. Generate
-     it, `docker exec -it reservation-runner docker login ghcr.io -u <user>`
-     (password via stdin), then store it ONLY in the runner's env file on
-     the NAS (`GH_RUNNER_PAT`) — never in GitHub.
-   - Verify the runner appears: repo → Settings → Actions → Runners, label
-     `reservation`.
+    - Check the NAS CPU: `uname -m` (x86_64 vs aarch64) when choosing the
+      runner image.
+    - Run the runner as a Container Station container so it survives QTS
+      reboots. Pragmatic image: `myoung34/github-runner:latest` (git +
+      docker CLI + PAT auto-registration; verify `python3 --version`
+      inside — the realm step needs it). Requirements for the image: git,
+      python3, docker CLI.
+      ```yaml
+      services:
+        runner:
+          image: myoung34/github-runner:latest
+          container_name: reservation-runner
+          restart: unless-stopped
+          network_mode: host          # so localhost:6680 = the NAS app port
+          environment:
+            ACCESS_TOKEN: ${GH_RUNNER_PAT:?classic PAT required}
+            RUNNER_SCOPE: repo
+            LABELS: reservation
+            RUNNER_NAME: reservation-qnap
+            DOCKER_CONFIG: /runner-docker
+          volumes:
+            - /var/run/docker.sock:/var/run/docker.sock      # compose control
+            - /opt/reservation:/opt/reservation              # SAME host path
+            - reservation-runner-docker:/runner-docker       # GHCR login persists
+      volumes:
+        reservation-runner-docker:
+      ```
+    - One classic PAT with `repo` + `read:packages` scopes: used as
+      `ACCESS_TOKEN` (runner registration) and for the GHCR pull. Generate
+      it, `docker exec -it reservation-runner docker login ghcr.io -u <user>`
+      (password via stdin), then store it ONLY in the runner's env file on
+      the NAS (`GH_RUNNER_PAT`) — never in GitHub.
+    - Verify the runner appears: repo → Settings → Actions → Runners, label
+      `reservation`.
 
 4. **GitHub variables**
-   - `QNAP_PUBLIC_APP_URL` — the app's public funnel URL
-     (`https://reservation-qnap.<tailnet>.ts.net`)
-   - `QNAP_PUBLIC_BASE_URL` — the Keycloak public funnel URL
-     (`https://reservation-qnap.<tailnet>.ts.net:8443`)
-   - `QNAP_DEPLOY_DIR` — deployment directory
-     (e.g. `/opt/reservation`)
+    - `QNAP_PUBLIC_APP_URL` — the app's public funnel URL (`https://reservation-qnap.<tailnet>.ts.net`)
+    - `QNAP_PUBLIC_BASE_URL` — the Keycloak public funnel URL (`https://reservation-qnap.<tailnet>.ts.net:8443`)
+    - `QNAP_DEPLOY_DIR` — deployment directory (e.g. `/opt/reservation`)
 
 5. **GitHub secrets cleanup** — DELETE (no longer used):
    `QNAP_DEPLOY_HOST`, `QNAP_DEPLOY_USER`, `QNAP_DEPLOY_SSH_KEY`, and
@@ -162,6 +156,12 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
    # the callback URL derives from the request's visible scheme+host via
    # SERVER_FORWARD_HEADERS_STRATEGY (= the funnel ts.net URL), and the
    # realm's redirect URIs are generated from the QNAP_PUBLIC_APP_URL var.
+   #
+   # The booking-request share link uses its own optional base: unset = the
+   # panel derives it from the admin's browsing host (correct while browsing
+   # via the funnel door); set = stable link base regardless of where the
+   # coach browses from.
+   APP_PUBLIC_BASE_URL=https://reservation-qnap.<tailnet>.ts.net
    ```
 
 7. **Realm secret rotation note**: changing `KC_WEB_CLIENT_SECRET` in the
@@ -174,7 +174,6 @@ Internet ─ Tailscale funnel relay (ts.net DNS → relay IPs)
    below must pass from a phone on LTE (true external vantage) at least
    once after provisioning.
 
-
 ## Keycloak console tasks (one-time, live realm)
 
 The live realm predates the updated realm export/generation — the following
@@ -183,10 +182,9 @@ fresh-import deployment (delete kcdata → re-run Deploy) carries them from
 the repo content instead.
 
 1. **Permanent master-console admin** (removes the "temporary admin user"
-   banner): log in at `…:8443` master realm as the bootstrap admin
-   (`KC_BOOTSTRAP_ADMIN_USERNAME`) → Users →
-   Add user (`kcadmin`, real email/name) → Credentials → set password with
-   **Temporary OFF** → Role mapping → Assign role → filter client
+   banner): log in at `…:8443` master realm as the bootstrap admin (`KC_BOOTSTRAP_ADMIN_USERNAME`) → Users →
+   Add user (`kcadmin`, real email/name) → Credentials → set password with **Temporary OFF** → Role mapping → Assign
+   role → filter client
    `realm-management` → assign `realm-admin`. Log out, log back in as
    `kcadmin` to verify, then delete the temporary bootstrap user.
 
@@ -201,7 +199,7 @@ the repo content instead.
 
 3. **Real users (seeded ones never ship to deployments)**: the QNAP realm
    generation REMOVES every demo user from the generated realm ("N demo
-   user(s) removed" in the deploy log) — fresh imports start empty; the
+   user (s) removed" in the deploy log) — fresh imports start empty; the
    committed dev realm keeps `alice`/`bob`/`admin` ONLY as the stable
    contract for the e2e stack and local development, and visitor
    self-registration stays OPEN by design (anyone may sign up as a
@@ -227,6 +225,7 @@ own choice first, the client-provided `ui_locales` third).
 
 Propagating a choice made INSIDE the Keycloak login screen back into the
 app is NOT possible with stock Keycloak, verified against the source:
+
 - the switcher writes only an auth-session note + the `KEYCLOAK_LOCALE`
   cookie, which is realm-path scoped (`/realms/reservation/...` —
   `CookieType.LOCALE`, `CookiePath.REALM`); the app's pages never receive
@@ -247,8 +246,8 @@ stock Keycloak.
 
 ## Deploy
 
-GitHub → Actions → **Deploy to QNAP** → run with the image SHA you want
-(the Release workflow publishes `:sha` images on every main push). The
+GitHub → Actions → **Deploy to QNAP** → run with the image SHA you want (the Release workflow publishes `:sha` images on
+every main push). The
 workflow runs on the self-hosted runner ON the QNAP: generates the QNAP
 realm locally (funnel URLs + real client secret from the host `.env`),
 syncs `docker-compose.deploy.yml` + realm into the deploy dir, pulls the
@@ -277,8 +276,8 @@ running). The runner must be online when you fire the action.
 
 ## Maintenance
 
-- **Rollback**: re-run the Deploy workflow with the previous known-good SHA
-  (compose recreates containers; images and volumes stay untouched). The
+- **Rollback**: re-run the Deploy workflow with the previous known-good SHA (compose recreates containers; images and
+  volumes stay untouched). The
   workflow records the previously deployed tag into
   `/opt/reservation/.previous-image` before every overwrite — copy that
   value from the host as the rollback input.
@@ -303,6 +302,6 @@ running). The runner must be online when you fire the action.
   the exposed funnel ports exactly.
 - **Realm tightening notes**: demo realm has `directAccessGrantsEnabled` on
   `reservation-api` (password grant) — acceptable for the demo, disable for
-  anything longer-lived. Seeded contract users never reach deployments
-  (removed at realm generation); on the LIVE realm they are deleted and
+  anything longer-lived. Seeded contract users never reach deployments (removed at realm generation); on the LIVE realm
+  they are deleted and
   real users are created per the console-task section above.

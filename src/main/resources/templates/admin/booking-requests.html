@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.adminBookingRequests', ~{::section})}">
+<head>
+    <title>Booking requests — Admin</title>
+</head>
+<body>
+<section class="container py-4">
+    <h1 class="mb-4" th:text="#{admin.bookingRequests.title}">Booking requests</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 card-title" th:text="#{admin.bookingRequests.linkTitle}">Shareable request link</h2>
+            <p class="text-muted small" th:text="#{admin.bookingRequests.linkHint}">Send this link to a customer over
+                your personal WhatsApp. The customer fills the public form; requests appear below. Regenerating revokes
+                the old link.</p>
+            <div th:if="${page.activeLink != null}">
+                <div class="mb-2">
+                    <span class="text-muted small" th:text="#{admin.bookingRequests.linkActive}">Active link exists — it is shareable via the once-shown URL.</span>
+                </div>
+            </div>
+            <form th:action="@{/admin/booking-requests/link}" method="post" class="d-inline me-2">
+                <button type="submit" class="btn btn-outline-primary btn-sm"
+                        th:text="${page.activeLink != null} ? #{admin.bookingRequests.regenerate} : #{admin.bookingRequests.create}">
+                    Create / Regenerate
+                </button>
+            </form>
+            <form th:if="${page.activeLink != null}" th:action="@{/admin/booking-requests/link/revoke}" method="post"
+                  class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm" th:text="#{admin.bookingRequests.revoke}">
+                    Revoke
+                </button>
+            </form>
+            <p class="mb-0 mt-2" th:if="${page.activeLink == null}" th:text="#{admin.bookingRequests.noLink}">No active
+                link. Create one to start collecting requests.</p>
+            <div th:if="${freshShareLink != null}" class="alert alert-success mt-2 mb-0">
+                <div class="small text-muted" th:text="#{admin.bookingRequests.freshLinkOnce}">Shown once — copy it
+                    now:
+                </div>
+                <code class="text-break" th:text="${freshShareLink}">https://…</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+            <tr>
+                <th scope="col" th:text="#{admin.bookingRequests.ref}">Reference</th>
+                <th scope="col" th:text="#{admin.bookingRequests.status}">Status</th>
+                <th scope="col" th:text="#{admin.bookingRequests.slot}">Requested slot</th>
+                <th scope="col" th:text="#{admin.bookingRequests.customer}">Customer</th>
+                <th scope="col" th:text="#{admin.bookingRequests.note}">Note</th>
+                <th scope="col" th:text="#{admin.bookingRequests.age}">Submitted</th>
+                <th scope="col" th:text="#{admin.table.action}">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${page.rows}">
+                <td><code th:text="${row.info.reference}">BKR-00000000</code></td>
+                <td th:text="#{${'status.' + row.info.status.name().toLowerCase()}}">PENDING</td>
+                <td th:text="${row.slotDate} + ' ' + ${row.slotStart} + '–' + ${row.slotEnd}">2026-10-26 18:00–19:30
+                </td>
+                <td>
+                    <div th:text="${row.info.customerName}">Ann Smith</div>
+                    <small class="text-muted" th:text="${row.info.contact}">+48…</small>
+                    <small th:if="${!row.info.advisoryFreeAtSubmission}" class="text-warning d-block"
+                           th:text="#{admin.bookingRequests.busyAtSubmission}">slot was busy at submission</small>
+                </td>
+                <td><small class="text-break" th:text="${row.info.note != null ? row.info.note : '—'}">—</small></td>
+                <td class="text-nowrap" th:text="#{admin.bookingRequests.ageDays(${row.ageDays})}">2 d ago</td>
+                <td>
+                    <form th:if="${row.info.status.name() == 'PENDING'}"
+                          th:action="@{/admin/booking-requests/{id}/approve(id=${row.info.id})}" method="post"
+                          class="d-inline me-1">
+                        <button type="submit" class="btn btn-outline-success btn-sm"
+                                th:text="#{admin.bookingRequests.approve}">Approve
+                        </button>
+                    </form>
+                    <form th:if="${row.info.status.name() == 'PENDING'}"
+                          th:action="@{/admin/booking-requests/{id}/reject(id=${row.info.id})}" method="post"
+                          class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                th:text="#{admin.bookingRequests.reject}">Reject
+                        </button>
+                    </form>
+                    <small th:unless="${row.info.status.name() == 'PENDING'}" class="text-muted"
+                           th:text="${row.info.reservationId != null ? row.info.reservationId.toString().substring(0, 8) : '—'}">—</small>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="text-muted" th:if="${page.total == 0}" th:text="#{admin.bookingRequests.none}">No booking requests
+        yet.</p>
+</section>
+</body>
+</html>

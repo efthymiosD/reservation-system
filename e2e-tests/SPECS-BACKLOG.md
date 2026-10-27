@@ -7,31 +7,31 @@ whole pattern: login fixture, selectors, deterministic slot, assertions.
 
 ## Runtime contract (already in place, do not change it)
 
-| Aspect | Value |
-|---|---|
-| Stack | `docker compose -f docker-compose.e2e.yml` (app :8080, keycloak :8081) |
-| Reset between full runs | `down -v --remove-orphans` then `up` — Flyway reseeds |
-| Fixed clock | `2026-10-12T10:00:00Z`; deterministic base date 2026-10-26 |
-| Users | `alice/alice` (CUSTOMER), `bob/bob` (CUSTOMER), `admin/admin` (ADMIN) |
-| Seed | Field 1-6 = `a0000000-…-00000000010{1..6}`, 80.00 PLN/h, hours 14:00-23:00 Europe/Warsaw |
-| Families | `constants.py` (dates/UUIDs/prices), `conftest.py` (`login()`, `_stack_ready`) |
+| Aspect                  | Value                                                                                    |
+|-------------------------|------------------------------------------------------------------------------------------|
+| Stack                   | `docker compose -f docker-compose.e2e.yml` (app :8080, keycloak :8081)                   |
+| Reset between full runs | `down -v --remove-orphans` then `up` — Flyway reseeds                                    |
+| Fixed clock             | `2026-10-12T10:00:00Z`; deterministic base date 2026-10-26                               |
+| Users                   | `alice/alice` (CUSTOMER), `bob/bob` (CUSTOMER), `admin/admin` (ADMIN)                    |
+| Seed                    | Field 1-6 = `a0000000-…-00000000010{1..6}`, 80.00 PLN/h, hours 14:00-23:00 Europe/Warsaw |
+| Families                | `constants.py` (dates/UUIDs/prices), `conftest.py` (`login()`, `_stack_ready`)           |
 
 ## Selector cheat-sheet (stable ids/classes in `templates/`)
 
-| Element | Selector |
-|---|---|
-| Date input | `#date` (type=date) |
-| Start select | `#start` (options 14:00…22:30, 30-min steps) |
-| Duration select | `#durationMinutes` (labels "1 h", "1 h 30 min", "2 h") |
-| Field tile | `.venue-map .resource[data-label='Field 1']` (classes `resource--available` / `resource--reserved` / `resource--blocked`) |
-| Tile state text | `.resource__state` ("✓ free" / "✕ reserved") |
-| Hidden resource id | `#hidden-resource-id` (filled by JS on select) |
-| Reserve button | `#reserve-button` (disabled until a tile is selected) |
-| Already-held tooltip span | in `#reserve-form` (`th:if` page.held) |
-| Success redirect | `/reservations/{id}/confirmation` |
-| Booking failure | redirect back to `/reserve?…` with flash error |
-| Nav login | `#mainNav` link `Log in` → `/oauth2/authorization/keycloak`; logout: POST form in nav |
-| Pipelines | Keycloak login form: `#username`, `#password`, submit button |
+| Element                   | Selector                                                                                                                  |
+|---------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| Date input                | `#date` (type=date)                                                                                                       |
+| Start select              | `#start` (options 14:00…22:30, 30-min steps)                                                                              |
+| Duration select           | `#durationMinutes` (labels "1 h", "1 h 30 min", "2 h")                                                                    |
+| Field tile                | `.venue-map .resource[data-label='Field 1']` (classes `resource--available` / `resource--reserved` / `resource--blocked`) |
+| Tile state text           | `.resource__state` ("✓ free" / "✕ reserved")                                                                            |
+| Hidden resource id        | `#hidden-resource-id` (filled by JS on select)                                                                            |
+| Reserve button            | `#reserve-button` (disabled until a tile is selected)                                                                     |
+| Already-held tooltip span | in `#reserve-form` (`th:if` page.held)                                                                                    |
+| Success redirect          | `/reservations/{id}/confirmation`                                                                                         |
+| Booking failure           | redirect back to `/reserve?…` with flash error                                                                            |
+| Nav login                 | `#mainNav` link `Log in` → `/oauth2/authorization/keycloak`; logout: POST form in nav                                     |
+| Pipelines                 | Keycloak login form: `#username`, `#password`, submit button                                                              |
 
 ## Spec 1 — `tests/test_booking.py` (PRIORITY)
 
@@ -39,6 +39,7 @@ whole pattern: login fixture, selectors, deterministic slot, assertions.
 already-taken-slot guardrail.
 
 **Part 1 (alice books):**
+
 1. `login(page, alice, alice)`; `goto /reserve`
 2. date = `constants.booking_date(device, browser)`; start = `18:00`; duration = `1 h`
 3. Click `.resource[data-label='Field 1']` → `#hidden-resource-id` =
@@ -48,6 +49,7 @@ already-taken-slot guardrail.
 5. `goto /my-reservations` → a card contains `Field 1` and the booked date
 
 **Part 2 (bob sees it taken):**
+
 1. Use a *fresh browser context* (do not reuse alice's session): log in as
    `bob/bob`
 2. Same slot, same field: the Field 1 tile carries class
@@ -81,6 +83,7 @@ alice books it once, bob only *observes*. Do not add reruns.
 ## Spec 3 (optional, later) — `tests/test_admin_journeys.py`
 
 **Purpose:** admin read/actuation sanity. login `admin/admin`:
+
 - `/admin/reservations` lists the row created by spec 1 (needs spec 1
   executed first in the same full run!) and cancel via the row button;
   the row's status flips
@@ -91,10 +94,40 @@ Deliberately NOT in scope (keep it that way until asked): everything the
 `@WebMvc`/integration tests already cover — validation rules, policy
 limits, pricing math, concurrency (exclusion constraints).
 
+## Spec 4 (optional, later) — `tests/test_booking_requests.py`
+
+**Purpose:** the coach-links workflow journey (public parent submits from a
+phone; coach approves/rejects in the queue; a pending request does not
+block anything).
+
+1. login `admin/admin` → `/admin/booking-requests`; POST `Regenerate` (the
+   fresh share link renders ONCE in the success flash — capture it)
+2. fresh browser context, NO login: open the captured link on a
+   `iPhone SE`-size viewport → fill the public form (`#customerName`,
+   `#contact`, `#date`, `#start`, `#durationMinutes`, `#resourceId`,
+   `#note` optional) → submit → land on the ack page asserting the
+   `BKR-…` reference + "NOT confirmed" copy
+3. as alice in another context: `/reserve` the SAME slot — must remain
+   bookable (a pending request never blocks)
+4. login admin again → the queue row appears PENDING → `Approve`
+   → the row flips APPROVED; alice's `/my-reservations` now contains the slot
+5. a second request → `Reject` → still no second reservation
+6. guard: the approval-conflict case (bob books the requested slot first,
+   then approve) → the request stays PENDING, no duplicate reservation
+7. revoked/unknown links: open a stale captured link → the friendly
+   "not valid" page; public users hitting `/admin/booking-requests` are
+   redirected to login (not 200)
+
+**Date discipline:** the request's slot must follow the same
+`constants.booking_date(device, browser)` scheme (the P1M window from the
+fixed clock applies to the submit-side validation). Consider writing a
+`pageobjects/booking_request.py` helpers module — two different app routes +
+a flash-capture make it the second spec needing shared interactions.
+
 ## Definition of done for each new spec
 
 - runs green twice consecutively (`down -v` reset between)
 - chromium + webkit locally
-- no selector inside templates duplicated in more than one file
-  (extract page-object style helper classes only when a second spec needs
+- no selector inside templates duplicated in more than one file (extract page-object style helper classes only when a
+  second spec needs
   the same interactions)

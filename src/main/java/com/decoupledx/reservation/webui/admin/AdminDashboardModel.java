@@ -5,6 +5,7 @@ package com.decoupledx.reservation.webui.admin;
  */
 record AdminDashboardModel(
         long activeReservations,
+        long pendingBookingRequests,
         long activeRecurringReservations,
         long resources) {
 }

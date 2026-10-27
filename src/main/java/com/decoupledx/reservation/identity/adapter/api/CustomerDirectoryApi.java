@@ -29,4 +29,12 @@ public interface CustomerDirectoryApi {
      * customer name into ids.
      */
     List<CustomerId> idsByExactName(String displayName);
+
+    /**
+     * Provisions (or reuses) an internal customer identity for an externally named booker
+     * WITHOUT an IdP session — the booking-request workflow's approval path.
+     * The subject is a workflow-namespaced opaque id (e.g.
+     * {@code wa-link:<…>}), never a real IdP subject.
+     */
+    CustomerId provisionExternalCustomer(String idpSubject, String displayName);
 }

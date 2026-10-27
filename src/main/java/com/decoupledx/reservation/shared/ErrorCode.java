@@ -27,7 +27,12 @@ public enum ErrorCode {
     INVALID_OPENING_HOURS(422, "Closing time must be after opening time"),
     INVALID_BOOKING_POLICY(422, "Invalid booking policy configuration"),
     INVALID_CANCELLATION_POLICY(422, "Invalid cancellation policy configuration"),
-    INVALID_PRICING_POLICY(422, "Invalid pricing policy configuration");
+    INVALID_PRICING_POLICY(422, "Invalid pricing policy configuration"),
+    BOOKING_REQUEST_NOT_FOUND(404, "Booking request not found"),
+    BOOKING_REQUEST_ALREADY_DECIDED(409, "Booking request has already been decided"),
+    BOOKING_REQUEST_LINK_INVALID(404, "Booking request link is unknown"),
+    BOOKING_REQUEST_LINK_REVOKED(404, "Booking request link was revoked"),
+    BOOKING_REQUEST_LINK_CONFLICT(409, "A booking request link was just issued by someone else");
 
     private final int httpStatus;
     private final String defaultMessage;
