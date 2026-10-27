@@ -5,15 +5,21 @@ import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
 import com.decoupledx.reservation.shared.TransactionRunner;
+import lombok.RequiredArgsConstructor;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 class CustomerAccountServiceImpl implements CustomerAccountService {
+
+    /**
+     * Workflow-namespace of externally provisioned booker identities.
+     */
+    static final String EXTERNAL_SUBJECT_PREFIX = "wa-link:";
 
     private final CustomerAccountRepository customerAccounts;
     private final TransactionRunner tx;
@@ -59,6 +65,16 @@ class CustomerAccountServiceImpl implements CustomerAccountService {
     @Override
     public List<CustomerId> byExactName(String displayName) {
         return customerAccounts.byExactName(displayName);
+    }
+
+    @Override
+    public CustomerId provision(String idpSubject, String displayName) {
+        if (idpSubject == null || !idpSubject.startsWith(EXTERNAL_SUBJECT_PREFIX)) {
+            throw new IllegalArgumentException(
+                    "external booker subjects must be workflow-namespaced (" + EXTERNAL_SUBJECT_PREFIX + "...)");
+        }
+        // resolveOrProvision already carries the tx + the seed-on-missing semantics.
+        return resolveOrProvision(idpSubject, displayName);
     }
 
     private boolean isUuid(String value) {
