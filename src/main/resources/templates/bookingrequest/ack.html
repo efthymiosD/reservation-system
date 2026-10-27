@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.bookingRequestAck', ~{::section})}">
+<head>
+    <title>Request received</title>
+</head>
+<body>
+<section class="container py-4" style="max-width: 640px;">
+    <h1 class="mb-1" th:text="#{bookingrequest.ackTitle}">Request received</h1>
+    <p class="alert alert-info" th:text="#{bookingrequest.ackLead}">Request received — waiting for coach
+        confirmation.</p>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-2">
+                <div class="text-muted small" th:text="#{bookingrequest.reference}">Reference</div>
+                <div class="fw-bold" th:text="${page.reference}">BKR-00000000</div>
+            </div>
+            <div class="mb-2">
+                <div class="text-muted small" th:text="#{bookingrequest.yourName}">Your name</div>
+                <div th:text="${page.customerName}">Ann Smith</div>
+            </div>
+            <div class="mb-2">
+                <div class="text-muted small" th:text="#{bookingrequest.requested}">Requested slot</div>
+                <div class="fw-bold"
+                     th:text="${page.startAt.toLocalDate()} + ' ' + ${page.startAt.toLocalTime()} + '–' + ${page.endAt.toLocalTime()}">
+                    2026-10-26 18:00–19:30
+                </div>
+            </div>
+            <div th:if="${page.note != null and !page.note.isEmpty()}">
+                <div class="text-muted small" th:text="#{bookingrequest.note}">Note</div>
+                <div th:text="${page.note}">—</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-muted mt-3" th:text="#{bookingrequest.ackInstructions}">The coach will check the slot and message you
+        on WhatsApp to confirm or suggest another time. Your booking is NOT confirmed yet.</p>
+</section>
+</body>
+</html>

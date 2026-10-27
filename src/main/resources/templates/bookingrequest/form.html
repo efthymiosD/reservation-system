@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: page('meta.bookingRequestForm', ~{::section})}">
+<head>
+    <title>Request a booking</title>
+</head>
+<body>
+<section class="container py-4" style="max-width: 640px;">
+    <h1 class="mb-1" th:text="#{bookingrequest.title}">Request a booking</h1>
+    <p class="text-muted" th:text="#{bookingrequest.subtitle}">Fill in your details — our coach will confirm your slot
+        over WhatsApp. A request is not a confirmed booking.</p>
+
+    <div class="alert alert-danger" th:if="${error}" th:text="${error}">Error</div>
+
+    <form th:action="@{/booking-requests/new/{t}(t=${token})}" method="post" class="row g-3">
+        <div class="col-12">
+            <label for="customerName" class="form-label" th:text="#{bookingrequest.customerName}">Your name</label>
+            <input id="customerName" name="customerName" type="text" class="form-control" maxlength="120" required
+                   th:value="${submission?.customerName}">
+        </div>
+        <div class="col-12">
+            <label for="contact" class="form-label" th:text="#{bookingrequest.contact}">Contact (phone / WhatsApp /
+                email)</label>
+            <input id="contact" name="contact" type="text" class="form-control" maxlength="200" required
+                   th:value="${submission?.contact}">
+        </div>
+        <div class="col-6">
+            <label for="date" class="form-label" th:text="#{bookingrequest.date}">Date</label>
+            <input type="date" id="date" name="date" class="form-control" required
+                   th:min="${page.options.minDate}" th:max="${page.options.maxDate}"
+                   th:value="${submission?.date}">
+        </div>
+        <div class="col-6">
+            <label for="start" class="form-label" th:text="#{bookingrequest.start}">Start time</label>
+            <select id="start" name="start" class="form-select" required>
+                <option th:each="t : ${page.options.startOptions}" th:value="${t}" th:text="${t}"
+                        th:selected="${t == submission?.start}">10:00
+                </option>
+            </select>
+        </div>
+        <div class="col-6">
+            <label for="durationMinutes" class="form-label" th:text="#{bookingrequest.duration}">Duration</label>
+            <select id="durationMinutes" name="durationMinutes" class="form-select" required>
+                <option th:each="d : ${page.options.durationOptions}"
+                        th:value="${d}" th:text="${d / 60} + ' h' + (${d % 60} > 0 ? ' ' + ${d % 60} + ' min' : '')"
+                        th:selected="${d == submission?.durationMinutes}">1 h
+                </option>
+            </select>
+        </div>
+        <div class="col-6">
+            <label for="resourceId" class="form-label" th:text="#{bookingrequest.resource}">Field</label>
+            <select id="resourceId" name="resourceId" class="form-select" required>
+                <option th:each="r : ${page.options.resources}" th:value="${r.id}" th:text="${r.name}"
+                        th:selected="${r.id == submission?.resourceId}">Field 1
+                </option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label for="note" class="form-label" th:text="#{bookingrequest.note}">Note (optional)</label>
+            <textarea id="note" name="note" class="form-control" rows="2" maxlength="500"
+                      th:text="${submission?.note}"></textarea>
+        </div>
+        <input type="hidden" name="submissionKey" th:value="${submission?.submissionKey} ?: ${page.submissionKey}">
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-lg w-100" th:text="#{bookingrequest.submit}">Send request
+            </button>
+        </div>
+        <div class="col-12">
+            <p class="text-muted small mb-0" th:text="#{bookingrequest.disclaimer}">Displayed times are gathered from
+                the venue's current rules and can change — availability is confirmed by the coach afterwards.</p>
+        </div>
+    </form>
+</section>
+</body>
+</html>
