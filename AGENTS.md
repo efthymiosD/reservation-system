@@ -8,11 +8,36 @@ tree, validate locally, and present them for review. On **"go-live"**: do
 the whole delivery chain in order (commit → push → create PR → merge PR →
 check out updated main).
 
+## Pre-review checklist (end of every change batch)
+
+Before presenting a change batch for review, run and apply findings from:
+
+1. **Clean code / SOLID / reusability** — no god methods (one reason per
+   method, small collaborators instead), no rule duplication (extract a
+   shared component), no dead parameters/keys, records in own files.
+2. **Performance** — index-backed lookups, no accidental N+1 (batch the
+   name/label lookups), bounded in-memory state, pagination counts only
+   where the UI needs them.
+3. **Security** — the public surface review (CSRF enforced even on
+   permitAll POSTs, tokens opaque + only hashes stored, no IDs/PII in
+   URLs, no internals in messages, no-store on fresh-clock pages,
+   input bounds, untrusted-header honesty documented).
+4. **Then** Spotless + unit + the nearest integration classes + full
+   verify — only then present.
+
 ## Status
 
-All phases implemented (Boot 4.1.1 + Modulith 2.1.1, Java 26, 10 modules); **189 tests green** (`./mvnw verify`, Testcontainers Postgres via Rancher Desktop) incl. go-live hardening, mobile-first responsive UI, and the Playwright e2e layer. Opt-in `@Tag("keycloak")` realm-contract test excluded by default (runs only vs live Keycloak).
+All phases implemented (Boot 4.1.1 + Modulith 2.1.1, Java 26, 10 modules); **189 tests green** (`./mvnw verify`,
+Testcontainers Postgres via Rancher Desktop) incl. go-live hardening, mobile-first responsive UI, and the Playwright e2e
+layer. Opt-in `@Tag("keycloak")` realm-contract test excluded by default (runs only vs live Keycloak).
 
-Highlights (details in code/ADRs, not repeated here): exclusion-constraint concurrency safety (`btree_gist` on `tstzrange`); internal identity (`sub` → app-owned `CustomerId`, auto-provisioned `customers` row); SPRING.FREE domain (b1: services are plain beans on `TransactionRunner` port, tx with `NoRollbackRule(DataIntegrityViolationException)` for constraint translation); configurable site content module (text blocks, photos, `/admin/map` drag-and-drop field-layout editor persisted as `venue.map.layout` JSON; overnight opening hours where `closesAt < opensAt`, only equal times rejected); audit `cancelled_by/cancelled_at` threading the internal actor; JWT audience validation + CORS allowlist; prod profile forbids dev-key fallback.
+Highlights (details in code/ADRs, not repeated here): exclusion-constraint concurrency safety (`btree_gist` on
+`tstzrange`); internal identity (`sub` → app-owned `CustomerId`, auto-provisioned `customers` row); SPRING.FREE domain
+(b1: services are plain beans on `TransactionRunner` port, tx with `NoRollbackRule(DataIntegrityViolationException)` for
+constraint translation); configurable site content module (text blocks, photos, `/admin/map` drag-and-drop field-layout
+editor persisted as `venue.map.layout` JSON; overnight opening hours where `closesAt < opensAt`, only equal times
+rejected); audit `cancelled_by/cancelled_at` threading the internal actor; JWT audience validation + CORS allowlist;
+prod profile forbids dev-key fallback.
 
 ## Quick start
 
@@ -28,85 +53,179 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 
 ## i18n (bundles + per-locale site content)
 
-- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (265 keys each, `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang` follows the resolved locale. Page `<title>` keys `meta.*`.
-- Locale resolution (`webui/LocaleConfig`, moved from shared.web): `?lang=` (LocaleChangeInterceptor) → `locale` cookie (365d) → browser `Accept-Language` restricted to enabled set → default EN. Enabled languages: site-content key `ui.locales.enabled` CSV, EMPTY/missing = all on; EN can never be disabled; a stale cookie for a disabled language silently resolves down (not rewritten).
-- **Three text categories (do not blur):** 1) system copy → bundles; 2) shipped site-content defaults → bundles too (`#{...}` fallback behind `${siteContent[k]}` — NO English text rows in V2 seeds, only non-text keys contact.phone/email, photos, venue.map.layout); 3) admin-authored copy → stored verbatim per language: master `key` (EN) + `pl:key`/`el:key` siblings via `/admin/content?contentLang=<tag>` (one dropdown, one page; per-language forms POST `pl:home.feature.1.title` keys). `ContentAdvice` exposes only the request-language authored row (never mixes languages); empty/missing → bundle default. Thymeleaf Elvis must be `${siteContent['k']} ?: #{bundleKey}` (a `#{..}` INSIDE `${...}` renders literally!).
-- `webui/WebMessages` = MessageSource facade for Java-side strings (controllers/model factories); error codes → `error.<code_lower>` keys. Value-free i18n tests: `I18nIntegrationTest`, `SiteContentLocalizationIntegrationTest` (assert `html lang`, `??` absence, `hreflang`, data-attribute ↔ MessageSource agreement — never translation literals).
-- Admin same-hour bookings: `POST /api/admin/reservations` (`createOnBehalfOfCustomer`) → `admin_override` row; customer-overlap EXCLUDE constraint ignores them (`WHERE ... AND admin_override = FALSE`); the resource-overlap one-pitch invariant is unchanged. Customer self-booking keeps its 409.
+- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (327 keys each,
+  `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang`
+  follows the resolved locale. Page `<title>` keys `meta.*`.
+- Locale resolution (`webui/LocaleConfig`, moved from shared.web): `?lang=` (LocaleChangeInterceptor) → `locale` cookie
+  (365d) → browser `Accept-Language` restricted to enabled set → default EN. Enabled languages: site-content key
+  `ui.locales.enabled` CSV, EMPTY/missing = all on; EN can never be disabled; a stale cookie for a disabled language
+  silently resolves down (not rewritten).
+- **Three text categories (do not blur):** 1) system copy → bundles; 2) shipped site-content defaults → bundles too
+  (`#{...}` fallback behind `${siteContent[k]}` — NO English text rows in V2 seeds, only non-text keys
+  contact.phone/email, photos, venue.map.layout); 3) admin-authored copy → stored verbatim per language: master `key`
+  (EN) + `pl:key`/`el:key` siblings via `/admin/content?contentLang=<tag>` (one dropdown, one page; per-language forms
+  POST `pl:home.feature.1.title` keys). `ContentAdvice` exposes only the request-language authored row (never mixes
+  languages); empty/missing → bundle default. Thymeleaf Elvis must be `${siteContent['k']} ?: #{bundleKey}` (a `#{..}`
+  INSIDE `${...}` renders literally!).
+- `webui/WebMessages` = MessageSource facade for Java-side strings (controllers/model factories); error codes →
+  `error.<code_lower>` keys. Value-free i18n tests: `I18nIntegrationTest`, `SiteContentLocalizationIntegrationTest`
+  (assert `html lang`, `??` absence, `hreflang`, data-attribute ↔ MessageSource agreement — never translation literals).
+- Admin same-hour bookings: `POST /api/admin/reservations` (`createOnBehalfOfCustomer`) → `admin_override` row;
+  customer-overlap EXCLUDE constraint ignores them (`WHERE ... AND admin_override = FALSE`); the resource-overlap
+  one-pitch invariant is unchanged. Customer self-booking keeps its 409.
 
 ## E2E tests (Playwright + Python)
 
-- `e2e-tests/`: Python 3.12 (brew `/opt/homebrew/bin/python3.12`; system 3.9 too old), pytest + pytest-playwright, venv `.venv` gitignored. **CI does NOT run e2e automatically** — manual dispatch workflow `e2e.yml` (Actions tab → Run workflow; browsers input, default chromium+webkit). Local Chromium default.
-- Deterministic stack `docker-compose.e2e.yml` (app+postgres+keycloak; fixed clock `2026-10-12T10:00:00Z` → journeys book `2026-10-26` + **per-device AND per-browser day offsets** via `constants.booking_date(device, browser)` — device 0..4, chromium +0/webkit +7/firefox +14 strided, all within the P1M window; cancel deadline 120 min rules out in-test cleanup). **Reset = `down -v --remove-orphans && up --build -d`** (Flyway reseeds). Always reset before a full rerun.
-- Implemented: `tests/test_responsive.py` only (booking journey × iPhone SE/Pixel 7/iPhone 14/iPad/Desktop, no-horizontal-scroll, navbar collapse; browser matrix passed explicitly — `pytest.ini` deliberately has NO `--browser` flags, duplicated params double-run). Booking/availability/admin specs documented in `SPECS-BACKLOG.md` for the first QA engineer.
+- `e2e-tests/`: Python 3.12 (brew `/opt/homebrew/bin/python3.12`; system 3.9 too old), pytest + pytest-playwright, venv
+  `.venv` gitignored. **CI does NOT run e2e automatically** — manual dispatch workflow `e2e.yml` (Actions tab → Run
+  workflow; browsers input, default chromium+webkit). Local Chromium default.
+- Deterministic stack `docker-compose.e2e.yml` (app+postgres+keycloak; fixed clock `2026-10-12T10:00:00Z` → journeys
+  book `2026-10-26` + **per-device AND per-browser day offsets** via `constants.booking_date(device, browser)` — device
+  0..4, chromium +0/webkit +7/firefox +14 strided, all within the P1M window; cancel deadline 120 min rules out in-test
+  cleanup). **Reset = `down -v --remove-orphans && up --build -d`** (Flyway reseeds). Always reset before a full rerun.
+- Implemented: `tests/test_responsive.py` only (booking journey × iPhone SE/Pixel 7/iPhone 14/iPad/Desktop,
+  no-horizontal-scroll, navbar collapse; browser matrix passed explicitly — `pytest.ini` deliberately has NO `--browser`
+  flags, duplicated params double-run). Booking/availability/admin specs documented in `SPECS-BACKLOG.md` for the first
+  QA engineer.
 - **No `pytest-rerunfailures`** — a rerun replays a booking into the same DB → false red.
-- Auth via the real Keycloak OAuth2 form (`conftest.login`); `prompt=login` keeps sessions fresh. Compose legs: browser-facing URIs `localhost:8081`, server legs use the compose hostname; `KC_HOSTNAME_URL=http://localhost:8081` pins `iss`. Runbook: `e2e-tests/README.md`.
+- Auth via the real Keycloak OAuth2 form (`conftest.login`); `prompt=login` keeps sessions fresh. Compose legs:
+  browser-facing URIs `localhost:8081`, server legs use the compose hostname; `KC_HOSTNAME_URL=http://localhost:8081`
+  pins `iss`. Runbook: `e2e-tests/README.md`.
 
 ## Environment
 
-- Docker (Rancher Desktop) required for integration tests. **Socket fix (applied here)**: `sudo ln -sf ~/.rd/docker.sock /var/run/docker.sock` — ryuk bind-mounts the socket into its sidecar and Rancher refuses `~/.rd/docker.sock` directly; without the symlink tests die with "Could not find a valid Docker environment". (Route B = Testcontainers Desktop: its `~/.testcontainers.properties` pins `tc.host tcp://…49340` and suppresses socket fallback — reset those pins if TCD is not running. Both routes + Windows equivalent in README.)
-- Local Postgres alternative: set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (default `jdbc:postgresql://localhost:5432/reservation`).
+- Docker (Rancher Desktop) required for integration tests. **Socket fix (applied here)**:
+  `sudo ln -sf ~/.rd/docker.sock /var/run/docker.sock` — ryuk bind-mounts the socket into its sidecar and Rancher
+  refuses `~/.rd/docker.sock` directly; without the symlink tests die with "Could not find a valid Docker environment".
+  (Route B = Testcontainers Desktop: its `~/.testcontainers.properties` pins `tc.host tcp://…49340` and suppresses
+  socket fallback — reset those pins if TCD is not running. Both routes + Windows equivalent in README.)
+- Local Postgres alternative: set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (default
+  `jdbc:postgresql://localhost:5432/reservation`).
 
 ## Keycloak (dev)
 
-- docker-compose: KC 26 on :8081 (app :8080), realm `reservation` auto-imported from `keycloak/realm-export.json`; console admin/admin. Users: `admin/admin` (ADMIN), `alice`/`bob` (CUSTOMER). Client `reservation-api` has a subject mapper so tokens carry `sub`.
+- docker-compose: KC 26 on :8081 (app :8080), realm `reservation` auto-imported from `keycloak/realm-export.json`;
+  console admin/admin. Users: `admin/admin` (ADMIN), `alice`/`bob` (CUSTOMER). Client `reservation-api` has a subject
+  mapper so tokens carry `sub`.
 - `JwtRolesConverter`: realm_access + resource_access + flat `roles`, `ROLE_`-prefixed, uppercase.
-- Identity: `CurrentCustomerResolver` maps `sub` only (no `preferred_username` fallback) → `CustomerAccountService.resolveOrProvision` provisions/reuses internal UUID.
-- **Integration tests must NOT depend on Keycloak** — `PostgresIntegrationTest` sets `issuer-uri=` (dev key) + `JwtSupport.customer/admin(subject)` mock JWTs (admin adds `.authorities("ROLE_ADMIN")`).
+- Identity: `CurrentCustomerResolver` maps `sub` only (no `preferred_username` fallback) →
+  `CustomerAccountService.resolveOrProvision` provisions/reuses internal UUID.
+- **Integration tests must NOT depend on Keycloak** — `PostgresIntegrationTest` sets `issuer-uri=` (dev key) +
+  `JwtSupport.customer/admin(subject)` mock JWTs (admin adds `.authorities("ROLE_ADMIN")`).
 
 ## Build & test quirks
 
 - JDK 26 renders `ISO_LOCAL_TIME` with seconds (`18:00:00`) — matters for JSON-body assertions.
 - Lombok processor is NOT implicit on JDK 25+ — `annotationProcessorPaths` in pom must stay.
-- Boot 4: `@AutoConfigureMockMvc` lives in separate `spring-boot-webmvc-test` artifact; Jackson is **3** (`tools.jackson.databind.ObjectMapper`); flyway needs `flyway-database-postgresql` added manually.
-- Testcontainers 2.x: `@ServiceConnection` + `PostgreSQLContainer` broken — static `{ POSTGRES.start(); }` + `@DynamicPropertySource` (base class `PostgresIntegrationTest`, fixed clock `2026-09-01T10:00:00Z`, subclasses add `@AutoConfigureMockMvc`).
-- One shared Postgres container across classes: base truncates `reservations, recurring_reservations` per test; `AdminReadApiIntegrationTest` uses 09-20/09-21 slots (others 09-04..09-07); content tests are order-independent by design. Raw-SQL tests must self-isolate (exclusion constraints).
-- Tests are coupled to seed: Field 1–6 UUIDs `…00000000010{1..6}`, 60/120 min durations, 30-min grid, P1M advance, 120-min cancel deadline, 80 PLN/h (90-min booking = `120.00`). Changing `V2__seed_data.sql` breaks them.
+- Boot 4: `@AutoConfigureMockMvc` lives in separate `spring-boot-webmvc-test` artifact; Jackson is **3**
+  (`tools.jackson.databind.ObjectMapper`); flyway needs `flyway-database-postgresql` added manually.
+- Testcontainers 2.x: `@ServiceConnection` + `PostgreSQLContainer` broken — static `{ POSTGRES.start(); }` +
+  `@DynamicPropertySource` (base class `PostgresIntegrationTest`, fixed clock `2026-09-01T10:00:00Z`, subclasses add
+  `@AutoConfigureMockMvc`).
+- One shared Postgres container across classes: base truncates `reservations, recurring_reservations` per test;
+  `AdminReadApiIntegrationTest` uses 09-20/09-21 slots (others 09-04..09-07); content tests are order-independent by
+  design. Raw-SQL tests must self-isolate (exclusion constraints).
+- Tests are coupled to seed: Field 1–6 UUIDs `…00000000010{1..6}`, 60/120 min durations, 30-min grid, P1M advance,
+  120-min cancel deadline, 80 PLN/h (90-min booking = `120.00`). Changing `V2__seed_data.sql` breaks them.
 - Opt-in keycloak tag: `-Dsurefire.excludedGroups=` runs it; `-Dtest=...` does NOT bypass the exclusion.
 - Thymeleaf model attr must be `siteContent` (never `content` — collides with layout fragment parameter).
-- `replaceOpeningHours` must reconcile in place, NOT delete-all+reinsert (re-insert onto delete-pending managed rows = 0 inserts → 422 later).
+- `replaceOpeningHours` must reconcile in place, NOT delete-all+reinsert (re-insert onto delete-pending managed rows = 0
+  inserts → 422 later).
 - Multipart: `max-file-size` 6MB > app's own 5MB check so the friendly error wins Tomcat's.
-- `ReservationPageModelFactory.timeOptions` uses minutes-of-day +1440 for overnight windows (`LocalTime.isAfter` fails at midnight wrap).
+- `ReservationPageModelFactory.timeOptions` uses minutes-of-day +1440 for overnight windows (`LocalTime.isAfter` fails
+  at midnight wrap).
 
 ## Module conventions (enforced by ModularityTests + arch tests)
 
-- Exactly one export per module: `adapter.api` (`@NamedInterface("api")`) — interface over use cases + DTO views; domain/adapters/internal wiring private. API views **delegate** to domain logic (no rule duplication); api record components use api/shared/JDK types only.
-- `webui` consumes only module APIs. `shared.domain` = shared kernel (Money, ReservationPeriod, BusinessException, ErrorCode, TransactionRunner). `administration` has no API.
-- ADR-0004 (events): contracts in the shared kernel root (`DomainEvent`, `DomainEventPublisher` port, `DomainEventListener`) + impl in `shared/event/` (the one Modulith seam); payloads = records in the publishing-or-REACTIVE module's `adapter/api` (release-request lives in reservation; cycle-break rule); composed `@OnDomainEvent` on methods of the consuming module's ONE `adapter/listeners/` class implementing the `DomainEventListener` marker (platform annotation composed once, per-method registry granularity); reaction bodies = one use-case call, policy in domain services (`releaseFutureOccurrencesOf`); events carry actor explicitly (SecurityContext gone after commit); reactions idempotent (registry republishes). Registry: starter-jdbc, completion-mode DELETE, republish-on-restart true; event_publication auto-DDL = the one non-Flyway table (Toolless repair never needed). ModularityTests.verify () now catches cross-module event cycles via Modulith.
-- ADR-0001 module layout (authoritative: `docs/adr/0001-module-structure.adoc`, 10 rules — flat package-private `domain/`, ports as `public interface` in `domain/port`, `XxxDomainConfig` owns beans, adapters own their configs, adapters never call adapters, domain returns immutable snapshots (`…Info`/`…DataValue`), web controllers use domain ports not `adapter.api`):
+- Exactly one export per module: `adapter.api` (`@NamedInterface("api")`) — interface over use cases + DTO views;
+  domain/adapters/internal wiring private. API views **delegate** to domain logic (no rule duplication); api record
+  components use api/shared/JDK types only.
+- `webui` consumes only module APIs. `shared.domain` = shared kernel (Money, ReservationPeriod, BusinessException,
+  ErrorCode, TransactionRunner). `administration` has no API.
+- ADR-0004 (events): contracts in the shared kernel root (`DomainEvent`, `DomainEventPublisher` port,
+  `DomainEventListener`) + impl in `shared/event/` (the one Modulith seam); payloads = records in the
+  publishing-or-REACTIVE module's `adapter/api` (release-request lives in reservation; cycle-break rule); composed
+  `@OnDomainEvent` on methods of the consuming module's ONE `adapter/listeners/` class implementing the
+  `DomainEventListener` marker (platform annotation composed once, per-method registry granularity); reaction bodies =
+  one use-case call, policy in domain services (`releaseFutureOccurrencesOf`); events carry actor explicitly
+  (SecurityContext gone after commit); reactions idempotent (registry republishes). Registry: starter-jdbc,
+  completion-mode DELETE, republish-on-restart true; event_publication auto-DDL = the one non-Flyway table (Toolless
+  repair never needed). ModularityTests.verify () now catches cross-module event cycles via Modulith.
+- ADR-0001 module layout (authoritative: `docs/adr/0001-module-structure.adoc`, 10 rules — flat package-private
+  `domain/`, ports as `public interface` in `domain/port`, `XxxDomainConfig` owns beans, adapters own their configs,
+  adapters never call adapters, domain returns immutable snapshots (`…Info`/`…DataValue`), web controllers use domain
+  ports not `adapter.api`):
   ```
   <module>/{domain/, domain/port/, domain/XxxDomainConfig,
              adapter/api/  (XxxApi + impl + config — the only export),
              adapter/persistence/, adapter/web/}
   ```
-- ADR-0002: adapters never resolve/thread the logged-in `CustomerId` — ports/APIs expose implicit "me" variants (resolved in domain) + explicit variants for scheduler/audit actors; webui `CurrentUserAdvice` is the only presentation consumer of `CurrentCustomerApi` (identity exports two APIs in one package).
-- ADR-0003: records in own top-level files (`RecordPlacementTest`), **package-private by default**; `public` reserved for cross-module records (`adapter.api` views, `…DataValue` snapshots) and shared webui config types (`Placement`/`VenueLayout`).
+- ADR-0002: adapters never resolve/thread the logged-in `CustomerId` — ports/APIs expose implicit "me" variants
+  (resolved in domain) + explicit variants for scheduler/audit actors; webui `CurrentUserAdvice` is the only
+  presentation consumer of `CurrentCustomerApi` (identity exports two APIs in one package).
+- ADR-0003: records in own top-level files (`RecordPlacementTest`), **package-private by default**; `public` reserved
+  for cross-module records (`adapter.api` views, `…DataValue` snapshots) and shared webui config types (`Placement`/
+  `VenueLayout`).
 - Spotless 3.0.0 in pom — run `spotless:apply` after Java edits.
 
 ## Testing conventions
 
-- Integration tests are black-box: HTTP API (MockMvc) or raw SQL at the DB boundary; no direct domain-service calls. Unit tests only for domain-model business logic; none for services with mocked deps. Web-UI tests cover flows/status codes only, never page internals. Concurrency (`ConcurrencyIntegrationTest`): exactly one 201, rest 409.
-- Persistence adapters translate BOTH constraint races to 409: `DataIntegrityViolationException` (23P01) and `ConcurrencyFailureException` (deadlock 40P01) — lock-race losers must not 500.
+- Integration tests are black-box: HTTP API (MockMvc) or raw SQL at the DB boundary; no direct domain-service calls.
+  Unit tests only for domain-model business logic; none for services with mocked deps. Web-UI tests cover flows/status
+  codes only, never page internals. Concurrency (`ConcurrencyIntegrationTest`): exactly one 201, rest 409.
+- Persistence adapters translate BOTH constraint races to 409: `DataIntegrityViolationException` (23P01) and
+  `ConcurrencyFailureException` (deadlock 40P01) — lock-race losers must not 500.
 
 ## Architecture
 
-- Tactical DDD + hexagonal, domains Spring-free (`DomainPurityTest`, ignores `package-info`); entities pure Java + Lombok (`@Getter`, PROTECTED ctor), JPA only in `adapter/persistence/*Entity`.
-- Clock property-driven (`app.clock.fixed-instant`); dev JWT fallback only with empty issuer (`src/main/resources/dev/jwt-public.pem`); springdoc at `/swagger-ui.html`.
-- Flyway: exactly two migrations (`V1__init_schema.sql`, `V2__seed_data.sql` — legacy V3/V4 folded in; re-importing history needs `flyway repair`).
+- Tactical DDD + hexagonal, domains Spring-free (`DomainPurityTest`, ignores `package-info`); entities pure Java +
+  Lombok (`@Getter`, PROTECTED ctor), JPA only in `adapter/persistence/*Entity`.
+- Clock property-driven (`app.clock.fixed-instant`); dev JWT fallback only with empty issuer
+  (`src/main/resources/dev/jwt-public.pem`); springdoc at `/swagger-ui.html`.
+- Flyway: exactly three migrations (`V1__init_schema.sql`, `V2__seed_data.sql` — legacy V3/V4 folded in;
+  `V3__booking_requests.sql` — the booking-request link workflow; re-importing history needs `flyway repair`).
 
 ## Key endpoint paths
 
 - `GET /api/public/venue`; `GET /api/availability?date&start&durationMinutes`
-- `POST /api/reservations` `{resourceId, startTime, durationMinutes}`; `GET /api/reservations?status&page&size`, `/{id}`, `POST /{id}/cancel`
-- `GET/POST /api/admin/resources` (+ activate/deactivate/PATCH); `GET/PUT /api/admin/booking-policy|/cancellation-policy|/pricing`
-- `GET /api/admin/reservations` — filters combine: `status` + repeatable `customer` (EXISTING customer display names, case-insensitive equality; unknown name ⇒ explicit empty page) + `startTimeFrom`/`startTimeTo` (ISO-8601 UTC instants; start-in-range semantics) + `page&size`; the webui page uses the same name filter over a directory-options picker and venue-local dates; `POST /api/admin/resource-blocks` + `/override` (atomic) + `/{id}/cancel` + list `?resourceId&status`
+- `POST /api/reservations` `{resourceId, startTime, durationMinutes}`; `GET /api/reservations?status&page&size`,
+  `/{id}`, `POST /{id}/cancel`
+- `GET/POST /api/admin/resources` (+ activate/deactivate/PATCH);
+  `GET/PUT /api/admin/booking-policy|/cancellation-policy|/pricing`
+- `GET /api/admin/reservations` — filters combine: `status` + repeatable `customer` (EXISTING customer display names,
+  case-insensitive equality; unknown name ⇒ explicit empty page) + `startTimeFrom`/`startTimeTo` (ISO-8601 UTC instants;
+  start-in-range semantics) + `page&size`; the webui page uses the same name filter over a directory-options picker and
+  venue-local dates; `POST /api/admin/resource-blocks` + `/override` (atomic) + `/{id}/cancel` + list
+  `?resourceId&status`
+- Booking-request link workflow (reservation module): coach queue `GET /admin/booking-requests` (+
+  approve/reject/regenerate/revoke POSTs, ROLE_ADMIN); public, token-gated `GET/POST /booking-requests/new/{token}` +
+  ack read (permitAll in the web chain, CSRF on); a PENDING request reserves nothing and blocks nothing — approval calls
+  the same-module staff-placement creation; V3 migration; E2E journeys: SPECS-BACKLOG
 - `GET/PUT /api/admin/venue`; `GET/PUT /api/admin/content` (+ `PUT /{key}`)
-- Web-UI admin: `/admin/content` (+ venue/photos/opening-hours/{key} POSTs), `/admin/map` (+ `/layout`, `/fields`, `/field/{id}/activate|deactivate`)
+- Web-UI admin: `/admin/content` (+ venue/photos/opening-hours/{key} POSTs), `/admin/map` (+ `/layout`, `/fields`,
+  `/field/{id}/activate|deactivate`)
 
 ## CI/CD (github.com/efthymiosD/reservation-system)
 
-- `ci.yml` — PR → main: `mvn verify` (JDK 26, Testcontainers; no Keycloak) + optional not-blocking `e2e` job (`needs: verify`, `continue-on-error`: compose stack → pytest chromium+webkit, artifacts on failure). `pull_request` trigger only (push trigger deadlocked branch protection with duplicate checks).
-- `release.yml` — push to main: verify → buildx image → Trivy (fail HIGH/CRITICAL, ignore-unfixed) → push `ghcr.io/…:sha` + `:main`, never `latest`. Jackson pins live in `pom.xml` (`jackson2.version=2.22.3`, `jackson-bom.version=3.2.3`) for the Trivy gate.
-- `deploy.yml` — manual dispatch by SHA → self-hosted runner (`runs-on: [self-hosted, reservation]`) running ON the QNAP as a Container Station container (docker.sock + deploy dir bind-mounted at the same host path; no SSH hop). Netask ISP is CGNAT — inbound router forwarding is impossible, so BOTH critical paths dial outbound: deploy (runner → GitHub) and public access (Tailscale Funnel carrier `docker-compose.tailscale.yml` → Tailscale edge; public URLs `https://<node>.<tailnet>.ts.net` funnel 443 → NAS 6680 app, `:8443` → NAS 6681 keycloak; TLS terminates at the node, LE certs via ts.net; myQNAPcloud DDNS no longer part of the app story). Realm generation happens ON the NAS (`scripts/qnap/generate-realm.sh`, client secret read from host `.env`) — deploy has NO GitHub secrets; `docker-compose.deploy.yml` carries runtime secrets (Keycloak bound NAS-side 6681:container 8080 + persistent kcdata); app env keeps the prod profile and renames its session cookie (`SERVER_SERVLET_SESSION_COOKIE_NAME=RESERVATION_SESSION`) so it cannot collide with Keycloak's cookies on the shared funnel hostname; scripts versioned in `scripts/qnap/*` (`deploy.sh`, `smoke.sh` with LAN + funnel-door checks, `tailscale-setup.sh`).
-- Branch protection: PRs required (0 approvals), check `mvn verify (unit + integration)` required, enforced for admins. Dependabot weekly (maven/docker/actions) — merge one PR at a time.
-- Dockerfile: multi-stage temurin-26, non-root `app` user (owns `/app/logs`), curl healthcheck, `/usr/bin/pebble` removed for Trivy.
+- `ci.yml` — PR → main: `mvn verify` (JDK 26, Testcontainers; no Keycloak) + optional not-blocking `e2e` job
+  (`needs: verify`, `continue-on-error`: compose stack → pytest chromium+webkit, artifacts on failure). `pull_request`
+  trigger only (push trigger deadlocked branch protection with duplicate checks).
+- `release.yml` — push to main: verify → buildx image → Trivy (fail HIGH/CRITICAL, ignore-unfixed) → push
+  `ghcr.io/…:sha` + `:main`, never `latest`. Jackson pins live in `pom.xml` (`jackson2.version=2.22.3`,
+  `jackson-bom.version=3.2.3`) for the Trivy gate.
+- `deploy.yml` — manual dispatch by SHA → self-hosted runner (`runs-on: [self-hosted, reservation]`) running ON the QNAP
+  as a Container Station container (docker.sock + deploy dir bind-mounted at the same host path; no SSH hop). Netask ISP
+  is CGNAT — inbound router forwarding is impossible, so BOTH critical paths dial outbound: deploy (runner → GitHub) and
+  public access (Tailscale Funnel carrier `docker-compose.tailscale.yml` → Tailscale edge; public URLs
+  `https://<node>.<tailnet>.ts.net` funnel 443 → NAS 6680 app, `:8443` → NAS 6681 keycloak; TLS terminates at the node,
+  LE certs via ts.net; myQNAPcloud DDNS no longer part of the app story). Realm generation happens ON the NAS
+  (`scripts/qnap/generate-realm.sh`, client secret read from host `.env`) — deploy has NO GitHub secrets;
+  `docker-compose.deploy.yml` carries runtime secrets (Keycloak bound NAS-side 6681:container 8080 + persistent kcdata);
+  app env keeps the prod profile and renames its session cookie
+  (`SERVER_SERVLET_SESSION_COOKIE_NAME=RESERVATION_SESSION`) so it cannot collide with Keycloak's cookies on the shared
+  funnel hostname; scripts versioned in `scripts/qnap/*` (`deploy.sh`, `smoke.sh` with LAN + funnel-door checks,
+  `tailscale-setup.sh`).
+- Branch protection: PRs required (0 approvals), check `mvn verify (unit + integration)` required, enforced for admins.
+  Dependabot weekly (maven/docker/actions) — merge one PR at a time.
+- Dockerfile: multi-stage temurin-26, non-root `app` user (owns `/app/logs`), curl healthcheck, `/usr/bin/pebble`
+  removed for Trivy.
