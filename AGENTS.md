@@ -53,7 +53,7 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 
 ## i18n (bundles + per-locale site content)
 
-- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (327 keys each,
+- System copy = message bundles `src/main/resources/messages/messages{,_en,_pl,_el}.properties` (329 keys each,
   `spring.messages.basename=messages/messages`, no system-locale fallback). Templates: `th:text="#{key}"; html lang`
   follows the resolved locale. Page `<title>` keys `meta.*`.
 - Locale resolution (`webui/LocaleConfig`, moved from shared.web): `?lang=` (LocaleChangeInterceptor) → `locale` cookie
