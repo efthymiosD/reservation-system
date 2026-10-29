@@ -23,7 +23,7 @@
              security-constraint and authentication bypass) are fixed in 11.0.25.
              Drop once a Boot patch manages >= 11.0.25. -->
         <tomcat.version>11.0.25</tomcat.version>
-        <spring-modulith.version>2.1.1</spring-modulith.version>
+        <spring-modulith.version>2.1.2</spring-modulith.version>
         <springdoc.version>3.2.0</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <lombok.version>1.18.48</lombok.version>
