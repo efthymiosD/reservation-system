@@ -55,6 +55,13 @@ Modulith stays at 2.1.1.
    checks: reactions live only in `adapter/listeners/` and implement the
    marker contract.
 
+NOTE: 2026-11-04 - the event contract classes, `SpringDomainEventPublisher`,
+`SpringTransactionRunner`, the JWT machinery and the error contract moved to
+the shared library `com.decoupledx:decoupledx-common` (repo `decoupledx-common`).
+Semantics unchanged; this ADR's rules continue to govern how applications use
+them. The ProblemDetail URN base is now the property
+`app.common.problem-urn-base` (this app: `urn:reservation:error`).
+
 6. *Actors* — listeners run after the publishing transaction commits,
    outside the request's `SecurityContext`; any event that implies an acting
    customer carries `String actor` explicitly.

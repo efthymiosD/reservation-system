@@ -1,18 +1,17 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.error.BusinessException;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestLinkInfo;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestLinkToken;
 import com.decoupledx.reservation.reservation.domain.port.BookingRequestLinkRepository;
 import com.decoupledx.reservation.reservation.domain.port.BookingRequestLinkService;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
-import com.decoupledx.reservation.shared.TransactionRunner;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Clock;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The shareable-link lifecycle. MVP: at most one active link; issuing a new

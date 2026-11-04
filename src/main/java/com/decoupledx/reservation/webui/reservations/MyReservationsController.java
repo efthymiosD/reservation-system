@@ -1,7 +1,7 @@
 package com.decoupledx.reservation.webui.reservations;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

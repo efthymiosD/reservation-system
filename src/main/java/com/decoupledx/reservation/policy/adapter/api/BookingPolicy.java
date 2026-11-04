@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.policy.adapter.api;
 
-import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.*;
 import java.util.Objects;

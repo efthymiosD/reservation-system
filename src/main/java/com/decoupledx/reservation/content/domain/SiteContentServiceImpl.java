@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.content.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.content.adapter.api.SiteContentBlock;
 import com.decoupledx.reservation.content.adapter.persistence.SiteTextDataValue;
 import com.decoupledx.reservation.content.domain.port.ContentService;
 import com.decoupledx.reservation.content.domain.port.SiteContentRepository;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import java.time.Clock;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -1,19 +1,18 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestLinkToken;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestStatus;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
-import org.junit.jupiter.api.Test;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.regex.Pattern;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class BookingRequestTest {
 

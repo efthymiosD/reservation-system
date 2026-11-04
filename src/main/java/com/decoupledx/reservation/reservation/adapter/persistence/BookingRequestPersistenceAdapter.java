@@ -1,19 +1,18 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestStatus;
 import com.decoupledx.reservation.reservation.domain.port.BookingRequestLinkRepository;
 import com.decoupledx.reservation.reservation.domain.port.BookingRequestRepository;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Persistence adapters of the booking-request workflow. Decisions are

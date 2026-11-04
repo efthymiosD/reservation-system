@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.webui;
 
-import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.common.error.BusinessException;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;

@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.reservation.adapter.api;
 
-import com.decoupledx.reservation.shared.DomainEvent;
+import com.decoupledx.common.event.DomainEvent;
 import java.time.Instant;
 import java.util.UUID;
 

@@ -4,11 +4,10 @@ import com.decoupledx.reservation.reservation.adapter.api.BookingRequestApi;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestInfo;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestLinkInfo;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestPage;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Assembles the coach's booking-request queue view from the module API: rows

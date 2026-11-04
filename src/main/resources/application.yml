@@ -82,6 +82,11 @@ management:
 
 
 app:
+  common:
+    problem-urn-base: urn:reservation:error
+    openapi:
+      title: Reservation System API
+      description: Generic reservation backend API
   security:
     issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/reservation}
     # Optional explicit JWKS for the resource server, so JWT decoder startup does

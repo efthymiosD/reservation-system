@@ -3,8 +3,8 @@ package com.decoupledx.reservation.policy;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.Clock;
 import java.time.Duration;

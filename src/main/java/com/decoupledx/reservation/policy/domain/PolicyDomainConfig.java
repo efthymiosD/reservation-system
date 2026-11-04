@@ -1,9 +1,9 @@
 package com.decoupledx.reservation.policy.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.policy.domain.port.BookingPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.CancellationPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.PolicyService;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

@@ -1,23 +1,22 @@
 package com.decoupledx.reservation;
 
-import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
-import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.MessageSource;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Locale;
-import java.util.Properties;
-
 import static com.decoupledx.reservation.testinfra.WebUserSupport.webAdmin;
 import static com.decoupledx.reservation.testinfra.WebUserSupport.webUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import jakarta.servlet.http.Cookie;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Locale;
+import java.util.Properties;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.MessageSource;
+import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * i18n contract: locale plumbing (cookie + Accept-Language + ?lang switch),

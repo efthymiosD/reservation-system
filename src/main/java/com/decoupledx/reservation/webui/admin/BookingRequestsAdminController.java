@@ -1,10 +1,11 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestApi;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestInfo;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestLinkToken;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.util.UUID;
 
 /**
  * Coach/ADMIN management of booking requests (ROLE_ADMIN gated at the

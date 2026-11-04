@@ -4,8 +4,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.decoupledx.reservation.shared.DomainEventListener;
-import com.decoupledx.reservation.shared.OnDomainEvent;
+import com.decoupledx.common.event.DomainEventListener;
+import com.decoupledx.common.event.OnDomainEvent;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;

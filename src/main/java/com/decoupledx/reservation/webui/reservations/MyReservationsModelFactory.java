@@ -1,12 +1,12 @@
 package com.decoupledx.reservation.webui.reservations;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.webui.WebMessages;
 import java.time.*;

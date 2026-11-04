@@ -1,13 +1,12 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalTime;

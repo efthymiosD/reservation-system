@@ -1,12 +1,11 @@
 package com.decoupledx.reservation.identity.adapter.api;
 
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Module external-facing facade implementing {@link CustomerDirectoryApi} on top of

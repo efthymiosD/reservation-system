@@ -1,9 +1,8 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 interface BookingRequestLinkJpaRepository extends JpaRepository<BookingRequestLinkEntity, UUID> {
 

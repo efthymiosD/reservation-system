@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.venue.adapter.api;
 
-import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,8 +1,8 @@
 package com.decoupledx.reservation.venue.domain;
 
-import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.common.error.BusinessException;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.shared.ErrorCode;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;

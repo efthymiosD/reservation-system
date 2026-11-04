@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.webui.reserve;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.availability.adapter.api.AvailabilityApi;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailability;
 import com.decoupledx.reservation.availability.adapter.api.ResourceAvailabilityStatus;
@@ -8,7 +9,6 @@ import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;

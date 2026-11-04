@@ -3,7 +3,7 @@ package com.decoupledx.reservation.venue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.decoupledx.reservation.shared.BusinessException;
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.shared.ReservationPeriod;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;

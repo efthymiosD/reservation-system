@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.shared;
 
+import com.decoupledx.common.error.BusinessException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;

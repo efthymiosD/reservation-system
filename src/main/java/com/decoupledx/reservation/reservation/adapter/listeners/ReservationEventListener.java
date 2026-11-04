@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.reservation.adapter.listeners;
 
+import com.decoupledx.common.event.DomainEventListener;
+import com.decoupledx.common.event.OnDomainEvent;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.reservation.adapter.api.CancelRecurringReservationCommand;
 import com.decoupledx.reservation.reservation.domain.port.CancelReservationService;
-import com.decoupledx.reservation.shared.DomainEventListener;
-import com.decoupledx.reservation.shared.OnDomainEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -26,4 +26,3 @@ class ReservationEventListener implements DomainEventListener {
     }
 
 }
-

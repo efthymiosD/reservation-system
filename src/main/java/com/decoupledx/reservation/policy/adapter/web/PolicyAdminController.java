@@ -1,9 +1,9 @@
 package com.decoupledx.reservation.policy.adapter.web;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import jakarta.validation.Valid;
