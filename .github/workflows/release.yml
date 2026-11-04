@@ -6,7 +6,7 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: read
 
 env:
   REGISTRY: ghcr.io
@@ -23,6 +23,24 @@ jobs:
           distribution: temurin
           java-version: '26'
           cache: maven
+      # decoupledx-common resolves from GitHub Packages (GPR requires auth even
+      # for reading); GITHUB_TOKEN carries the needed scope inside this repo.
+      - name: Configure GitHub Package credentials
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<XML
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${{ github.actor }}</username>
+                <password>${GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          XML
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and verify
         run: ./mvnw -B -ntp verify
       - name: Upload test reports on failure
@@ -38,6 +56,9 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v7
 
