@@ -1,17 +1,16 @@
 package com.decoupledx.reservation.identity.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.identity.adapter.api.CustomerEntry;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
-import com.decoupledx.reservation.shared.TransactionRunner;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 class CustomerAccountServiceImpl implements CustomerAccountService {

@@ -6,13 +6,12 @@ import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import org.springframework.stereotype.Component;
-
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
+import org.springframework.stereotype.Component;
 
 /**
  * Advisory OPTIONS of the public booking-request form, shaped from the very

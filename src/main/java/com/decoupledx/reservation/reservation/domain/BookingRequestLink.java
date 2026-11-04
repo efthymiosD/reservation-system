@@ -2,12 +2,11 @@ package com.decoupledx.reservation.reservation.domain;
 
 
 import com.decoupledx.reservation.reservation.adapter.persistence.BookingRequestLinkDataValue;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.Instant;
-import java.util.UUID;
 
 /**
  * One shareable booking-request link (MVP: a single reusable link at a time).

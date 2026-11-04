@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.venue.domain;
 
-import com.decoupledx.reservation.shared.TransactionRunner;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.venue.domain.port.VenueRepository;
 import com.decoupledx.reservation.venue.domain.port.VenueService;
 import org.springframework.context.annotation.Bean;

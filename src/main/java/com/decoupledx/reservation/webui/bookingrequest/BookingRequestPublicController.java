@@ -1,12 +1,15 @@
 package com.decoupledx.reservation.webui.bookingrequest;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestApi;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestInfo;
 import com.decoupledx.reservation.reservation.adapter.api.SubmitBookingRequestCommand;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -18,10 +21,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * The PUBLIC booking-request flow: a customer opens the coach's link on a

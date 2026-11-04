@@ -1,8 +1,8 @@
 package com.decoupledx.reservation.identity.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

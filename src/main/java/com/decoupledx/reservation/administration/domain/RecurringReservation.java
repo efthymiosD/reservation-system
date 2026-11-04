@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.administration.domain;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationInfo;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationStatus;
 import com.decoupledx.reservation.administration.adapter.persistence.RecurringReservationDataValue;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import java.time.*;
 import java.util.Objects;

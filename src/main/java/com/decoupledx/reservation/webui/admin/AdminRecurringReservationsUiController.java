@@ -1,9 +1,9 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.administration.adapter.api.AdministrationApi;
 import com.decoupledx.reservation.administration.adapter.api.CreateRecurringReservationCommand;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
 import java.time.DayOfWeek;
 import java.time.LocalTime;

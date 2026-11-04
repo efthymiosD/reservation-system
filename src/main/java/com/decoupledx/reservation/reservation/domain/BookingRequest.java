@@ -1,17 +1,16 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestStatus;
 import com.decoupledx.reservation.reservation.adapter.persistence.BookingRequestDataValue;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * A booking REQUEST submitted by a customer through a coach's shareable link.

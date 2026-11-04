@@ -140,10 +140,18 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 - Exactly one export per module: `adapter.api` (`@NamedInterface("api")`) — interface over use cases + DTO views;
   domain/adapters/internal wiring private. API views **delegate** to domain logic (no rule duplication); api record
   components use api/shared/JDK types only.
-- `webui` consumes only module APIs. `shared.domain` = shared kernel (Money, ReservationPeriod, BusinessException,
-  ErrorCode, TransactionRunner). `administration` has no API.
-- ADR-0004 (events): contracts in the shared kernel root (`DomainEvent`, `DomainEventPublisher` port,
-  `DomainEventListener`) + impl in `shared/event/` (the one Modulith seam); payloads = records in the
+- `webui` consumes only module APIs. `shared` = application shared kernel
+  (Money, ReservationPeriod, app-owned `ErrorCode` enum implementing the
+  library error contract, SecurityConfig); the application-neutral seams
+  (BusinessException, ErrorCode **contract**, domain-event contract +
+  `@OnDomainEvent`, TransactionRunner, JWT machinery, GlobalExceptionHandler,
+  fixed clock, OpenAPI bearer scheme) come from the
+  `com.decoupledx:decoupledx-common` library (repo `../decoupledx-common`,
+  auto-configured, ADRs in the library repo).
+- ADR-0004 (events): contracts in decoupledx-common (`com.decoupledx.common.event`:
+  `DomainEvent`, `DomainEventPublisher` port, `DomainEventListener` +
+  `OnDomainEvent` + `SpringDomainEventPublisher` — the one Modulith seam,
+  auto-registered); payloads = records in the
   publishing-or-REACTIVE module's `adapter/api` (release-request lives in reservation; cycle-break rule); composed
   `@OnDomainEvent` on methods of the consuming module's ONE `adapter/listeners/` class implementing the
   `DomainEventListener` marker (platform annotation composed once, per-method registry granularity); reaction bodies =

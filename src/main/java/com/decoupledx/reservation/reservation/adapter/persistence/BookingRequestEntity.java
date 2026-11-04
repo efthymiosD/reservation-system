@@ -1,14 +1,13 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
 import jakarta.persistence.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "booking_requests")

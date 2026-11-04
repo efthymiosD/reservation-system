@@ -1,8 +1,8 @@
 package com.decoupledx.reservation.pricing.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.pricing.domain.port.PricingPolicyRepository;
 import com.decoupledx.reservation.pricing.domain.port.PricingService;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

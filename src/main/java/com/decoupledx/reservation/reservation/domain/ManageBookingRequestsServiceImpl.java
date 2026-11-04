@@ -1,5 +1,7 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.error.BusinessException;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
@@ -10,15 +12,12 @@ import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
 import com.decoupledx.reservation.reservation.domain.port.BookingRequestRepository;
 import com.decoupledx.reservation.reservation.domain.port.CreateReservationService;
 import com.decoupledx.reservation.reservation.domain.port.ManageBookingRequestsService;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
-import com.decoupledx.reservation.shared.TransactionRunner;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The coach-side decisions. Approval is AUTHORITATIVE: it provisions the

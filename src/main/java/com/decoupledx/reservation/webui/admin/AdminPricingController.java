@@ -1,8 +1,8 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
 import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.Money;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;

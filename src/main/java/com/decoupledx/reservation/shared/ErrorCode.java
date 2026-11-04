@@ -1,6 +1,6 @@
 package com.decoupledx.reservation.shared;
 
-public enum ErrorCode {
+public enum ErrorCode implements com.decoupledx.common.error.ErrorCode {
 
     RESOURCE_NOT_FOUND(404, "Resource not found"),
     RESOURCE_INACTIVE(409, "Resource is inactive"),

@@ -1,18 +1,17 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.event.DomainEventPublisher;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.identity.adapter.api.CurrentCustomerApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
 import com.decoupledx.reservation.reservation.domain.port.*;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
-import com.decoupledx.reservation.shared.DomainEventPublisher;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
+import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.Clock;
 
 /**
  * Domain-internal wiring; nothing here is visible to other modules.

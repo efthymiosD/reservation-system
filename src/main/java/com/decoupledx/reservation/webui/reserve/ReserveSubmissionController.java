@@ -1,7 +1,7 @@
 package com.decoupledx.reservation.webui.reserve;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.webui.WebMessages;
 import java.time.LocalDate;
 import java.time.LocalTime;

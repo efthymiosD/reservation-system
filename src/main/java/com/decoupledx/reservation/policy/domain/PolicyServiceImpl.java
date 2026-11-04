@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.policy.domain;
 
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.policy.adapter.api.BookingPolicy;
 import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 import com.decoupledx.reservation.policy.adapter.persistence.BookingPolicyDataValue;
@@ -7,7 +8,6 @@ import com.decoupledx.reservation.policy.adapter.persistence.CancellationPolicyD
 import com.decoupledx.reservation.policy.domain.port.BookingPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.CancellationPolicyRepository;
 import com.decoupledx.reservation.policy.domain.port.PolicyService;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import lombok.RequiredArgsConstructor;
 

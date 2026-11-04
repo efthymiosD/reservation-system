@@ -1,5 +1,6 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.identity.adapter.api.CustomerDirectoryApi;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
@@ -9,7 +10,6 @@ import com.decoupledx.reservation.reservation.adapter.api.ReservationPage;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import java.time.Clock;
 import java.time.Instant;

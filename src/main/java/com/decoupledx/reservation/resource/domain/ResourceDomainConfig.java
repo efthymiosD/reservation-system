@@ -1,10 +1,10 @@
 package com.decoupledx.reservation.resource.domain;
 
+import com.decoupledx.common.event.DomainEventPublisher;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.resource.domain.port.ResourceGroupRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceRepository;
 import com.decoupledx.reservation.resource.domain.port.ResourceService;
-import com.decoupledx.reservation.shared.DomainEventPublisher;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

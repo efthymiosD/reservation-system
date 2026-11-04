@@ -1,7 +1,7 @@
 package com.decoupledx.reservation.webui.admin;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.content.adapter.api.ContentApi;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.venue.adapter.api.DailyOpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.OpeningHours;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;

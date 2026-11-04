@@ -1,5 +1,7 @@
 package com.decoupledx.reservation.reservation.domain;
 
+import com.decoupledx.common.error.BusinessException;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.reservation.adapter.api.BookingRequestInfo;
 import com.decoupledx.reservation.reservation.adapter.api.SubmitBookingRequestCommand;
 import com.decoupledx.reservation.reservation.adapter.persistence.BookingRequestDataValue;
@@ -11,20 +13,17 @@ import com.decoupledx.reservation.reservation.domain.port.SubmitBookingRequestSe
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.ReservationPeriod;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The public-form submission use case. PENDING = a statement of intent: sits

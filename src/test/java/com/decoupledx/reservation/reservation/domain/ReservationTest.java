@@ -3,11 +3,11 @@ package com.decoupledx.reservation.reservation.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.policy.adapter.api.CancellationPolicy;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.Money;
 import com.decoupledx.reservation.shared.ReservationPeriod;

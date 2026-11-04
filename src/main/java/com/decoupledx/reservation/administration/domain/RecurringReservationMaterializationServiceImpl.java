@@ -2,14 +2,14 @@ package com.decoupledx.reservation.administration.domain;
 
 import static java.time.Duration.ofMinutes;
 
+import com.decoupledx.common.error.BusinessException;
+import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.administration.adapter.api.RecurringReservationMaterializationSummary;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationMaterializationService;
 import com.decoupledx.reservation.administration.domain.port.RecurringReservationRepository;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.ReservationPeriod;
-import com.decoupledx.reservation.shared.TransactionRunner;
 import com.decoupledx.reservation.venue.adapter.api.VenueApi;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import java.time.*;

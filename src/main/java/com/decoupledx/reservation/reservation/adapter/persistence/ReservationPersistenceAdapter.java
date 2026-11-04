@@ -1,12 +1,12 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
+import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.reservation.adapter.api.AdminReservationFilter;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationId;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationStatus;
 import com.decoupledx.reservation.reservation.domain.port.ReservationRepository;
 import com.decoupledx.reservation.resource.adapter.api.ResourceId;
-import com.decoupledx.reservation.shared.BusinessException;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.ReservationPeriod;
 import java.util.List;

@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   verify:
@@ -26,6 +27,25 @@ jobs:
       # GitHub runners ship Docker; Testcontainers starts its own PostgreSQL container.
       # Keycloak is NOT required: the opt-in @Tag("keycloak") test stays excluded
       # (surefire excludedGroups=keycloak) and tests use the dev key + mock JWTs.
+      # decoupledx-common resolves from GitHub Packages (GPR requires auth even
+      # for reading); GITHUB_TOKEN carries the needed scope inside this repo.
+      - name: Configure GitHub Package credentials
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<XML
+          <settings>
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${{ github.actor }}</username>
+                <password>${GITHUB_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          XML
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build and verify
         run: ./mvnw -B -ntp verify
 
