@@ -89,6 +89,12 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:candidate-${{ github.sha }}
+          # GitHub Packages auth for the Dockerfile build stage (BuildKit
+          # secret mount — never baked into image layers or the build cache).
+          build-args: |
+            GPR_USERNAME=${{ github.actor }}
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

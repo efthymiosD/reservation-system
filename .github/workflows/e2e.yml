@@ -40,6 +40,10 @@ jobs:
           python -m playwright install --with-deps ${{ github.event.inputs.browsers || 'chromium webkit' }}
 
       - name: Boot the deterministic e2e stack
+        # GITHUB_TOKEN: exposed to Compose as the BuildKit secret the app image
+        # build needs to read decoupledx-common from GitHub Packages.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker compose -f docker-compose.e2e.yml down -v --remove-orphans
           docker compose -f docker-compose.e2e.yml up --build -d

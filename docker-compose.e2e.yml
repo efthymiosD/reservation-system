@@ -43,7 +43,14 @@ services:
         condition: service_healthy
 
   e2e-app:
-    build: .
+    build:
+      context: .
+      # The app image build resolves decoupledx-common from GitHub Packages:
+      # a BuildKit secret (never baked into layers). GitHub exposes GITHUB_TOKEN
+      # via the top-level secret below; locally export GITHUB_TOKEN (e.g.
+      # `GITHUB_TOKEN=$(gh auth token)`) before `up --build`.
+      secrets:
+        - github_token
     environment:
       # Database (in-network)
       DB_URL: jdbc:postgresql://e2e-postgres:5432/reservation
@@ -75,3 +82,10 @@ services:
       timeout: 5s
       start_period: 60s
       retries: 30
+
+# GPR secret for the e2e-app image build (see build.secrets above): Docker
+# Compose takes it from the GITHUB_TOKEN environment variable of whoever
+# invokes compose (Actions exports it in e2e.yml; locally export it manually).
+secrets:
+  github_token:
+    environment: GITHUB_TOKEN
