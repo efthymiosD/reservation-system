@@ -236,4 +236,8 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 - Branch protection: PRs required (0 approvals), check `mvn verify (unit + integration)` required, enforced for admins.
   Dependabot weekly (maven/docker/actions) — merge one PR at a time.
 - Dockerfile: multi-stage temurin-26, non-root `app` user (owns `/app/logs`), curl healthcheck, `/usr/bin/pebble`
-  removed for Trivy.
+  removed for Trivy. The build stage resolves decoupledx-common from GPR via a BuildKit secret
+  (`github_token` + build-arg `GPR_USERNAME`) — settings.xml is created and deleted within each RUN so
+  the token never lands in image layers or the buildx cache. The e2e compose stack carries the same
+  secret from the GITHUB_TOKEN env var (Actions exports it in e2e.yml; locally
+  `GITHUB_TOKEN=$(gh auth token)`).

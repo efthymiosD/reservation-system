@@ -1,16 +1,38 @@
+# syntax=docker/dockerfile:1
 # --- Build stage ---
 # Tests are NOT run here; PR CI (ci.yml) runs `mvn verify` with Testcontainers.
+#
+# GitHub Packages (decoupledx-common) requires authentication even for
+# reading: the token arrives as a BuildKit SECRET MOUNT (`github_token`,
+# wired by release.yml / the e2e compose stack; locally pass
+# GITHUB_TOKEN=... via compose secrets or --secret). The server credentials
+# file is created and deleted WITHIN each RUN, so the token is never stored
+# in an image layer or the buildx cache. GPR_USERNAME only carries the
+# account name — not sensitive — as a normal build arg.
 FROM maven:3.9-eclipse-temurin-26 AS build
 WORKDIR /workspace
+ARG GPR_USERNAME=
 
 # Cache dependencies: copy pom first, download, then copy sources
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
-RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
+RUN chmod +x mvnw
+
+RUN --mount=type=secret,id=github_token,required=true \
+    mkdir -p /root/.m2 \
+ && printf '<settings><servers><server><id>github</id><username>%s</username><password>%s</password></server></servers></settings>' \
+        "$GPR_USERNAME" "$(cat /run/secrets/github_token)" > /root/.m2/settings.xml \
+ && ./mvnw -B -q dependency:go-offline ; \
+    rc=$? ; rm -f /root/.m2/settings.xml ; exit $rc
 
 COPY src src
-RUN ./mvnw -B -q -DskipTests package
+RUN --mount=type=secret,id=github_token,required=true \
+    mkdir -p /root/.m2 \
+ && printf '<settings><servers><server><id>github</id><username>%s</username><password>%s</password></server></servers></settings>' \
+        "$GPR_USERNAME" "$(cat /run/secrets/github_token)" > /root/.m2/settings.xml \
+ && ./mvnw -B -q -DskipTests package ; \
+    rc=$? ; rm -f /root/.m2/settings.xml ; exit $rc
 
 # --- Runtime stage ---
 # JRE version matches the build JDK (temurin 26) — deliberate pairing;
