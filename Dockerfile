@@ -40,10 +40,13 @@ RUN --mount=type=secret,id=github_token,required=true \
 FROM eclipse-temurin:27-jre AS runtime
 
 # curl for the container healthcheck (temurin images do not ship it);
-# drop /usr/bin/pebble (Canonical init daemon baked into the Ubuntu base, not a
-# dpkg package) — unused and its bundled Go stdlib carries HIGH CVEs that would
-# fail the Trivy gate.
+# upgrade the base OS packages (apt / libapt-pkg) so Trivy's HIGH/CRITICAL
+# gate stays green (e.g. CVE-2026-109518, fixed in 3.2.1ubuntu0.1); drop
+# /usr/bin/pebble (Canonical init daemon baked into the Ubuntu base, not a
+# dpkg package) — unused and its bundled Go stdlib carries HIGH CVEs that
+# would fail the Trivy gate.
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends curl \
  && rm -rf /var/lib/apt/lists/* \
  && rm -f /usr/bin/pebble
