@@ -2,7 +2,9 @@ package com.decoupledx.reservation.resource.adapter.api;
 
 import com.decoupledx.reservation.resource.domain.port.ResourceService;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,14 @@ class ResourceApiImpl implements ResourceApi {
     @Override
     public List<ResourceInfo> findResources(UUID venueId) {
         return resourceService.findResources(VenueId.of(venueId));
+    }
+
+    @Override
+    public Map<UUID, String> resourceNames(Collection<UUID> resourceIds) {
+        // The inbound port already returns UUID-keyed names (missing rows are
+        // simply absent — consumers provide the fallback).
+        return resourceService.resourceNames(
+                resourceIds.stream().map(ResourceId::of).toList());
     }
 
     @Override

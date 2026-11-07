@@ -2,7 +2,7 @@ package com.decoupledx.reservation.venue.adapter.web;
 
 import java.util.Map;
 
-public record PublicVenueResponse(
+record PublicVenueResponse(
         String name,
         String description,
         String address,

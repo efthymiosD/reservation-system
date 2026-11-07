@@ -1,6 +1,5 @@
 package com.decoupledx.reservation.identity.domain;
 
-import com.decoupledx.common.transaction.TransactionRunner;
 import com.decoupledx.reservation.identity.adapter.api.CustomerEntry;
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountRepository;
@@ -21,7 +20,6 @@ class CustomerAccountServiceImpl implements CustomerAccountService {
     static final String EXTERNAL_SUBJECT_PREFIX = "wa-link:";
 
     private final CustomerAccountRepository customerAccounts;
-    private final TransactionRunner tx;
 
     @Override
     public CustomerId resolveOrProvision(String idpSubject) {
@@ -30,16 +28,16 @@ class CustomerAccountServiceImpl implements CustomerAccountService {
 
     @Override
     public CustomerId resolveOrProvision(String idpSubject, String displayName) {
-        return tx.run(() -> {
-            CustomerId existing = customerAccounts.findBySubject(idpSubject)
-                    .orElseGet(() -> customerAccounts.create(idpSubject, displayName));
-            if (displayName != null
-                    && !customerAccounts.displayNames(java.util.List.of(existing))
-                    .containsKey(existing)) {
-                customerAccounts.updateDisplayName(existing, displayName);
-            }
-            return existing;
-        });
+        // Deliberately NO transaction wrapper (2026-11-07 Postgres
+        // aborted-transaction rule): on a parallel first-request race the
+        // loser's INSERT aborts a wrapped tx and NO recovery statement could
+        // run inside it. Each repository call is its own unit; the
+        // idp_subject unique index is the truth and the adapter's race
+        // recovery re-reads (and name-seeds) the winner in its own unit.
+        // The display-name lookup happens ONLY on the race path — never as a
+        // per-request probe (AGENTS.md performance checklist).
+        return customerAccounts.findBySubject(idpSubject)
+                .orElseGet(() -> customerAccounts.create(idpSubject, displayName));
     }
 
     @Override
@@ -72,7 +70,8 @@ class CustomerAccountServiceImpl implements CustomerAccountService {
             throw new IllegalArgumentException(
                     "external booker subjects must be workflow-namespaced (" + EXTERNAL_SUBJECT_PREFIX + "...)");
         }
-        // resolveOrProvision already carries the tx + the seed-on-missing semantics.
+        // resolveOrProvision carries the seed-on-missing semantics; each
+        // statement is its own unit (see the 2026-11-07 aborted-transaction rule).
         return resolveOrProvision(idpSubject, displayName);
     }
 

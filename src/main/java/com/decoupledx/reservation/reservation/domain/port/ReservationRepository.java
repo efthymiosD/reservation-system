@@ -25,6 +25,9 @@ public interface ReservationRepository {
 
     List<ReservationDataValue> findActiveOverlappingResource(ResourceId resourceId, ReservationPeriod period);
 
+    List<ReservationDataValue> findActiveOverlappingResources(java.util.Collection<ResourceId> resourceIds,
+                                                              ReservationPeriod period);
+
     List<ReservationDataValue> findActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);
 
     boolean existsActiveOverlappingCustomer(CustomerId customerId, ReservationPeriod period);

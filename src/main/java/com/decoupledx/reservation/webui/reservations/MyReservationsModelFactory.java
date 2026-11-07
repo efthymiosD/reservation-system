@@ -1,6 +1,5 @@
 package com.decoupledx.reservation.webui.reservations;
 
-import com.decoupledx.common.error.BusinessException;
 import com.decoupledx.reservation.policy.adapter.api.PolicyApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationInfo;
@@ -13,7 +12,10 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -43,12 +45,13 @@ class MyReservationsModelFactory {
 
         List<ReservationInfo> reservations = ownReservations();
         var now = clock.instant();
+        var fieldNames = fieldNames(reservations);
 
         List<ReservationCard> upcoming = new ArrayList<>();
         List<ReservationCard> past = new ArrayList<>();
         for (ReservationInfo reservation : reservations) {
             boolean future = reservation.isActive() && !reservation.start().isBefore(now);
-            var card = toCard(reservation, zone, deadline, now, future);
+            var card = toCard(reservation, fieldNames, zone, deadline, now, future);
             (future ? upcoming : past).add(card);
         }
         upcoming.sort(Comparator.comparing(ReservationCard::start));
@@ -64,13 +67,16 @@ class MyReservationsModelFactory {
             result = reservationApi.findMyReservationsPage(null, page, PAGE_SIZE);
             all.addAll(result.items());
             page++;
-        } while (all.size() < result.total() && page < result.page() + 2 && page < 10);
+        } while (all.size() < result.total() && page < 10);
+        // page < 10: a hard cap of ~1000 reservations — more than any card
+        // overview should render; deep pages live in the API, not the UI.
         return all;
     }
 
     private ReservationCard toCard(ReservationInfo reservation,
+                                   java.util.Map<UUID, String> fieldNames,
                                    ZoneId zone, Duration deadline, Instant now, boolean future) {
-        String fieldName = fieldName(reservation.resourceId());
+        String fieldName = fieldName(reservation.resourceId(), fieldNames);
         LocalDate date = reservation.start().atZone(zone).toLocalDate();
         LocalTime start = reservation.start().atZone(zone).toLocalTime();
         LocalTime end = reservation.end().atZone(zone).toLocalTime();
@@ -88,11 +94,15 @@ class MyReservationsModelFactory {
                 reservation.isCancellable(now, deadline));
     }
 
-    private String fieldName(ResourceId resourceId) {
-        try {
-            return resourceService.getResource(resourceId.value()).name();
-        } catch (BusinessException gone) {
-            return messages.get("reserve.theSelectedField");
-        }
+    private String fieldName(ResourceId resourceId, Map<UUID, String> fieldNames) {
+        return fieldNames.getOrDefault(resourceId.value(), messages.get("reserve.theSelectedField"));
+    }
+
+    /** ONE batch name lookup for the whole listing (AGENTS.md — no N+1). */
+    private Map<UUID, String> fieldNames(List<ReservationInfo> reservations) {
+        Set<UUID> ids = reservations.stream()
+                .map(reservation -> reservation.resourceId().value())
+                .collect(Collectors.toSet());
+        return resourceService.resourceNames(ids);
     }
 }

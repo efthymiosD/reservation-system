@@ -21,9 +21,9 @@ class AdministrationDomainConfig {
     RecurringReservationMaterializationService recurringReservationMaterializationService(
             RecurringReservationRepository recurringReservations,
             ReservationApi reservationApi, VenueApi venueService,
-            Clock clock, TransactionRunner tx) {
+            Clock clock) {
         return new RecurringReservationMaterializationServiceImpl(
-                recurringReservations, reservationApi, venueService, clock, tx);
+                recurringReservations, reservationApi, venueService, clock);
     }
 
     @Bean

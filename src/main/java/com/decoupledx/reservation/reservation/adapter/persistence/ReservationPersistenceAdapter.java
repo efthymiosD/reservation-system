@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -34,11 +34,15 @@ class ReservationPersistenceAdapter implements ReservationRepository {
                     () -> reservations.save(toEntity(reservation)));
             reservations.flush();
             return reservation;
-        } catch (DataIntegrityViolationException | JpaSystemException |
-                 org.springframework.orm.ObjectOptimisticLockingFailureException conflict) {
+        } catch (DataIntegrityViolationException | ConcurrencyFailureException conflict) {
+            // ObjectOptimisticLockingFailureException is a ConcurrencyFailureException
+            // subclass (it must not appear in the same multi-catch).
             // The btree_gist exclusion constraints (resource/customer overlap, blocked
             // periods) reject the write under concurrency; translate to the shared
             // 409 business conflict so no lock-race loser surfaces as a 500.
+            // Deliberately NARROW: JpaSystemException is NOT caught — after the
+            // 2026-11-07 aborted-transaction rule, an aborted-tx continuation is a
+            // defect, not a conflict; genuine 500-class failures must stay 500s.
             throw new BusinessException(ErrorCode.RESOURCE_NO_LONGER_AVAILABLE);
         }
     }
@@ -76,6 +80,18 @@ class ReservationPersistenceAdapter implements ReservationRepository {
     public List<ReservationDataValue> findActiveOverlappingResource(ResourceId resourceId,
                                                                     ReservationPeriod period) {
         return reservations.findActiveOverlappingResource(resourceId.value(), period.start(), period.end())
+                .stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public List<ReservationDataValue> findActiveOverlappingResources(
+            java.util.Collection<ResourceId> resourceIds, ReservationPeriod period) {
+        if (resourceIds.isEmpty()) {
+            return List.of();
+        }
+        return reservations
+                .findActiveOverlappingResources(
+                        resourceIds.stream().map(ResourceId::value).toList(), period.start(), period.end())
                 .stream().map(this::toDomain).toList();
     }
 

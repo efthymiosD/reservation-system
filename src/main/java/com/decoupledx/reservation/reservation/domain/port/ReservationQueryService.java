@@ -42,4 +42,8 @@ public interface ReservationQueryService {
     ReservationPage listAllForAdmin(AdminReservationFilter filter, int page, int size);
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);
+
+    /** Batch overlap lookup for slot rendering (no per-resource queries). */
+    List<ReservationInfo> findActiveOverlappingResources(java.util.Collection<java.util.UUID> resourceIds,
+                                                         ReservationPeriod period);
 }

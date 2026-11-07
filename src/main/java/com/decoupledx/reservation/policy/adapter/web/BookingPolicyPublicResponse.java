@@ -1,7 +1,7 @@
 package com.decoupledx.reservation.policy.adapter.web;
 
 
-public record BookingPolicyPublicResponse(
+record BookingPolicyPublicResponse(
         long minDurationMinutes,
         long maxDurationMinutes,
         long durationStepMinutes,

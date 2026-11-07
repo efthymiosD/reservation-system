@@ -5,6 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import java.time.DayOfWeek;
 import java.util.Map;
 
-public record OpeningHoursUpdateRequest(
+record OpeningHoursUpdateRequest(
         @NotEmpty Map<DayOfWeek, @NotNull DailyOpeningHoursRequest> days) {
 }

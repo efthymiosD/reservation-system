@@ -69,6 +69,10 @@ public interface ReservationApi {
 
     List<ReservationInfo> findActiveOverlappingResource(UUID resourceId, ReservationPeriod period);
 
+    /** Batch overlap lookup for slot rendering (no per-resource queries). */
+    List<ReservationInfo> findActiveOverlappingResources(java.util.Collection<UUID> resourceIds,
+                                                         ReservationPeriod period);
+
     List<ReservationInfo> findActiveByRecurringReservation(UUID recurringReservationId);
 
     boolean isSlotFree(UUID resourceId, ReservationPeriod period);

@@ -97,4 +97,15 @@ class ReservationQueryServiceImpl implements ReservationQueryService {
     public boolean isSlotFree(UUID resourceId, ReservationPeriod period) {
         return reservations.findActiveOverlappingResource(ResourceId.of(resourceId), period).isEmpty();
     }
+
+    @Override
+    public List<ReservationInfo> findActiveOverlappingResources(
+            java.util.Collection<java.util.UUID> resourceIds, ReservationPeriod period) {
+        return reservations
+                .findActiveOverlappingResources(
+                        resourceIds.stream().map(ResourceId::of).toList(), period)
+                .stream()
+                .map(ReservationMappings::toInfo)
+                .toList();
+    }
 }

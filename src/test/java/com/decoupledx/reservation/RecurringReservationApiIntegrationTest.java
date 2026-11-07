@@ -8,7 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.decoupledx.reservation.testinfra.PostgresIntegrationTest;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -268,5 +275,54 @@ class RecurringReservationApiIntegrationTest extends PostgresIntegrationTest {
                 {"resourceId": "%s", "customerId": "%s", "weekday": "%s",
                  "startTime": "%s", "endTime": "%s", "windowMonths": %d}
                 """.formatted(resourceId, customerId, weekday, startTime, endTime, windowMonths);
+    }
+
+    @Test
+    void concurrentMaterializeRunsNeverFailAndNeverDuplicateOccurrences() throws Exception {
+        // A recurring reservation seeded directly with a 6-month window whose
+        // occurrences are NOT yet materialized (bypasses the auto-materialize
+        // at creation). Two concurrent materialize runs race the same
+        // insert-with-pre-check window for every occurrence; the exclusion
+        // constraint decides, and the per-occurrence transaction units (2026-11-07
+        // aborted-transaction rule) keep both runs from ever surfacing a
+        // poisoned "aborted transaction" 500.
+        UUID recurringId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO recurring_reservations
+                    (id, resource_id, customer_id, weekday, start_time, end_time, status,
+                     next_occurrence, window_months, created_at)
+                VALUES (?, ?::uuid, ?::uuid, 'THURSDAY', TIME '18:00', TIME '19:00', 'ACTIVE',
+                        DATE '2026-09-01', 6, now())
+                """, recurringId, FIELD_2, CUSTOMER_B);
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            CountDownLatch start = new CountDownLatch(1);
+            Callable<MvcResult> materialize = () -> {
+                start.await();
+                return mockMvc.perform(post("/api/admin/recurring-reservations/materialize")
+                                .with(admin("admin")))
+                        .andReturn();
+            };
+            Future<MvcResult> first = pool.submit(materialize);
+            Future<MvcResult> second = pool.submit(materialize);
+            start.countDown();
+
+            int firstStatus = first.get().getResponse().getStatus();
+            int secondStatus = second.get().getResponse().getStatus();
+            assertThat(List.of(firstStatus, secondStatus))
+                    .allSatisfy(status -> assertThat(status).isLessThan(500));
+            // The exclusion constraint is the truth: exactly one reservation per
+            // Thursday, 26 occurrences in the window — never two racers' rows.
+            assertThat(activeReservationsFor(FIELD_2)).isEqualTo(26);
+            // The cursor advanced exactly once past the window (it must never
+            // rewind), even though every occurrence raced.
+            LocalDate cursor = jdbc.queryForObject(
+                    "SELECT next_occurrence FROM recurring_reservations WHERE id = ?",
+                    LocalDate.class, recurringId);
+            assertThat(cursor).isEqualTo(LocalDate.parse("2027-03-02"));
+        } finally {
+            pool.shutdownNow();
+        }
     }
 }

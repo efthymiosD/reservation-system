@@ -1,6 +1,7 @@
 package com.decoupledx.reservation.reservation.adapter.persistence;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,18 @@ interface ReservationJpaRepository extends JpaRepository<ReservationEntity, UUID
             """)
     List<ReservationEntity> findActiveOverlappingResource(
             @Param("resourceId") UUID resourceId,
+            @Param("startTime") Instant startTime,
+            @Param("endTime") Instant endTime);
+
+    @Query("""
+            select r from ReservationEntity r
+            where r.resourceId in :resourceIds
+              and r.status = 'ACTIVE'
+              and r.startTime < :endTime
+              and r.endTime > :startTime
+            """)
+    List<ReservationEntity> findActiveOverlappingResources(
+            @Param("resourceIds") Collection<UUID> resourceIds,
             @Param("startTime") Instant startTime,
             @Param("endTime") Instant endTime);
 

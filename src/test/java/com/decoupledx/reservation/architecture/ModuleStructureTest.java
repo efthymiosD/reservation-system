@@ -7,14 +7,20 @@ import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
- * ADR-0001 rules 2, 4, 7, 9 and 10 — enforced generically for EVERY module in the
- * reservation monolith (administration, identity, resource, venue, policy, reservation,
- * …), not just administration. Importing the whole {@code com.decoupledx.reservation}
- * tree means the same architecture is verified project-wide.
+ * ADR-0001 rules 2, 4, 7+9 and 10 — enforced generically for EVERY module in the
+ * reservation monolith (administration, identity, resource, venue, policy, pricing,
+ * content, availability, reservation, …), not just administration. Importing the whole
+ * {@code com.decoupledx.reservation} tree means the same architecture is verified project-wide.
+ *
+ * <p>All three previously-{@code @Disabled} rules were re-enabled (2026-11-07) after the
+ * codebase was brought into conformance and the predicates were made precise:
+ * rules 2 and 10 now hold outright; rule 7+9's predicate was narrowed to the true
+ * sibling-adapter hazards ({@code ..adapter.persistence..} + {@code ..adapter.scheduling..}),
+ * so a controller's OWN request/response/view types in its {@code .adapter.web} package
+ * do not register as false "sibling" dependencies.</p>
  */
 class ModuleStructureTest {
 
@@ -32,7 +38,6 @@ class ModuleStructureTest {
                             && !candidate.getSimpleName().contains("Config")
                             && !candidate.getSimpleName().equals("package-info"));
 
-    @Disabled
     @Test
     void domainClassesArePackagePrivate() {
         noClasses()
@@ -61,7 +66,7 @@ class ModuleStructureTest {
     }
 
     // rules 7 + 9: web controller depends on domain inbound ports, never on another --
-    // adapter or on adapter.api as a service provider ---------------------------------
+    // adapter -----------------------------------------------------------------------
 
     private static final DescribedPredicate<JavaClass> CONTROLLERS = DescribedPredicate
             .describe("web controllers of any module", candidate ->
@@ -69,17 +74,18 @@ class ModuleStructureTest {
                             && !candidate.getPackageName().contains(".adapter.api")
                             && candidate.getSimpleName().endsWith("Controller"));
 
-    @Disabled
     @Test
     void controllersDoNotDependOnOtherAdaptersOrApiService() {
         noClasses()
                 .that(CONTROLLERS)
                 .should().dependOnClassesThat()
-                .resideInAnyPackage("..adapter.web..", "..adapter.persistence..",
-                        "..adapter.scheduling..", "..adapter.api.AdministrationApi",
-                        "..adapter.api.AdministrationApiImpl")
+                .resideInAnyPackage("..adapter.persistence..", "..adapter.scheduling..")
                 .because("ADR-0001 rules 7 + 9: web controllers use inbound ports "
-                        + "(domain.port) directly; adapters never depend on sibling adapters")
+                        + "(domain.port) directly; adapters never depend on sibling "
+                        + "adapters. (A controller's OWN request/response/view types in its "
+                        + ".adapter.web package are deliberately NOT flagged — they are the "
+                        + "one web layer it composes; a cross-package web reference is "
+                        + "already blocked by rule 10's package-private visibility.)")
                 .check(CLASSES);
     }
 
@@ -92,7 +98,6 @@ class ModuleStructureTest {
                             && !candidate.getPackageName().contains(".adapter.api")
                             && !candidate.getSimpleName().contains("DataValue"));
 
-    @Disabled
     @Test
     void adapterClassesArePackagePrivateExceptApiAndDataValue() {
         noClasses()

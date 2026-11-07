@@ -96,6 +96,12 @@ class ReservationApiImpl implements ReservationApi {
     }
 
     @Override
+    public List<ReservationInfo> findActiveOverlappingResources(java.util.Collection<UUID> resourceIds,
+                                                                ReservationPeriod period) {
+        return reservationQueries.findActiveOverlappingResources(resourceIds, period);
+    }
+
+    @Override
     public List<ReservationInfo> findActiveByRecurringReservation(UUID recurringReservationId) {
         return reservationQueries.findActiveByRecurringReservation(recurringReservationId);
     }
