@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public record AdminReservationResponse(
+record AdminReservationResponse(
         UUID id,
         UUID resourceId,
         String customerId,

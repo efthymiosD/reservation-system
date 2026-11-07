@@ -1,4 +1,4 @@
-package com.decoupledx.reservation.identity;
+package com.decoupledx.reservation.identity.adapter.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.decoupledx.reservation.identity.adapter.api.CustomerId;
-import com.decoupledx.reservation.identity.adapter.web.CurrentCustomerResolver;
 import com.decoupledx.reservation.identity.domain.port.CustomerAccountService;
 import java.time.Instant;
 import java.util.List;

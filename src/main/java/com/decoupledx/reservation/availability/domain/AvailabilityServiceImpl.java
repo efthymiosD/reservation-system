@@ -11,7 +11,6 @@ import com.decoupledx.reservation.pricing.adapter.api.PricingApi;
 import com.decoupledx.reservation.pricing.adapter.api.PricingPolicy;
 import com.decoupledx.reservation.reservation.adapter.api.ReservationApi;
 import com.decoupledx.reservation.resource.adapter.api.ResourceApi;
-import com.decoupledx.reservation.resource.adapter.api.ResourceId;
 import com.decoupledx.reservation.resource.adapter.api.ResourceInfo;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.shared.Money;
@@ -21,6 +20,9 @@ import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import com.decoupledx.reservation.venue.adapter.api.VenueInfo;
 import java.time.*;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -39,8 +41,9 @@ class AvailabilityServiceImpl implements AvailabilityService {
         if (activeResources.isEmpty()) {
             return List.of();
         }
+        Set<UUID> busyResourceIds = busyResourceIds(activeResources, slot.period());
         return activeResources.stream()
-                .filter(resource -> isFree(resource.id(), slot.period()))
+                .filter(resource -> !busyResourceIds.contains(resource.id().value()))
                 .map(resource -> toAvailableResource(resource, slot.price()))
                 .toList();
     }
@@ -51,8 +54,9 @@ class AvailabilityServiceImpl implements AvailabilityService {
         if (activeResources.isEmpty()) {
             return List.of();
         }
+        Set<UUID> busyResourceIds = busyResourceIds(activeResources, slot.period());
         return activeResources.stream()
-                .map(resource -> toResourceAvailability(resource, slot))
+                .map(resource -> toResourceAvailability(resource, slot, busyResourceIds))
                 .toList();
     }
 
@@ -66,21 +70,28 @@ class AvailabilityServiceImpl implements AvailabilityService {
                 price.currency().getCurrencyCode());
     }
 
-    private ResourceAvailability toResourceAvailability(ResourceInfo resource, Slot slot) {
+    private ResourceAvailability toResourceAvailability(ResourceInfo resource, Slot slot,
+                                                        Set<UUID> busyResourceIds) {
+        boolean available = !busyResourceIds.contains(resource.id().value());
         return new ResourceAvailability(
                 resource.id().value(),
                 resource.name(),
                 resource.code(),
                 resource.type().name(),
-                statusOf(resource.id(), slot.period()),
+                available ? ResourceAvailabilityStatus.AVAILABLE : ResourceAvailabilityStatus.RESERVED,
                 slot.price().amount(),
                 slot.price().currency().getCurrencyCode());
     }
 
-    private ResourceAvailabilityStatus statusOf(ResourceId resourceId, ReservationPeriod period) {
-        return isFree(resourceId, period)
-                ? ResourceAvailabilityStatus.AVAILABLE
-                : ResourceAvailabilityStatus.RESERVED;
+    /** ONE batch overlap query for the whole slot grid (AGENTS.md — no N+1). */
+    private Set<UUID> busyResourceIds(List<ResourceInfo> activeResources,
+                                      ReservationPeriod period) {
+        return reservationQueries
+                .findActiveOverlappingResources(
+                        activeResources.stream().map(resource -> resource.id().value()).toList(), period)
+                .stream()
+                .map(reservation -> reservation.resourceId().value())
+                .collect(Collectors.toSet());
     }
 
     private Slot validatedSlot(LocalDate date, LocalTime startTime, int durationMinutes) {
@@ -117,10 +128,6 @@ class AvailabilityServiceImpl implements AvailabilityService {
 
     private List<ResourceInfo> activeResources(VenueInfo venue) {
         return resourceService.findActiveResources(venue.id().value());
-    }
-
-    private boolean isFree(ResourceId resourceId, ReservationPeriod period) {
-        return reservationQueries.isSlotFree(resourceId.value(), period);
     }
 
 }

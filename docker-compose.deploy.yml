@@ -35,6 +35,12 @@ services:
     container_name: reservation-keycloak
     restart: unless-stopped
     command: start-dev --import-realm
+    # TRACKED FOLLOW-UP (do not defer indefinitely): this box is
+    # internet-reachable via the funnel, yet Keycloak runs DEV mode
+    # (mutable config, no RDBMS backing — realm data lives on a volume).
+    # Migration to `start` + RDBMS-backed realm + prod hardening is a
+    # scheduled maintenance window (requires auth downtime planning):
+    # see AGENTS.md "Deferred infrastructure follow-ups".
     environment:
       # Temporary bootstrap admin (Keycloak 26 naming — legacy KEYCLOAK_ADMIN
       # pair is deprecated): created ONLY when the master realm doesn't exist
@@ -85,6 +91,11 @@ services:
       # 6265) — a stock JSESSIONID on / would collide with Keycloak's own
       # JSESSIONID and shadow the app session during login.
       SERVER_SERVLET_SESSION_COOKIE_NAME: RESERVATION_SESSION
+      # The container default is UTC; pinning the venue zone keeps the
+      # materialization cron (04:00) Warsaw-local (as the config implies)
+      # and access logs on wall-clock time. All domain date math is
+      # zone-aware (venue.timezone), so this affects only defaults.
+      TZ: Europe/Warsaw
     depends_on:
       postgres:
         condition: service_healthy

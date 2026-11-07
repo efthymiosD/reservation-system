@@ -10,7 +10,7 @@ import java.util.UUID;
  * pitch still cannot host two bookings in the same window.
  */
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = false)
-public record CreateOnBehalfOfCustomerRequest(
+record CreateOnBehalfOfCustomerRequest(
         @NotNull UUID resourceId,
         @NotNull String customerId,
         @NotNull LocalDateTime startTime,

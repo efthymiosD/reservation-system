@@ -48,11 +48,6 @@ class CustomerPersistenceAdapter implements CustomerAccountRepository {
     }
 
     @Override
-    public CustomerId create(String idpSubject) {
-        return create(idpSubject, null);
-    }
-
-    @Override
     public List<CustomerAccountInfo> findAll() {
         return customers.findAllByOrderByCreatedAtDesc().stream()
                 .map(entity -> new CustomerAccountInfo(
@@ -71,25 +66,29 @@ class CustomerPersistenceAdapter implements CustomerAccountRepository {
                 .toList();
     }
 
-    @Override
-    public void updateDisplayName(CustomerId customerId, String displayName) {
-        customers.findFirstByCustomerId(UUID.fromString(customerId.value()))
-                .ifPresent(entity -> {
-                    entity.setDisplayName(displayName);
-                    customers.save(entity);
-                });
-    }
 
     @Override
     public CustomerId create(String idpSubject, String displayName) {
-        CustomerEntity entity = new CustomerEntity(
-                UUID.randomUUID(), idpSubject, displayName, Instant.now());
         try {
+            CustomerEntity entity = new CustomerEntity(
+                    UUID.randomUUID(), idpSubject, displayName, Instant.now());
             customers.saveAndFlush(entity);
             return CustomerId.of(entity.getCustomerId().toString());
-        } catch (DataIntegrityViolationException conflict) {
-            return findBySubject(idpSubject)
-                    .orElseThrow(() -> conflict);
+        } catch (DataIntegrityViolationException provisioningRace) {
+            // 2026-11-07 aborted-transaction rule: this recovery re-read runs
+            // OUTSIDE any wrapped tx (each repository call is its own unit).
+            // The loser seeds its own name onto a nameless winner only. Note
+            // a nameless row can also exist pre-deploy (first login without a
+            // preferred_username claim) — such rows are no longer auto-named
+            // by later logins (never probe per request); a backfill, if ever
+            // wanted, must be a one-off, not request-path logic.
+            CustomerEntity winner = customers.findByIdpSubject(idpSubject)
+                    .orElseThrow(() -> provisioningRace);
+            if (winner.getDisplayName() == null && displayName != null) {
+                winner.setDisplayName(displayName);
+                customers.save(winner);
+            }
+            return CustomerId.of(winner.getCustomerId().toString());
         }
     }
 }

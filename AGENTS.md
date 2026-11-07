@@ -32,9 +32,10 @@ Testcontainers Postgres via Rancher Desktop) incl. go-live hardening, mobile-fir
 layer. Opt-in `@Tag("keycloak")` realm-contract test excluded by default (runs only vs live Keycloak).
 
 Highlights (details in code/ADRs, not repeated here): exclusion-constraint concurrency safety (`btree_gist` on
-`tstzrange`); internal identity (`sub` → app-owned `CustomerId`, auto-provisioned `customers` row); SPRING.FREE domain
-(b1: services are plain beans on `TransactionRunner` port, tx with `NoRollbackRule(DataIntegrityViolationException)` for
-constraint translation); configurable site content module (text blocks, photos, `/admin/map` drag-and-drop field-layout
+`tstzrange`); internal identity (`sub` → app-owned `CustomerId`, auto-provisioned `customers` row, provisioning OUTSIDE
+any wrapped tx per the 2026-11-07 aborted-transaction rule); SPRING.FREE domain
+(b1: services are plain beans on `TransactionRunner` port; persistence adapters translate constraint races
+(23P01 + 40P01) to 409 at the failure boundary); configurable site content module (text blocks, photos, `/admin/map` drag-and-drop field-layout
 editor persisted as `venue.map.layout` JSON; overnight opening hours where `closesAt < opensAt`, only equal times
 rejected); audit `cancelled_by/cancelled_at` threading the internal actor; JWT audience validation + CORS allowlist;
 prod profile forbids dev-key fallback.
@@ -109,7 +110,10 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
   mapper so tokens carry `sub`.
 - `JwtRolesConverter`: realm_access + resource_access + flat `roles`, `ROLE_`-prefixed, uppercase.
 - Identity: `CurrentCustomerResolver` maps `sub` only (no `preferred_username` fallback) →
-  `CustomerAccountService.resolveOrProvision` provisions/reuses internal UUID.
+  `CustomerAccountService.resolveOrProvision` provisions/reuses internal UUID
+  **outside any explicit tx** (each statement its own unit; the `idp_subject`
+  unique index is the truth; race recovery re-reads the winner in its own
+  unit — see ADR-0002's 2026-11-07 supplement in decoupledx-common).
 - **Integration tests must NOT depend on Keycloak** — `PostgresIntegrationTest` sets `issuer-uri=` (dev key) +
   `JwtSupport.customer/admin(subject)` mock JWTs (admin adds `.authorities("ROLE_ADMIN")`).
 
@@ -188,6 +192,11 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 
 - Tactical DDD + hexagonal, domains Spring-free (`DomainPurityTest`, ignores `package-info`); entities pure Java +
   Lombok (`@Getter`, PROTECTED ctor), JPA only in `adapter/persistence/*Entity`.
+- **Postgres aborted-transaction rule (2026-11-07, proven by race specs; supersedes the old
+  `NoRollbackRule` description):** after any failed statement the tx is dead — recovery never runs
+  mid-transaction; adapters translate both constraint races (23P01 + 40P01) to 409 at the failure
+  boundary, and flows that re-read after a race (identity provisioning, materializer cursor advance
+  via the guarded `advanceCursor`) run in their own units (see decoupledx-common ADR-0002).
 - Clock property-driven (`app.clock.fixed-instant`); dev JWT fallback only with empty issuer
   (`src/main/resources/dev/jwt-public.pem`); springdoc at `/swagger-ui.html`.
 - Flyway: exactly three migrations (`V1__init_schema.sql`, `V2__seed_data.sql` — legacy V3/V4 folded in;
@@ -212,6 +221,20 @@ source ~/tools/env.sh          # JDK 26 + Maven 3.9.16
 - `GET/PUT /api/admin/venue`; `GET/PUT /api/admin/content` (+ `PUT /{key}`)
 - Web-UI admin: `/admin/content` (+ venue/photos/opening-hours/{key} POSTs), `/admin/map` (+ `/layout`, `/fields`,
   `/field/{id}/activate|deactivate`)
+
+## Deferred infrastructure follow-ups (tracked — do not defer indefinitely)
+
+- **Keycloak runs dev mode on a publicly reachable box** (funnel): dev mode =
+  mutable config and no RDBMS backing (realm data lives on a persistent
+  volume). Migration to `start` + RDBMS-backed realm + prod hardening needs a
+  maintenance window with auth downtime — scheduled, see the comment in
+  `docker-compose.deploy.yml`.
+- **`V1__init_schema.sql` exclusion-constraint comment is stale** (applied
+  migration — checksum immutability means the comment stays). Truthful
+  semantics: `admin_override` rows are excluded ONLY from the
+  customer-overlap constraint; the resource-overlap one-pitch invariant
+  still applies (documented in the "Admin same-hour bookings" bullet above).
+  Correct the comment only inside a future repair migration if churn justifies it.
 
 ## CI/CD (github.com/efthymiosD/reservation-system)
 

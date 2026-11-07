@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Positive;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record CreateReservationRequest(
+record CreateReservationRequest(
         @NotNull UUID resourceId,
         @NotNull LocalDateTime startTime,
         @Positive int durationMinutes) {

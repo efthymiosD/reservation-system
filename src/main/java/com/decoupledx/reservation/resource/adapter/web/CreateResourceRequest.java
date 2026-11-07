@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
-public record CreateResourceRequest(
+record CreateResourceRequest(
         @NotNull UUID groupId,
         @NotBlank String name,
         @NotBlank String code,

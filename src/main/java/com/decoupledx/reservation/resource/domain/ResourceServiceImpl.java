@@ -12,7 +12,11 @@ import com.decoupledx.reservation.resource.domain.port.ResourceService;
 import com.decoupledx.reservation.shared.ErrorCode;
 import com.decoupledx.reservation.venue.adapter.api.VenueId;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -26,6 +30,12 @@ class ResourceServiceImpl implements ResourceService {
     @Override
     public ResourceInfo getResource(ResourceId resourceId) {
         return toInfo(loadResource(resourceId));
+    }
+
+    @Override
+    public Map<UUID, String> resourceNames(Collection<ResourceId> resourceIds) {
+        return resources.names(resourceIds).entrySet().stream()
+                .collect(Collectors.toMap(entry -> entry.getKey().value(), Map.Entry::getValue));
     }
 
     @Override

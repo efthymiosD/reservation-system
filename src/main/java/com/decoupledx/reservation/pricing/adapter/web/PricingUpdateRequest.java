@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-public record PricingUpdateRequest(
+record PricingUpdateRequest(
         @NotNull @DecimalMin("0.0") BigDecimal hourlyPrice,
         @NotBlank String currency) {
 }

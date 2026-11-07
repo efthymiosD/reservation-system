@@ -29,7 +29,8 @@ import lombok.RequiredArgsConstructor;
  * Create/cancel/query use cases for recurring reservations. Creation validates
  * the slot definition up front (active resource, period sanity, opening-hours
  * fit and duration policy for the next occurrence) and materializes the first
- * batch of occurrences in the same transaction.
+ * batch of occurrences after the creation is committed, in its own
+ * per-occurrence transaction units (2026-11-07 aborted-transaction rule).
  */
 @RequiredArgsConstructor
 class RecurringReservationServiceImpl implements RecurringReservationService {
@@ -46,7 +47,7 @@ class RecurringReservationServiceImpl implements RecurringReservationService {
 
     @Override
     public RecurringReservationInfo create(CreateRecurringReservationCommand command) {
-        return tx.run(() -> {
+        RecurringReservationInfo saved = tx.run(() -> {
             ResourceInfo resource = resourceService.lockResource(command.resourceId());
             if (!resource.isActive()) {
                 throw new BusinessException(ErrorCode.RESOURCE_INACTIVE);
@@ -65,10 +66,16 @@ class RecurringReservationServiceImpl implements RecurringReservationService {
                     today,
                     clock.instant());
             recurringReservations.save(recurringReservation.toDataValue());
-            RecurringReservationInfo saved = recurringReservation.toInfo();
-            materializer.materializeFor(saved.id());
-            return saved;
+            return recurringReservation.toInfo();
         });
+        // Materialization AFTER the recurring reservation is committed, in its
+        // own per-occurrence units (2026-11-07 Postgres aborted-transaction
+        // rule): a skipped/failing occurrence must never poison the creation.
+        // Still synchronous, so the created occurrences are present when the
+        // POST returns; the nightly job and the idempotent endpoint cover any
+        // gap a crash could leave.
+        materializer.materializeFor(saved.id());
+        return saved;
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.decoupledx.reservation.resource.adapter.web;
 
 import java.util.UUID;
 
-public record ResourceResponse(
+record ResourceResponse(
         UUID id,
         UUID groupId,
         String name,

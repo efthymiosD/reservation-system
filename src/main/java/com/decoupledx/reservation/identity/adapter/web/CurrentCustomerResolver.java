@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @RequiredArgsConstructor
-public class CurrentCustomerResolver implements CurrentCustomerApi {
+class CurrentCustomerResolver implements CurrentCustomerApi {
 
     private final CustomerAccountService customerAccounts;
 

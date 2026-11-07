@@ -11,8 +11,6 @@ public interface CustomerAccountRepository {
 
     Optional<CustomerId> findBySubject(String idpSubject);
 
-    CustomerId create(String idpSubject);
-
     CustomerId create(String idpSubject, String displayName);
 
     /**
@@ -33,9 +31,5 @@ public interface CustomerAccountRepository {
      */
     List<CustomerId> byExactName(String displayName);
 
-    /**
-     * Seeds/overwrites the display name for an already-provisioned customer.
-     */
-    void updateDisplayName(CustomerId customerId, String displayName);
 
 }
