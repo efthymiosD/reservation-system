@@ -2,6 +2,16 @@
 
 Status: Accepted · Deciders: EfthymiosD · Date: 2026-09-19
 
+> **Amendment (2026-11-08) — decided for team-management, pending migration here:**
+> the repository-port language records (`…DataValue`) MOVE to each module's
+> `domain.port` as public records, so the domain imports NOTHING from adapter
+> packages (hexagonal direction: adapter → domain only). See ADR-0003 of
+> `team-management` for the decision, the arch rule, and the motivation
+> (domain code importing a public adapter type was an inversion of the
+> dependency direction). Rule 2/4/10 gain the designated exception:
+> `domain.port` hosts the public ports AND their public language records.
+> Migration rides the next change batch touching each module.
+
 ## Context
 Following the `administration` module structure, we codify the 10 rules every
 module must follow. They nail down package layout, Java access modifiers, the
